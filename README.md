@@ -15,7 +15,7 @@ Utilisation
 
 ### Résultat et exemple d’utilisation
 
-Pour l’exemple, le code de la propriété intellectuelle peut être consulté sur Github : <https://github.com/Seb35/CPI/blob/master/Code_de_la_propriété_intellectuelle.md>. Il est affiché ici dans sa dernière version.
+Pour l’exemple, le code de la propriété intellectuelle peut être consulté sur Github : <https://github.com/Seb35/CPI/blob/master/Code%20de%20la%20propriété%20intellectuelle.md>. Il est affiché ici dans sa dernière version.
 
 Vous pouvez voir l’historique des versions du code en cliquant sur `History` dans l’en-tête du fichier, sur la droite, puis cliquer sur une des versions pour afficher les changements effectués et entrés en vigueur ce jour-là.
 
