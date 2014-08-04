@@ -1,0 +1,119 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# 
+# Archéo Lex – Pure Histoire de la Loi française
+# – crée un dépôt Git des lois françaises écrites en syntaxe Markdown
+# 
+# This program is free software. It comes without any warranty, to
+# the extent permitted by applicable law. You can redistribute it
+# and/or modify it under the terms of the Do What The Fuck You Want
+# To Public License, Version 2, as published by Sam Hocevar. See
+# the LICENSE file for more details.
+
+# Imports
+from __future__ import (unicode_literals, absolute_import, division, print_function)
+from docopt import docopt
+from lexarcheo import logger
+from lexarcheo.basededonnees import initialisation_bdd
+from lexarcheo.telecharger import (obtenir_identifiants,telecharger_html)
+from lexarcheo.ranger import ranger
+from lexarcheo.exporter import (creer_historique,creer_historique_texte)
+from lexarcheo.utilitaires import nop
+
+# Manuel d’aide
+aide = ('''Usage: archeo-lex [--aide] [--textes=<TEXTES>] [--format=<FORMAT>] [--versionnement=<VERS>] [--metadonnees] [--initialisation] [--rechercher-xml] [--telecharger-html] [--ranger] [--lier] [--exporter] [--mise-a-jour | --nouveau] [--base=<fichier>] [--cache=<dossier>] [--dossier=<dossier>]
+
+-t --textes=<TEXTES>       Types de textes à télécharger :
+                             - "constitution-de-1958",
+                             - "codes",
+                             - nom du code ("code pénal"…),
+                             - identifiant Légifrance (paramètre « cidTexte »)
+-f --format=<FORMAT>       Format de sortie des textes :
+                             - "markdown" (défaut)
+-v --versionnement=<VERS>  Versionner avec le système :
+                             - "git" (défaut)
+                             - "fichiers" : plusieurs fichiers avec les dates
+-m --metadonnees           Afficher les métadonnées dans le texte
+
+-i --initialisation        Vérifier les dépendances, initialiser la base
+-t --rechercher-xml        Rechercher les textes dans les données XML
+-t --telecharger-html      Télécharger les textes HTML du site grand public
+-r --ranger                Ranger les données dans la base de données
+-l --lier                  Lier les versions d’articles aux versions de textes
+-e --exporter              Exporter les textes
+
+-m --mise-a-jour           Effectuer seulement une mise à jour
+-n --nouveau               Effacer et repartir du début, sauf le téléchargement
+
+-b --base=<fichier>        Nom de la base de données, par défaut "bdd.sqlite"
+-c --cache=<dossier>       Dossier de cache, par défaut "cache"
+-s --dossier=<dossier>     Dossier de sortie, par défaut "git-légifrance.md"
+
+-a --aide                  Afficher ce message d’aide
+''')
+
+def principal(arguments):
+    
+    # Action "aide"
+    if arguments.get('--aide'):
+        print(aide)
+        return
+    
+    # Actions à considérer
+    action_initialisation = arguments.get('--initialisation') or False
+    action_rechercher_xml = arguments.get('--rechercher-xml') or False
+    action_telecharger_html = arguments.get('--telecharger-html') or False
+    action_ranger = arguments.get('--ranger') or False
+    action_lier = arguments.get('--lier') or False
+    action_exporter = arguments.get('--exporter') or False
+    
+    if not(action_initialisation or action_rechercher_xml or action_telecharger_html or action_ranger or action_lier or action_exporter):
+        action_initialisation = action_rechercher_xml = action_telecharger_html = action_ranger = action_lier = action_exporter = True
+    
+    # Lecture des données de format
+    data = {}
+    data['textes'] = ((arguments.get('--textes') or '').decode('utf-8') or 'code-pénal').split(',')
+    data['format'] = arguments.get('--format') or 'markdown'
+    data['historique'] = arguments.get('--historique') or 'git'
+    data['metadonnees'] = arguments.get('--metadonnees') or False
+    
+    # Lecture des autres paramètres
+    data['base'] = (arguments.get('--base') or '').decode('utf-8') or 'bdd.sqlite'
+    data['cache'] = (arguments.get('--cache') or '').decode('utf-8') or 'cache'
+    data['dossier'] = (arguments.get('--dossier') or '').decode('utf-8') or 'markdown-git'
+    data['effacer'] = not arguments.get('--mise-a-jour') or arguments.get('--nouveau') or False
+    #data['effacer'] = arguments.get('--nouveau') or not arguments.get('--mise-à-jour') or False
+    
+    # Recherche des identifiants
+    logger.info('Recherche des identifiants')
+    data['textes'] = obtenir_identifiants(data['textes'], data['cache'])
+    logger.info('Textes demandés')
+    for t in data['textes']:
+        logger.info('* {} : {}'.format(t[1], t[0]))
+    
+    # Exécution des actions
+    if action_initialisation:
+        logger.info('Initialisation de la base de données')
+        initialisation_bdd(data['base'], data['cache'], data['effacer'])
+    
+    if action_rechercher_xml:
+        nop()
+    
+    if action_telecharger_html:
+        logger.info('Téléchargement des fichiers HTML')
+        telecharger_html(data['textes'], data['cache'])
+    
+    if action_ranger:
+        logger.info('Rangement des données dans la base de données')
+        ranger(data['textes'], data['cache'])
+    
+    #if action_lier:
+    #    lier(data['textes'], data['cache'])
+    
+    if action_exporter:
+        logger.info('Création de l’historique')
+        creer_historique(data['textes'], data['format'], data['dossier'], data['cache'])
+
+if __name__ == "__main__":
+    principal(docopt(aide, version=0.1, help=False))
+

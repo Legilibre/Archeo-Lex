@@ -1,0 +1,5 @@
+*.pyc
+*.swp
+cache
+markdown-git
+README.htm
