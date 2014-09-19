@@ -42,14 +42,14 @@ class Texte(Model):
         ]
     
     enum_natures = [
-        ('constitution','Constitution'),
-        ('code','Code'),
-        ('loi','Loi'),
-        ('loi constitutionnelle','Loi constitutionnelle'),
-        ('ordonnance','Ordonnance'),
-        ('décret','Décrêt'),
-        ('arrêté','Arrêté'),
-        ('décret-loi','Décret-loi')
+        ('constitution', 'Constitution'),
+        ('code', 'Code'),
+        ('loi', 'Loi'),
+        ('loi constitutionnelle', 'Loi constitutionnelle'),
+        ('ordonnance', 'Ordonnance'),
+        ('décret', 'Décrêt'),
+        ('arrêté', 'Arrêté'),
+        ('décret-loi', 'Décret-loi')
     ]
     
     cid = CharField(max_length=20, primary_key=True)
@@ -73,17 +73,17 @@ class Version_texte(Model):
         
         database = bd
         enum_etats_juridiques = [
-            ('VIGUEUR','vigueur'),
-            ('VIGUEUR_DIFF','vigueur différée'),
-            ('ABROGE','abrogé'),
-            ('ABROGE_DIFF','abrogé différé'),
-            ('ANNULE','annulé'),
-            ('PERIME','périmé'),
-            ('TRANSFERE','transféré'),
-            ('','disjoint'),
-            ('','substitué'),
-            ('MODIFIE',''),
-            ('MODIFIE_MORT_NE','')
+            ('VIGUEUR', 'vigueur'),
+            ('VIGUEUR_DIFF', 'vigueur différée'),
+            ('ABROGE', 'abrogé'),
+            ('ABROGE_DIFF', 'abrogé différé'),
+            ('ANNULE', 'annulé'),
+            ('PERIME', 'périmé'),
+            ('TRANSFERE', 'transféré'),
+            ('', 'disjoint'),
+            ('', 'substitué'),
+            ('MODIFIE', ''),
+            ('MODIFIE_MORT_NE', '')
         ]
     
     texte = ForeignKeyField(Texte, related_name='versions_texte')
@@ -170,7 +170,7 @@ def initialisation_bdd(nom='archeo-lex.sqlite', cache='cache', effacer=False):
     #bd = SqliteDatabase(os.path.join(cache, 'autre', nom))
     #bd.connect()
     
-    for modele in (Section,Texte,Version_texte,Version_section,Article):
+    for modele in (Section, Texte, Version_texte, Version_section, Article):
         
         if effacer:
             modele.drop_table(fail_silently=True)

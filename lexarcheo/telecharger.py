@@ -17,7 +17,7 @@ import re
 from datetime import datetime
 from path import path
 from bs4 import BeautifulSoup
-from lexarcheo.utilitaires import (telecharger,MOIS,nop)
+from lexarcheo.utilitaires import (telecharger, MOIS, nop)
 
 
 def telecharger_legifrance(url, fichier, cache_html, force=False):
@@ -27,11 +27,11 @@ def telecharger_legifrance(url, fichier, cache_html, force=False):
         delta = datetime.today() - touch
         
         if not force or not isinstance(force, bool) and isinstance(force, (int, long, float)) and delta.total_seconds() < force:
-            print('* Téléchargement de '+url+' (cache)')
+            print('* Téléchargement de ' + url + ' (cache)')
             return True
     
-    print('* Téléchargement de '+url)
-    return telecharger('http://legifrance.gouv.fr/'+url, os.path.join(cache_html, fichier))
+    print('* Téléchargement de ' + url)
+    return telecharger('http://legifrance.gouv.fr/' + url, os.path.join(cache_html, fichier))
 
 
 def telecharger_html(cles, cache):
@@ -55,16 +55,16 @@ def telecharger_html_reel(cles, cache):
             nom_index = 'affichCode.do'
         
         # Téléchargement initial
-        telecharger_legifrance(nom_index+'?cidTexte='+cle[1], cle[1]+'.html', cache, 86400)
-        fichier = open(os.path.join(cache, cle[1]+'.html'), 'r')
+        telecharger_legifrance(nom_index + '?cidTexte=' + cle[1], cle[1] + '.html', cache, 86400)
+        fichier = open(os.path.join(cache, cle[1] + '.html'), 'r')
         
         # Recherche de la version consolidée la plus récente
         soup = BeautifulSoup(fichier.read())
         date = soup.select('.sousTitreTexte')
-        if date and re.match(('Version consolidée au \d{1,2} (?:'+'|'.join(MOIS.keys())+') \d{4}'), date[0].text.strip()):
-            date = re.match(('Version consolidée au (\d{1,2}) ('+'|'.join(MOIS.keys())+') (\d{4})'), date[0].text.strip())
+        if date and re.match(('Version consolidée au \d{1,2} (?:' + '|'.join(MOIS.keys()) + ') \d{4}'), date[0].text.strip()):
+            date = re.match(('Version consolidée au (\d{1,2}) (' + '|'.join(MOIS.keys()) + ') (\d{4})'), date[0].text.strip())
             date = date.group(3) + MOIS[date.group(2)] + '{:02d}'.format(int(date.group(1)))
-            telecharger_legifrance(nom_index+'?cidTexte='+cle[1]+'&dateTexte='+date, cle[1]+'-'+date+'.html', cache)
+            telecharger_legifrance(nom_index + '?cidTexte=' + cle[1] + '&dateTexte=' + date, cle[1] + '-' + date + '.html', cache)
 
 
 def transformer_html_xml(cles, cache):
@@ -77,15 +77,15 @@ def obtenir_identifiants(cles, cache):
     codes, sedoc = telecharger_index_codes(cache)
     
     ncles = [''] * len(cles)
-    for i in range(0,len(cles)):
+    for i in range(0, len(cles)):
         
         cle = re.sub('’', '\'', re.sub('[_-]', ' ', cles[i]))
-        cle = cle[0].upper()+cle[1:].lower()
+        cle = cle[0].upper() + cle[1:].lower()
         
         if cle == 'Constitution de 1958' or cle.upper() == 'LEGITEXT000006071194':
             ncles[i] = ('Constitution de 1958', 'LEGITEXT000006071194', False, None)
         elif cle in sedoc.keys():
-            ncles[i] = (re.sub('\'','’',cle), sedoc[cle], True, None)
+            ncles[i] = (re.sub('\'', '’', cle), sedoc[cle], True, None)
         elif cle.upper() in codes.keys():
             ncles[i] = (codes[cle.upper()], cle.upper(), True, None)
         else:

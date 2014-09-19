@@ -44,7 +44,7 @@ def lire_code_xml(cle, cache):
 def ranger_texte_xml(chemin_base, cidTexte, nature_attendue=None):
     
     # Lecture brute du fichier XML texte/version
-    chemin_texte_version = os.path.join(chemin_base, 'texte', 'version', cidTexte+'.xml')
+    chemin_texte_version = os.path.join(chemin_base, 'texte', 'version', cidTexte + '.xml')
     if not os.path.exists(chemin_texte_version):
         raise Exception()
     f_version = open(chemin_texte_version, 'r')
@@ -67,7 +67,7 @@ def ranger_texte_xml(chemin_base, cidTexte, nature_attendue=None):
     version_ETAT = version_META_TEXTE_VERSION.find('ETAT').text
     
     # Lecture brute du fichier XML texte/struct
-    chemin_texte_struct = os.path.join(chemin_base, 'texte', 'struct', cidTexte+'.xml')
+    chemin_texte_struct = os.path.join(chemin_base, 'texte', 'struct', cidTexte + '.xml')
     if not os.path.exists(chemin_texte_struct):
         raise Exception()
     f_struct = open(chemin_texte_struct, 'r')
@@ -111,13 +111,13 @@ def ranger_texte_xml(chemin_base, cidTexte, nature_attendue=None):
         raise Exception()
     if not version_DATE_PUBLI == struct_DATE_PUBLI:
         raise Exception()
-    if not len(struct_VERSION) == 1: # texte/version ne peut avoir qu’une seule version, donc texte/struct également et elles doivent correspondre
+    if not len(struct_VERSION) == 1:  # texte/version ne peut avoir qu’une seule version, donc texte/struct également et elles doivent correspondre
         raise Exception()
     
     # Enregistrement du Texte
     # TODO gérer les mises à jour
     try:
-        entree_texte = Texte.get(Texte.cid==version_CID)
+        entree_texte = Texte.get(Texte.cid == version_CID)
     except:
         entree_texte = Texte.create(
             cid=version_CID.upper(),
@@ -130,7 +130,7 @@ def ranger_texte_xml(chemin_base, cidTexte, nature_attendue=None):
     # Enregistrement de la Version_texte d’autorité
     # TODO gérer les mises à jour
     try:
-        entree_version_texte = Version_texte.get(Version_texte.texte==entree_texte)
+        entree_version_texte = Version_texte.get(Version_texte.texte == entree_texte)
     except:
         entree_version_texte = Version_texte.create(
             texte=entree_texte,
@@ -143,7 +143,7 @@ def ranger_texte_xml(chemin_base, cidTexte, nature_attendue=None):
         )
     
     # Recensement des dates de changement
-    dates_changement = set([version_DATE_DEBUT,version_DATE_FIN])
+    dates_changement = set([version_DATE_DEBUT, version_DATE_FIN])
     ensemble_versions_sections = set()
     ensemble_articles = set()
     
@@ -154,7 +154,7 @@ def ranger_texte_xml(chemin_base, cidTexte, nature_attendue=None):
     # Créer les versions de textes
     dates_changement = list(dates_changement)
     dates_changement.sort(cmp=comp_infini)
-    for i in range(len(dates_changement)-1):
+    for i in range(len(dates_changement) - 1):
         # TODO gérer les mises à jour
         Version_texte.create(
             texte=entree_texte,
@@ -182,7 +182,7 @@ def ranger_sections_xml(chemin_base, coll_sections, coll_articles, entree_texte,
     
     for i in range(len(coll_sections)):
         
-        print('{}/{}'.format(i+1,len(coll_sections)), end='')
+        print('{}/{}'.format(i+1, len(coll_sections)), end='')
         sys.stdout.flush()
         
         cid = coll_sections[i]['cid']
@@ -207,12 +207,12 @@ def ranger_sections_xml(chemin_base, coll_sections, coll_articles, entree_texte,
             )
         
         # Ajout des dates limites pour préparer l’édition de liens
-        dates_changement |= {debut,fin}
+        dates_changement |= {debut, fin}
         
         # Enregistrement de version de section
         # TODO gérer les mises à jour
         try:
-            entree_version_section = Version_section.get(Version_section.id==id)
+            entree_version_section = Version_section.get(Version_section.id == id)
         except:
             entree_version_section = Version_section.create(
                 cid=cid,
@@ -237,7 +237,7 @@ def ranger_sections_xml(chemin_base, coll_sections, coll_articles, entree_texte,
         # Continuer récursivement
         chemin_section_ta = os.path.join(chemin_base, 'section_ta', url)
         f_section_ta = open(chemin_section_ta, 'r')
-        soup = BeautifulSoup( f_section_ta.read(), 'xml')
+        soup = BeautifulSoup(f_section_ta.read(), 'xml')
         section_ta_STRUCTURE_TA = soup.find('STRUCTURE_TA')
         section_ta_LIEN_SECTION_TA = section_ta_STRUCTURE_TA.find_all('LIEN_SECTION_TA')
         section_ta_LIEN_ART = section_ta_STRUCTURE_TA.find_all('LIEN_ART')
@@ -246,8 +246,8 @@ def ranger_sections_xml(chemin_base, coll_sections, coll_articles, entree_texte,
         
         print('\033[3D   \033[3D', end='')
         
-        nb_chiffres=len('{}/{}'.format(i+1,len(coll_sections)))
-        print('\033['+str(nb_chiffres)+'D'+(''.join([' '*nb_chiffres]))+'\033['+str(nb_chiffres)+'D', end='')
+        nb_chiffres=len('{}/{}'.format(i+1, len(coll_sections)))
+        print('\033[' + str(nb_chiffres) + 'D' + (''.join([' ' * nb_chiffres])) + '\033[' + str(nb_chiffres) + 'D', end='')
     
     return dates_changement, ensemble_versions_sections, ensemble_articles
 
@@ -259,7 +259,7 @@ def ranger_articles_xml(chemin_base, coll_articles, entree_version_section, entr
     
     for i in range(len(coll_articles)):
         
-        print('({}/{})'.format(i+1,len(coll_articles)), end='')
+        print('({}/{})'.format(i+1, len(coll_articles)), end='')
         sys.stdout.flush()
         
         # Lecture brute des attributs XML
@@ -273,7 +273,7 @@ def ranger_articles_xml(chemin_base, coll_articles, entree_version_section, entr
         # Enregistrement de l’article
         # TODO gérer les mises à jour
         try:
-            entree_article = Article.get(Article.id==id)
+            entree_article = Article.get(Article.id == id)
         except:
             entree_article = Article.create(
                 id=id,
@@ -288,11 +288,11 @@ def ranger_articles_xml(chemin_base, coll_articles, entree_version_section, entr
             )
         
         # Inscription des dates et articles
-        dates_changement |= {debut,fin}
+        dates_changement |= {debut, fin}
         ensemble_articles |= {entree_article}
         
-        nb_chiffres=len('({}/{})'.format(i+1,len(coll_articles)))
-        print('\033['+str(nb_chiffres)+'D'+(''.join([' '*nb_chiffres]))+'\033['+str(nb_chiffres)+'D', end='')
+        nb_chiffres=len('({}/{})'.format(i+1, len(coll_articles)))
+        print('\033[' + str(nb_chiffres) + 'D' + (''.join([' ' * nb_chiffres])) + '\033[' + str(nb_chiffres) + 'D', end='')
         sys.stdout.flush()
     
     return dates_changement, ensemble_articles

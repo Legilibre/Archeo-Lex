@@ -38,7 +38,7 @@ MOIS2 = ['', 'janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', '
 
 def telecharger(url, fichier):
     
-    subprocess.call(['wget', '--output-document='+fichier, url])
+    subprocess.call(['wget', '--output-document=' + fichier, url])
 
 
 def normalisation_code(code):
@@ -71,11 +71,17 @@ def normalise_date(texte):
 
 def chemin_texte(cidTexte, code=True, vigueur=True):
     
-    if vigueur: vigueur = 'en'
-    else: vigueur = 'non'
-    if code: code = 'code'
-    else: code = 'TNC'
-    return os.path.join('legi', 'global', 'code_et_TNC_'+vigueur+'_vigueur', code+'_'+vigueur+'_vigueur', decompose_cid(cidTexte))
+    if vigueur:
+        vigueur = 'en'
+    else:
+        vigueur = 'non'
+    
+    if code:
+        code = 'code'
+    else:
+        code = 'TNC'
+    
+    return os.path.join('legi', 'global', 'code_et_TNC_' + vigueur + '_vigueur', code + '_' + vigueur + '_vigueur', decompose_cid(cidTexte))
 
 
 def decompose_cid(cidTexte):
@@ -91,27 +97,36 @@ def decompose_cid(cidTexte):
     return os.path.join(FFFF, TTTT, xx1, xx2, xx3, xx4, xx5, cidTexte)
 
 
-def comp_infini(x,y):
+def comp_infini(x, y):
     
-    if x == y: return 0
-    if x == None: return 1
-    if y == None: return -1
-    return -2*int(x < y)+1
+    if x == y:
+        return 0
+    if x == None:
+        return 1
+    if y == None:
+        return -1
+    return -2 * int(x < y) + 1
 
 
-def comp_infini_strict(x,y):
+def comp_infini_strict(x, y):
     
-    if x == None and y == None: return False
-    if x == None: return False
-    if y == None: return True
+    if x == None and y == None:
+        return False
+    if x == None:
+        return False
+    if y == None:
+        return True
     return x < y
 
 
-def comp_infini_large(x,y):
+def comp_infini_large(x, y):
     
-    if x == y: return True
-    if x == None: return False
-    if y == None: return True
+    if x == y:
+        return True
+    if x == None:
+        return False
+    if y == None:
+        return True
     return x < y
 
 

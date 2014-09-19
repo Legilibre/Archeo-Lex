@@ -15,9 +15,9 @@ from __future__ import (unicode_literals, absolute_import, division, print_funct
 from docopt import docopt
 from lexarcheo import logger
 from lexarcheo.basededonnees import initialisation_bdd
-from lexarcheo.telecharger import (obtenir_identifiants,telecharger_html)
+from lexarcheo.telecharger import (obtenir_identifiants, telecharger_html)
 from lexarcheo.ranger import ranger
-from lexarcheo.exporter import (creer_historique,creer_historique_texte)
+from lexarcheo.exporter import (creer_historique, creer_historique_texte)
 from lexarcheo.utilitaires import nop
 
 # Manuel d’aide
@@ -51,6 +51,7 @@ aide = ('''Usage: archeo-lex [--aide] [--textes=<TEXTES>] [--format=<FORMAT>] [-
 
 -a --aide                  Afficher ce message d’aide
 ''')
+
 
 def principal(arguments):
     

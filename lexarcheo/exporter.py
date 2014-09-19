@@ -18,9 +18,10 @@ import datetime
 from path import path
 from bs4 import BeautifulSoup
 from lexarcheo import logger
-from lexarcheo.basededonnees import (Version_texte,Version_section,Article)
+from lexarcheo.basededonnees import (Version_texte, Version_section, Article)
 from lexarcheo.markdown import (creer_markdown, creer_markdown_texte)
 from lexarcheo.utilitaires import (normalisation_code, chemin_texte, nop, MOIS, MOIS2, comp_infini, comp_infini_strict)
+
 
 def creer_historique(textes, format, dossier, cache):
     
@@ -47,10 +48,10 @@ def creer_historique_texte(texte, format, dossier, cache):
         path(dossier).mkdir_p()
         path(os.path.join(dossier, sousdossier)).mkdir_p()
         chemin_base = chemin_texte(cid, True)
-    fichier = os.path.join(dossier, sousdossier, nom+'.md')
+    fichier = os.path.join(dossier, sousdossier, nom + '.md')
     
     # Créer le dépôt Git
-    if not os.path.exists(os.path.join(dossier,'.git')):
+    if not os.path.exists(os.path.join(dossier, '.git')):
         subprocess.Popen(['git', 'init'], cwd=dossier)
     else:
         subprocess.Popen(['git', 'checkout', '--', sousdossier], cwd=dossier)
@@ -68,25 +69,25 @@ def creer_historique_texte(texte, format, dossier, cache):
     # - rechercher les sections et articles associés
     # - créer le fichier texte au format demandé
     # - commiter le fichier
-    for (i_version,version_texte) in enumerate(versions_texte):
+    for (i_version, version_texte) in enumerate(versions_texte):
         
         # Passer les versions 'nulles'
         if version_texte.base is None:
             continue
         
         # Sélectionner les versions d’articles et sections présentes dans cette version de texte, c’est-à-dire celles créées avant et détruites après (ou jamais)
-        articles =                                                                     \
-            Article.select()                                                           \
-                   .where(  (Article.texte == cid)                                     \
-                          & (Article.debut <= version_texte.debut)                     \
-                          & ((Article.fin >= version_texte.fin)|(Article.fin == None)) \
+        articles =                                                                       \
+            Article.select()                                                             \
+                   .where(  (Article.texte == cid)                                       \
+                          & (Article.debut <= version_texte.debut)                       \
+                          & ((Article.fin >= version_texte.fin) | (Article.fin == None)) \
                          )
         
-        versions_sections =                                                                            \
-            Version_section.select()                                                                   \
-                   .where(  (Version_section.texte == cid)                                             \
-                          & (Version_section.debut <= version_texte.debut)                             \
-                          & ((Version_section.fin >= version_texte.fin)|(Version_section.fin == None)) \
+        versions_sections =                                                                              \
+            Version_section.select()                                                                     \
+                   .where(  (Version_section.texte == cid)                                               \
+                          & (Version_section.debut <= version_texte.debut)                               \
+                          & ((Version_section.fin >= version_texte.fin) | (Version_section.fin == None)) \
                          )
         
         # Créer l’en-tête
@@ -95,8 +96,8 @@ def creer_historique_texte(texte, format, dossier, cache):
             date_fr = '1er {} {}'.format(MOIS2[int(version_texte.debut.month)], version_texte.debut.year)
         contenu = nom + '\n'   \
                   + '\n'   \
-                  + '- Date de consolidation : '+date_fr+'\n'            \
-                  + '- [Lien permanent Légifrance](http://legifrance.gouv.fr/affichCode.do?cidTexte='+cid+'&dateTexte='+str(version_texte.debut.year)+'{:02d}'.format(version_texte.debut.month)+'{:02d}'.format(version_texte.debut.day)+')\n' \
+                  + '- Date de consolidation : ' + date_fr + '\n'            \
+                  + '- [Lien permanent Légifrance](http://legifrance.gouv.fr/affichCode.do?cidTexte=' + cid + '&dateTexte=' + str(version_texte.debut.year) + '{:02d}'.format(version_texte.debut.month) + '{:02d}'.format(version_texte.debut.day) + ')\n' \
                   + '\n' \
                   + '\n'
         
@@ -109,8 +110,8 @@ def creer_historique_texte(texte, format, dossier, cache):
         f_texte.close()
         
         # Exécuter Git
-        subprocess.call(['git', 'add', os.path.join(sousdossier, nom+'.md')], cwd=dossier)
-        subprocess.call(['git', 'commit', '--author="Législateur <>"', '--date="'+str(version_texte.debut)+'T00:00:00Z"', '-m', 'Version consolidée au {}'.format(date_fr), '-q', '--no-status'], cwd=dossier)
+        subprocess.call(['git', 'add', os.path.join(sousdossier, nom + '.md')], cwd=dossier)
+        subprocess.call(['git', 'commit', '--author="Législateur <>"', '--date="' + str(version_texte.debut) + 'T00:00:00Z"', '-m', 'Version consolidée au {}'.format(date_fr), '-q', '--no-status'], cwd=dossier)
         
         if version_texte.fin == None:
             logger.info('Version {} enregistrée (du {} à maintenant)'.format(i_version, version_texte.debut))
@@ -161,7 +162,7 @@ def creer_articles_section(texte, niveau, version_section_parente, articles, ver
             raise Exception('article non valide (version texte de {} à {}, version article de {} à {})'.format(version_texte.debut, version_texte.fin, article.debut, article.fin))
             continue
         
-        chemin_markdown = os.path.join(cache, 'markdown', cid, article.id+'.md')
+        chemin_markdown = os.path.join(cache, 'markdown', cid, article.id + '.md')
         f_article = open(chemin_markdown, 'r')
         texte_article = f_article.read().decode('utf-8')
         f_article.close()

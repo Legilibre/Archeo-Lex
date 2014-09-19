@@ -16,8 +16,9 @@ import os
 import re
 from path import path
 from bs4 import BeautifulSoup
-from lexarcheo.basededonnees import (Version_texte,Version_section,Article)
+from lexarcheo.basededonnees import (Version_texte, Version_section, Article)
 from lexarcheo.utilitaires import (normalisation_code, chemin_texte, decompose_cid)
+
 
 def creer_markdown(textes, cache):
     
@@ -29,7 +30,7 @@ def creer_markdown_texte(texte, cache):
     
     # Informations de base
     cid = texte[1]
-    articles = Article.select(Article.id).where(Article.texte==cid)
+    articles = Article.select(Article.id).where(Article.texte == cid)
     chemin_base = os.path.join(cache, 'xml', chemin_texte(cid))
     
     # Créer le répertoire de cache
@@ -39,12 +40,12 @@ def creer_markdown_texte(texte, cache):
     for article in articles:
         
         # Si la markdownisation a déjà été faite, passer
-        chemin_markdown = os.path.join(cache, 'markdown', cid, article.id+'.md')
+        chemin_markdown = os.path.join(cache, 'markdown', cid, article.id + '.md')
         if os.path.exists(chemin_markdown):
             continue
         
         # Lecture du fichier
-        chemin_article = os.path.join(chemin_base, 'article', decompose_cid(article.id)+'.xml')
+        chemin_article = os.path.join(chemin_base, 'article', decompose_cid(article.id) + '.xml')
         f_article = open(chemin_article, 'r')
         soup = BeautifulSoup(f_article.read(), 'xml')
         f_article.close()
@@ -55,23 +56,24 @@ def creer_markdown_texte(texte, cache):
         contenu = '\n'.join(lignes)
         
         # - Retrait des <br/> en début et fin (cela semble être enlevé par BeautifulSoup)
-        if all([lignes[l].startswith(('<br/>', r'<br />')) for l in range(0,len(lignes))]):
+        if all([lignes[l].startswith(('<br/>', r'<br />')) for l in range(0, len(lignes))]):
             lignes[i] = re.sub(r'^<br ?/> *', r'', lignes[i])
-        if all([lignes[l].endswith(('<br/>', r'<br />')) for l in range(0,len(lignes))]):
+        if all([lignes[l].endswith(('<br/>', r'<br />')) for l in range(0, len(lignes))]):
             lignes[i] = re.sub(r' *<br ?/>$', r'', lignes[i])
         contenu = '\n'.join(lignes)
         
         # - Markdownisation des listes numérotées
         ligne_liste = [ False ] * len(lignes)
         for i in range(len(lignes)):
-            if re.match(r'(?:\d+[°\.\)-]|[\*-]) ', lignes[i]): ligne_liste[i] = True
-            lignes[i]=re.sub(r'^(\d+)([°\.\)-]) +', r'\1. ', lignes[i])
-            lignes[i]=re.sub(r'^([\*-]) +', r'- ', lignes[i])
+            if re.match(r'(?:\d+[°\.\)-]|[\*-]) ', lignes[i]):
+                ligne_liste[i] = True
+            lignes[i] = re.sub(r'^(\d+)([°\.\)-]) +', r'\1. ', lignes[i])
+            lignes[i] = re.sub(r'^([\*-]) +', r'- ', lignes[i])
         contenu = '\n'.join(lignes)
         
         # - Création d’alinea séparés, sauf pour les listes
         contenu = lignes[0]
-        for i in range(1,len(lignes)):
+        for i in range(1, len(lignes)):
             if ligne_liste[i]:
                 contenu = contenu + '\n' + lignes[i]
             else:
