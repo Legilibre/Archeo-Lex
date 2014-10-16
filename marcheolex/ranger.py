@@ -11,12 +11,21 @@
 # the LICENSE file for more details.
 
 # Imports
-from __future__ import (unicode_literals, absolute_import, division, print_function)
+from __future__ import unicode_literals
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
 import os
 import sys
-from lexarcheo.basededonnees import (Texte, Version_texte, Section, Version_section, Article)
-from lexarcheo.utilitaires import (chemin_texte, normalise_date, comp_infini)
 from bs4 import BeautifulSoup
+from marcheolex.basededonnees import Texte
+from marcheolex.basededonnees import Version_texte
+from marcheolex.basededonnees import Section
+from marcheolex.basededonnees import Version_section
+from marcheolex.basededonnees import Article
+from marcheolex.utilitaires import chemin_texte
+from marcheolex.utilitaires import normalise_date
+from marcheolex.utilitaires import comp_infini
 
 
 def ranger(textes, cache):
@@ -32,7 +41,7 @@ def lire_code_xml(cle, cache):
         return
     
     cidTexte = cle[1]
-    chemin_base = os.path.join(cache, 'xml', chemin_texte(cidTexte))
+    chemin_base = os.path.join(cache, 'bases-xml', chemin_texte(cidTexte))
     if not os.path.exists(chemin_base):
         raise Exception()
     

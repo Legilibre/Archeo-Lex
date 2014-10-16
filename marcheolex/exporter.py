@@ -11,16 +11,28 @@
 # the LICENSE file for more details.
 
 # Imports
-from __future__ import (unicode_literals, absolute_import, division, print_function)
+from __future__ import unicode_literals
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
 import os
 import subprocess
 import datetime
 from path import path
 from bs4 import BeautifulSoup
-from lexarcheo import logger
-from lexarcheo.basededonnees import (Version_texte, Version_section, Article)
-from lexarcheo.markdown import (creer_markdown, creer_markdown_texte)
-from lexarcheo.utilitaires import (normalisation_code, chemin_texte, nop, MOIS, MOIS2, comp_infini, comp_infini_strict)
+from marcheolex import logger
+from marcheolex.basededonnees import Version_texte
+from marcheolex.basededonnees import Version_section
+from marcheolex.basededonnees import Article
+from marcheolex.markdown import creer_markdown
+from marcheolex.markdown import creer_markdown_texte
+from marcheolex.utilitaires import normalisation_code
+from marcheolex.utilitaires import chemin_texte
+from marcheolex.utilitaires import nop
+from marcheolex.utilitaires import MOIS
+from marcheolex.utilitaires import MOIS2
+from marcheolex.utilitaires import comp_infini
+from marcheolex.utilitaires import comp_infini_strict
 
 
 def creer_historique(textes, format, dossier, cache):

@@ -11,13 +11,23 @@
 # the LICENSE file for more details.
 
 # Imports
-from __future__ import (unicode_literals, absolute_import, division, print_function)
+from __future__ import unicode_literals
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
 import os
 from path import path
-from peewee import (Model, SqliteDatabase, BlobField, BooleanField, CharField, DateField, ForeignKeyField, IntegerField)
+from peewee import Model
+from peewee import SqliteDatabase
+from peewee import BlobField
+from peewee import BooleanField
+from peewee import CharField
+from peewee import DateField
+from peewee import ForeignKeyField
+from peewee import IntegerField
 
 # Initialisation de la base de données
-bd = SqliteDatabase('cache/autre/archeo-lex.sqlite')
+bd = SqliteDatabase('cache/sql/archeo-lex.sqlite')
 bd.connect()
 
 
@@ -166,8 +176,8 @@ class Article(Model):
 def initialisation_bdd(nom='archeo-lex.sqlite', cache='cache', effacer=False):
     
     # TODO ceci est inopérant et donc on ne peut pas choisir le nom de la BDD
-    #path(os.path.join(cache, 'autre')).mkdir_p()
-    #bd = SqliteDatabase(os.path.join(cache, 'autre', nom))
+    #path(os.path.join(cache, 'sql')).mkdir_p()
+    #bd = SqliteDatabase(os.path.join(cache, 'sql', nom))
     #bd.connect()
     
     for modele in (Section, Texte, Version_texte, Version_section, Article):

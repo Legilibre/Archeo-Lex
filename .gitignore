@@ -1,5 +1,11 @@
-*.pyc
-*.swp
+# Données du programme
 cache
-markdown-git
+textes
+
+# Fichiers compilés
+*.pyc
 README.htm
+
+# Fichiers de sauvegarde
+*.swp
+*~

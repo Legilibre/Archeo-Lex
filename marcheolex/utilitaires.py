@@ -11,7 +11,10 @@
 # the LICENSE file for more details.
 
 # Imports
-from __future__ import (unicode_literals, absolute_import, division, print_function)
+from __future__ import unicode_literals
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
 import os
 import re
 import subprocess
@@ -187,7 +190,7 @@ def telecharger_base(identifiant, date_maj, cache):
         date_maj = str(date_maj)
     elif not isinstance(date_maj, str) and not date_maj == None:
         raise Exception()
-    path(os.path.join(cache, 'autre')).mkdir_p()
+    path(os.path.join(cache, 'tar')).mkdir_p()
     
     serveur = {
         'JORF': ('ftp', 'ftp2.journal-officiel.gouv.fr', 'jorf', 'open1234'),
@@ -252,5 +255,5 @@ def telecharger_base(identifiant, date_maj, cache):
     connexion_ftp.close()
     
     # Téléchargement de la base demandée
-    return telecharger_cache(url, os.path.join(cache, 'autre', identifiant + '-' + type_fichier + '-' + recent + '.tar.gz'))
+    return telecharger_cache(url, os.path.join(cache, 'tar', identifiant + '-' + type_fichier + '-' + recent + '.tar.gz'))
 

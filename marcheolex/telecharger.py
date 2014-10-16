@@ -11,13 +11,18 @@
 # the LICENSE file for more details.
 
 # Imports
-from __future__ import (unicode_literals, absolute_import, division, print_function)
+from __future__ import unicode_literals
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
 import os
 import re
 from datetime import datetime
 from path import path
 from bs4 import BeautifulSoup
-from lexarcheo.utilitaires import (telecharger, MOIS, nop)
+from marcheolex.utilitaires import telecharger
+from marcheolex.utilitaires import MOIS
+from marcheolex.utilitaires import nop
 
 
 def telecharger_legifrance(url, fichier, cache_html, force=False):
@@ -100,9 +105,9 @@ def telecharger_index_codes(cache):
     sedoc = {}
     
     # Télécharger le cas échéant le formulaire de recherche contenant le nom des codes
-    path(os.path.join(cache, 'autre')).mkdir_p()
-    telecharger_legifrance('initRechCodeArticle.do', 'recherche.html', os.path.join(cache, 'autre'), 86400)
-    fichier_recherche = open(os.path.join(cache, 'autre', 'recherche.html'), 'r')
+    path(os.path.join(cache, 'html')).mkdir_p()
+    telecharger_legifrance('initRechCodeArticle.do', 'recherche.html', os.path.join(cache, 'html'), 86400)
+    fichier_recherche = open(os.path.join(cache, 'html', 'recherche.html'), 'r')
     soup = BeautifulSoup(fichier_recherche.read())
     
     # Récupérer les informations

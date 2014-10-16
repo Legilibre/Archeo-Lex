@@ -11,14 +11,19 @@
 # the LICENSE file for more details.
 
 # Imports
-from __future__ import (unicode_literals, absolute_import, division, print_function)
+from __future__ import unicode_literals
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
 from docopt import docopt
-from lexarcheo import logger
-from lexarcheo.basededonnees import initialisation_bdd
-from lexarcheo.telecharger import (obtenir_identifiants, telecharger_html)
-from lexarcheo.ranger import ranger
-from lexarcheo.exporter import (creer_historique, creer_historique_texte)
-from lexarcheo.utilitaires import nop
+from marcheolex import logger
+from marcheolex.basededonnees import initialisation_bdd
+from marcheolex.telecharger import obtenir_identifiants
+from marcheolex.telecharger import telecharger_html
+from marcheolex.ranger import ranger
+from marcheolex.exporter import creer_historique
+from marcheolex.exporter import creer_historique_texte
+from marcheolex.utilitaires import nop
 
 # Manuel d’aide
 aide = ('''Usage: archeo-lex [--aide] [--textes=<TEXTES>] [--format=<FORMAT>] [--versionnement=<VERS>] [--metadonnees] [--initialisation] [--rechercher-xml] [--telecharger-html] [--ranger] [--lier] [--exporter] [--mise-a-jour | --nouveau] [--base=<fichier>] [--cache=<dossier>] [--dossier=<dossier>]
@@ -47,7 +52,7 @@ aide = ('''Usage: archeo-lex [--aide] [--textes=<TEXTES>] [--format=<FORMAT>] [-
 
 -b --base=<fichier>        Nom de la base de données, par défaut "bdd.sqlite"
 -c --cache=<dossier>       Dossier de cache, par défaut "cache"
--s --dossier=<dossier>     Dossier de sortie, par défaut "git-légifrance.md"
+-s --dossier=<dossier>     Dossier de sortie, par défaut "textes"
 
 -a --aide                  Afficher ce message d’aide
 ''')
@@ -73,7 +78,7 @@ def principal(arguments):
     
     # Lecture des données de format
     data = {}
-    data['textes'] = ((arguments.get('--textes') or '').decode('utf-8') or 'code-pénal').split(',')
+    data['textes'] = ((arguments.get('--textes') or '').decode('utf-8') or 'code-de-la-propriété-intellectuelle').split(',')
     data['format'] = arguments.get('--format') or 'markdown'
     data['historique'] = arguments.get('--historique') or 'git'
     data['metadonnees'] = arguments.get('--metadonnees') or False
@@ -81,7 +86,7 @@ def principal(arguments):
     # Lecture des autres paramètres
     data['base'] = (arguments.get('--base') or '').decode('utf-8') or 'bdd.sqlite'
     data['cache'] = (arguments.get('--cache') or '').decode('utf-8') or 'cache'
-    data['dossier'] = (arguments.get('--dossier') or '').decode('utf-8') or 'markdown-git'
+    data['dossier'] = (arguments.get('--dossier') or '').decode('utf-8') or 'textes'
     data['effacer'] = not arguments.get('--mise-a-jour') or arguments.get('--nouveau') or False
     #data['effacer'] = arguments.get('--nouveau') or not arguments.get('--mise-à-jour') or False
     

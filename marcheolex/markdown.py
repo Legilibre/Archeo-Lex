@@ -11,13 +11,20 @@
 # the LICENSE file for more details.
 
 # Imports
-from __future__ import (unicode_literals, absolute_import, division, print_function)
+from __future__ import unicode_literals
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
 import os
 import re
 from path import path
 from bs4 import BeautifulSoup
-from lexarcheo.basededonnees import (Version_texte, Version_section, Article)
-from lexarcheo.utilitaires import (normalisation_code, chemin_texte, decompose_cid)
+from marcheolex.basededonnees import Version_texte
+from marcheolex.basededonnees import Version_section
+from marcheolex.basededonnees import Article
+from marcheolex.utilitaires import normalisation_code
+from marcheolex.utilitaires import chemin_texte
+from marcheolex.utilitaires import decompose_cid
 
 
 def creer_markdown(textes, cache):
@@ -31,7 +38,7 @@ def creer_markdown_texte(texte, cache):
     # Informations de base
     cid = texte[1]
     articles = Article.select(Article.id).where(Article.texte == cid)
-    chemin_base = os.path.join(cache, 'xml', chemin_texte(cid))
+    chemin_base = os.path.join(cache, 'bases-xml', chemin_texte(cid))
     
     # Créer le répertoire de cache
     path(os.path.join(cache, 'markdown')).mkdir_p()
@@ -47,7 +54,7 @@ def creer_markdown_texte(texte, cache):
         # Lecture du fichier
         chemin_article = os.path.join(chemin_base, 'article', decompose_cid(article.id) + '.xml')
         f_article = open(chemin_article, 'r')
-        soup = BeautifulSoup(f_article.read(), 'xml')
+        soup = BeautifulSoup(f_article.read(), 'bases-xml')
         f_article.close()
         contenu = soup.find('BLOC_TEXTUEL').find('CONTENU').text.strip()
         
