@@ -4,6 +4,9 @@
 # – crée un dépôt Git des lois françaises écrites en syntaxe Markdown
 # – ce module gère la structure de la base de données
 # 
+# La version de la base de données manipulée ici est : 1.0.
+# Cette version est incrémentée à chaque changement de la BDD.
+# 
 # This program is free software. It comes without any warranty, to
 # the extent permitted by applicable law. You can redistribute it
 # and/or modify it under the terms of the Do What The Fuck You Want
