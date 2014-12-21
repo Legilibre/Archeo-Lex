@@ -1,0 +1,419 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   version="1.2"
+   width="593.78125"
+   height="499.70941"
+   id="svg2">
+  <title
+     id="title8545">Structure de la base de données d’Archéo Lex v1.0</title>
+  <defs
+     id="defs4">
+    <marker
+       refX="0"
+       refY="0"
+       orient="auto"
+       id="Arrow1Mend"
+       style="overflow:visible">
+      <path
+         d="M 0,0 5,-5 -12.5,0 5,5 0,0 z"
+         transform="matrix(-0.4,0,0,-0.4,-4,0)"
+         id="path4049"
+         style="fill-rule:evenodd;stroke:#000000;stroke-width:1pt" />
+    </marker>
+    <marker
+       refX="0"
+       refY="0"
+       orient="auto"
+       id="TriangleOutL"
+       style="overflow:visible">
+      <path
+         d="m 5.77,0 -8.65,5 0,-10 8.65,5 z"
+         transform="scale(0.8,0.8)"
+         id="path4182"
+         style="fill-rule:evenodd;stroke:#000000;stroke-width:1pt" />
+    </marker>
+    <marker
+       refX="0"
+       refY="0"
+       orient="auto"
+       id="Arrow2Send"
+       style="overflow:visible">
+      <path
+         d="M 8.7185878,4.0337352 -2.2072895,0.01601326 8.7185884,-4.0017078 c -1.7454984,2.3720609 -1.7354408,5.6174519 -6e-7,8.035443 z"
+         transform="matrix(-0.3,0,0,-0.3,0.69,0)"
+         id="path4073"
+         style="fill-rule:evenodd;stroke-width:0.625;stroke-linejoin:round" />
+    </marker>
+    <marker
+       refX="0"
+       refY="0"
+       orient="auto"
+       id="Arrow1Lend"
+       style="overflow:visible">
+      <path
+         d="M 0,0 5,-5 -12.5,0 5,5 0,0 z"
+         transform="matrix(-0.8,0,0,-0.8,-10,0)"
+         id="path4043"
+         style="fill-rule:evenodd;stroke:#000000;stroke-width:1pt" />
+    </marker>
+  </defs>
+  <metadata
+     id="metadata7">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title>Structure de la base de données d’Archéo Lex v1.0</dc:title>
+        <dc:date>2014-12-21</dc:date>
+        <dc:creator>
+          <cc:Agent>
+            <dc:title>Seb35</dc:title>
+          </cc:Agent>
+        </dc:creator>
+        <dc:language>fr</dc:language>
+        <cc:license
+           rdf:resource="http://www.wtfpl.net/" />
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     transform="translate(-12.466518,-346.99561)"
+     id="layer1">
+    <g
+       transform="translate(147.42857,0.77526249)"
+       id="g8156">
+      <rect
+         width="80.45488"
+         height="95.366882"
+         x="51.589989"
+         y="444.20016"
+         id="rect3882"
+         style="fill:#0000ff;fill-opacity:0;stroke:#000000;stroke-width:0.88911563;stroke-linejoin:round;stroke-opacity:1" />
+      <text
+         x="55.823288"
+         y="457.18146"
+         id="text2985"
+         xml:space="preserve"
+         style="font-size:12px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans"><tspan
+           x="55.823288"
+           y="457.18146"
+           id="tspan2987">texte</tspan><tspan
+           x="55.823288"
+           y="472.18146"
+           id="tspan2989"
+           style="font-weight:normal;fill:#000000;fill-opacity:1;stroke:none">- <tspan
+   id="tspan3097"
+   style="font-weight:bold;fill:#0000ff;fill-opacity:1;stroke:none">cid</tspan></tspan><tspan
+           x="55.823288"
+           y="487.18146"
+           id="tspan2991">- nor</tspan><tspan
+           x="55.823288"
+           y="502.18146"
+           id="tspan2993">- nature</tspan><tspan
+           x="55.823288"
+           y="517.18146"
+           id="tspan2995">- date_texte</tspan><tspan
+           x="55.823288"
+           y="532.18146"
+           id="tspan2997">- date_publi</tspan></text>
+    </g>
+    <text
+       x="314.45782"
+       y="474.04892"
+       id="text3019"
+       xml:space="preserve"
+       style="font-size:12px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans"><tspan
+         x="314.45782"
+         y="474.04892"
+         id="tspan3021"></tspan></text>
+    <g
+       transform="translate(355.05911,198.25362)"
+       id="g8167">
+      <rect
+         width="125.67597"
+         height="155.98596"
+         x="112.53217"
+         y="246.75777"
+         id="rect3919"
+         style="fill:#00ff00;fill-opacity:0;stroke:#000000;stroke-width:0.9610374;stroke-linejoin:round;stroke-opacity:1" />
+      <text
+         x="116.46589"
+         y="260.39432"
+         id="text3071"
+         xml:space="preserve"
+         style="font-size:12px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans"><tspan
+           x="116.46589"
+           y="260.39432"
+           id="tspan3073">article</tspan><tspan
+           x="116.46589"
+           y="275.39432"
+           id="tspan3075">- <tspan
+   id="tspan3105"
+   style="font-weight:bold;fill:#00ff00;fill-opacity:1">id</tspan></tspan><tspan
+           x="116.46589"
+           y="290.39432"
+           id="tspan3077">- nom</tspan><tspan
+           x="116.46589"
+           y="305.39432"
+           id="tspan3079">- etat_juridique</tspan><tspan
+           x="116.46589"
+           y="320.39432"
+           id="tspan3081">- num</tspan><tspan
+           x="116.46589"
+           y="335.39432"
+           id="tspan3083">- debut</tspan><tspan
+           x="116.46589"
+           y="350.39432"
+           id="tspan3085">- fin</tspan><tspan
+           x="116.46589"
+           y="365.39432"
+           id="tspan3087">- <tspan
+   id="tspan8090"
+   style="fill:#0000ff;fill-opacity:1">texte_id</tspan></tspan><tspan
+           x="116.46589"
+           y="380.39432"
+           id="tspan3091">- <tspan
+   id="tspan8150"
+   style="fill:#ffba00;fill-opacity:1">version_section_id</tspan></tspan><tspan
+           x="116.46589"
+           y="395.39432"
+           id="tspan3095">- <tspan
+   id="tspan8136"
+   style="fill:#00edff;fill-opacity:0.39215686">version_texte_id</tspan></tspan></text>
+    </g>
+    <g
+       transform="translate(11.650071,-1.3448054)"
+       id="g8218">
+      <rect
+         width="99.147713"
+         height="140.98972"
+         x="187.40257"
+         y="621.45465"
+         id="rect3909"
+         style="fill:#00edff;fill-opacity:0;stroke:#000000;stroke-width:0.95729089;stroke-linejoin:round;stroke-opacity:1" />
+      <text
+         x="191.56627"
+         y="635.09308"
+         id="text2999"
+         xml:space="preserve"
+         style="font-size:12px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans"><tspan
+           x="191.56627"
+           y="635.09308"
+           id="tspan3001">version_texte</tspan><tspan
+           x="191.56627"
+           y="650.09308"
+           id="tspan3003">- <tspan
+   id="tspan3099"
+   style="font-weight:bold;fill:#00edff;fill-opacity:1">id</tspan></tspan><tspan
+           x="191.56627"
+           y="665.09308"
+           id="tspan3005">- <tspan
+   id="tspan8144"
+   style="fill:#0000ff;fill-opacity:1">texte_id</tspan></tspan><tspan
+           x="191.56627"
+           y="680.09308"
+           id="tspan3007">- titre</tspan><tspan
+           x="191.56627"
+           y="695.09308"
+           id="tspan3009">- titre_long</tspan><tspan
+           x="191.56627"
+           y="710.09308"
+           id="tspan3011">- etat_juridique</tspan><tspan
+           x="191.56627"
+           y="725.09308"
+           id="tspan3013">- debut</tspan><tspan
+           x="191.56627"
+           y="740.09308"
+           id="tspan3015">- fin</tspan><tspan
+           x="191.56627"
+           y="755.09308"
+           id="tspan3017">- <tspan
+   id="tspan8154"
+   style="fill:#00edff;fill-opacity:1">base_id</tspan></tspan></text>
+    </g>
+    <g
+       transform="translate(30.553901,149.6592)"
+       id="g8185">
+      <rect
+         width="95.415894"
+         height="81.007896"
+         x="295.25253"
+         y="295.34122"
+         id="rect3917"
+         style="fill:#ff0000;fill-opacity:0;stroke:#000000;stroke-width:0.93910372;stroke-linejoin:round;stroke-opacity:1" />
+      <text
+         x="299.19681"
+         y="308.98871"
+         id="text3025"
+         xml:space="preserve"
+         style="font-size:12px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans"><tspan
+           x="299.19681"
+           y="308.98871"
+           id="tspan3027">section</tspan><tspan
+           x="299.19681"
+           y="323.98871"
+           id="tspan3029">- <tspan
+   id="tspan3101"
+   style="font-weight:bold;fill:#ff0000;fill-opacity:1">cid</tspan></tspan><tspan
+           x="299.19681"
+           y="338.98871"
+           id="tspan3031">- <tspan
+   id="tspan8138"
+   style="fill:#ff0000;fill-opacity:1">cid_parent_id</tspan></tspan><tspan
+           x="299.19681"
+           y="353.98871"
+           id="tspan3033">- niveau</tspan><tspan
+           x="299.19681"
+           y="368.98871"
+           id="tspan3037">- <tspan
+   id="tspan8142"
+   style="fill:#0000ff;fill-opacity:1">texte_id</tspan></tspan></text>
+    </g>
+    <g
+       transform="translate(-30.261579,180.18129)"
+       id="g8197">
+      <rect
+         width="113.78709"
+         height="186.0331"
+         x="356.05542"
+         y="439.90686"
+         id="rect3921"
+         style="fill:#ffba00;fill-opacity:0;stroke:#000000;stroke-width:0.91390926;stroke-linejoin:round;stroke-opacity:1" />
+      <text
+         x="360.24097"
+         y="453.56696"
+         id="text3041"
+         xml:space="preserve"
+         style="font-size:12px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans"><tspan
+           x="360.24097"
+           y="453.56696"
+           id="tspan3043">version_section</tspan><tspan
+           x="360.24097"
+           y="468.56696"
+           id="tspan3045">- <tspan
+   id="tspan3103"
+   style="font-weight:bold;fill:#ffba00;fill-opacity:1">id</tspan></tspan><tspan
+           x="360.24097"
+           y="483.56696"
+           id="tspan3047">- <tspan
+   id="tspan8146"
+   style="fill:#ff0000;fill-opacity:1">cid_id</tspan></tspan><tspan
+           x="360.24097"
+           y="498.56696"
+           id="tspan3049">- <tspan
+   id="tspan8148"
+   style="fill:#ffba00;fill-opacity:1">id_parent_id</tspan></tspan><tspan
+           x="360.24097"
+           y="513.56696"
+           id="tspan3051">- nom</tspan><tspan
+           x="360.24097"
+           y="528.56696"
+           id="tspan3053">- etat_juridique</tspan><tspan
+           x="360.24097"
+           y="543.56696"
+           id="tspan3055">- niveau</tspan><tspan
+           x="360.24097"
+           y="558.56696"
+           id="tspan3057">- numero</tspan><tspan
+           x="360.24097"
+           y="573.56696"
+           id="tspan3059">- debut</tspan><tspan
+           x="360.24097"
+           y="588.56696"
+           id="tspan3061">- fin</tspan><tspan
+           x="360.24097"
+           y="603.56696"
+           id="tspan3063">- <tspan
+   id="tspan8140"
+   style="fill:#0000ff;fill-opacity:1">texte_id</tspan></tspan><tspan
+           x="360.24097"
+           y="618.56696"
+           id="tspan3067">- <tspan
+   id="tspan8152"
+   style="fill:#00edff;fill-opacity:1">version_texte_id</tspan></tspan></text>
+    </g>
+    <text
+       x="23.592495"
+       y="502.22363"
+       id="text8234"
+       xml:space="preserve"
+       style="font-size:14px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans"><tspan
+         x="23.592495"
+         y="502.22363"
+         id="tspan8236">Base LEGI brute</tspan></text>
+    <text
+       x="24.857143"
+       y="690.60419"
+       id="text8238"
+       xml:space="preserve"
+       style="font-size:14px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans"><tspan
+         x="24.857143"
+         y="690.60419"
+         id="tspan8240">Versions consolidées</tspan></text>
+    <text
+       x="218.87112"
+       y="408.07648"
+       id="text8242"
+       xml:space="preserve"
+       style="font-size:14px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans"><tspan
+         x="218.87112"
+         y="408.07648"
+         id="tspan8244">Textes</tspan></text>
+    <text
+       x="338.9032"
+       y="408.07648"
+       id="text8246"
+       xml:space="preserve"
+       style="font-size:14px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans"><tspan
+         x="338.9032"
+         y="408.07648"
+         id="tspan8248">Sections</tspan></text>
+    <text
+       x="498.60651"
+       y="408.07648"
+       id="text8250"
+       xml:space="preserve"
+       style="font-size:14px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans"><tspan
+         x="498.60651"
+         y="408.07648"
+         id="tspan8252">Articles</tspan></text>
+    <text
+       x="383.26242"
+       y="834.00677"
+       id="text8414"
+       xml:space="preserve"
+       style="font-size:12px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans"><tspan
+         x="383.26242"
+         y="834.00677"
+         id="tspan8416"
+         style="font-size:14px">Version base de données : 1.0</tspan></text>
+    <g
+       transform="translate(0,6)"
+       id="g8420">
+      <text
+         x="193.30246"
+         y="366.29248"
+         id="text8410"
+         xml:space="preserve"
+         style="font-size:12px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans"><tspan
+           x="193.30246"
+           y="366.29248"
+           id="tspan8412"
+           style="font-size:16px">Base de données Archéo Lex</tspan></text>
+      <path
+         d="m 169.71429,-19.718715 229.14285,0"
+         transform="translate(24.966518,391.43976)"
+         id="path8418"
+         style="fill:none;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1" />
+    </g>
+  </g>
+</svg>
