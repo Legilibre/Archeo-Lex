@@ -19,7 +19,6 @@ from docopt import docopt
 from marcheolex import logger
 from marcheolex.basededonnees import initialisation_bdd
 from marcheolex.telecharger import obtenir_identifiants
-from marcheolex.telecharger import telecharger_html
 from marcheolex.ranger import ranger
 from marcheolex.exporter import creer_historique
 from marcheolex.exporter import creer_historique_texte
