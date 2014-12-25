@@ -1,0 +1,80 @@
+# NE PAS MODIFIER (ici)
+# 
+# → Modifier le fichier de même nom dans le sous-répertoire « textes »
+# 
+# Ce fichier de configuration à la base du répertoire du programme Archéo Lex
+# n’est utilisé que pour être copié dans le répertoire contenant les textes
+# issus d’Archéo Lex (par défaut le sous-répertoire « textes »).
+
+- _base:
+    versionnement: git
+    versions:
+      master:
+        - markdown
+        - mises-à-jour: oui
+      markdown-complet:
+        - axe-évolution: temporel
+        - mises-à-jour: étiquettes
+        - markdown
+        - historique-codification
+        - historique-modifications
+        - citations-cibles
+        - citations-sources
+        - liens
+      textile-complet:
+        - axe-évolution: temporel
+        - mises-à-jour: étiquettes
+        - textile
+        - historique-codification
+        - historique-modifications
+        - citations-cibles
+        - citations-sources
+        - liens
+      html-technique:
+        - axe-évolution: légistique
+        - html
+        - historique-codification
+        - historique-modifications
+        - citations-cibles
+        - citations-sources
+        - liens
+- codes:
+  - code des assurances
+  - code de la propriété intellectuelle:
+      versions:
+        master:
+          - markdown
+          - mises-à-jour: oui
+        markdown-complet:
+          - axe-évolution: temporel
+          - mises-à-jour: étiquettes
+          - markdown
+          - historique-codification
+          - historique-modifications
+          - citations-cibles
+          - citations-sources
+          - liens
+        textile-complet:
+          - axe-évolution: temporel
+          - début: 1992-07-03
+          - fin: 1995-07-01
+          - mises-à-jour: étiquettes
+          - textile
+          - historique-codification
+          - historique-modifications
+          - citations-cibles
+          - citations-sources
+          - liens
+        textile-technique:
+          - axe-évolution: légistique
+          - textile
+          - historique-codification
+          - historique-modifications
+          - citations-cibles
+          - citations-sources
+          - liens
+        html:
+          - html
+- constitutions:
+  - constitution de 1958
+
