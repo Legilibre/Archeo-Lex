@@ -21,12 +21,10 @@ from datetime import datetime
 from path import path
 from bs4 import BeautifulSoup
 from marcheolex.utilitaires import telecharger
-from marcheolex.utilitaires import MOIS
-from marcheolex.utilitaires import nop
 
 
 def telecharger_legifrance(url, fichier, cache_html, force=False):
-
+    
     if os.path.exists(os.path.join(cache_html, fichier)):
         touch = datetime.fromtimestamp(os.stat(os.path.join(cache_html, fichier)).st_mtime)
         delta = datetime.today() - touch
@@ -37,43 +35,6 @@ def telecharger_legifrance(url, fichier, cache_html, force=False):
     
     print('* Téléchargement de ' + url)
     return telecharger('http://legifrance.gouv.fr/' + url, os.path.join(cache_html, fichier))
-
-
-def telecharger_html(cles, cache):
-    
-    path(os.path.join(cache, 'html')).mkdir_p()
-    path(os.path.join(cache, 'xml-html')).mkdir_p()
-    
-    # Télécharger effectivement les fichiers HTML (ou vérifier qu’ils sont dans le cache)
-    telecharger_html_reel(cles, os.path.join(cache, 'html'))
-    
-    # Transformer le HTML en XML
-    transformer_html_xml(cles, cache)
-
-
-def telecharger_html_reel(cles, cache):
-     
-    for cle in cles:
-        
-        nom_index = 'affichTexte.do'
-        if cle[2]:
-            nom_index = 'affichCode.do'
-        
-        # Téléchargement initial
-        telecharger_legifrance(nom_index + '?cidTexte=' + cle[1], cle[1] + '.html', cache, 86400)
-        fichier = open(os.path.join(cache, cle[1] + '.html'), 'r')
-        
-        # Recherche de la version consolidée la plus récente
-        soup = BeautifulSoup(fichier.read())
-        date = soup.select('.sousTitreTexte')
-        if date and re.match(('Version consolidée au \d{1,2} (?:' + '|'.join(MOIS.keys()) + ') \d{4}'), date[0].text.strip()):
-            date = re.match(('Version consolidée au (\d{1,2}) (' + '|'.join(MOIS.keys()) + ') (\d{4})'), date[0].text.strip())
-            date = date.group(3) + MOIS[date.group(2)] + '{:02d}'.format(int(date.group(1)))
-            telecharger_legifrance(nom_index + '?cidTexte=' + cle[1] + '&dateTexte=' + date, cle[1] + '-' + date + '.html', cache)
-
-
-def transformer_html_xml(cles, cache):
-    nop()
 
 
 # Le tuple renvoyé correspond à (Nom, cidTexte, estUnCode, 'xml'|'xml-html'|'html'|None)

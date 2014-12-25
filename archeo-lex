@@ -26,7 +26,7 @@ from marcheolex.exporter import creer_historique_texte
 from marcheolex.utilitaires import nop
 
 # Manuel d’aide
-aide = ('''Usage: archeo-lex [--aide] [--textes=<TEXTES>] [--format=<FORMAT>] [--versionnement=<VERS>] [--metadonnees] [--initialisation] [--rechercher-xml] [--telecharger-html] [--ranger] [--lier] [--exporter] [--mise-a-jour | --nouveau] [--base=<fichier>] [--cache=<dossier>] [--dossier=<dossier>]
+aide = ('''Usage: archeo-lex [--aide] [--help] [--textes=<TEXTES>] [--format=<FORMAT>] [--versionnement=<VERS>] [--metadonnees] [--initialisation] [--rechercher-xml] [--ranger] [--lier] [--exporter] [--mise-a-jour | --nouveau] [--base=<fichier>] [--cache=<dossier>] [--dossier=<dossier>]
 
 -t --textes=<TEXTES>       Types de textes à télécharger :
                              - "constitution-de-1958",
@@ -42,7 +42,6 @@ aide = ('''Usage: archeo-lex [--aide] [--textes=<TEXTES>] [--format=<FORMAT>] [-
 
 -i --initialisation        Vérifier les dépendances, initialiser la base
 -t --rechercher-xml        Rechercher les textes dans les données XML
--t --telecharger-html      Télécharger les textes HTML du site grand public
 -r --ranger                Ranger les données dans la base de données
 -l --lier                  Lier les versions d’articles aux versions de textes
 -e --exporter              Exporter les textes
@@ -55,26 +54,26 @@ aide = ('''Usage: archeo-lex [--aide] [--textes=<TEXTES>] [--format=<FORMAT>] [-
 -s --dossier=<dossier>     Dossier de sortie, par défaut "textes"
 
 -a --aide                  Afficher ce message d’aide
+-h --help                  Afficher ce message d’aide
 ''')
 
 
 def principal(arguments):
     
     # Action "aide"
-    if arguments.get('--aide'):
+    if arguments.get('--aide') or arguments.get('--help'):
         print(aide)
         return
     
     # Actions à considérer
     action_initialisation = arguments.get('--initialisation') or False
     action_rechercher_xml = arguments.get('--rechercher-xml') or False
-    action_telecharger_html = arguments.get('--telecharger-html') or False
     action_ranger = arguments.get('--ranger') or False
     action_lier = arguments.get('--lier') or False
     action_exporter = arguments.get('--exporter') or False
     
-    if not(action_initialisation or action_rechercher_xml or action_telecharger_html or action_ranger or action_lier or action_exporter):
-        action_initialisation = action_rechercher_xml = action_telecharger_html = action_ranger = action_lier = action_exporter = True
+    if not(action_initialisation or action_rechercher_xml or action_ranger or action_lier or action_exporter):
+        action_initialisation = action_rechercher_xml = action_ranger = action_lier = action_exporter = True
     
     # Lecture des données de format
     data = {}
@@ -105,9 +104,9 @@ def principal(arguments):
     if action_rechercher_xml:
         nop()
     
-    if action_telecharger_html:
-        logger.info('Téléchargement des fichiers HTML')
-        telecharger_html(data['textes'], data['cache'])
+    #if action_telecharger:
+    #    logger.info('Téléchargement des fichiers XML')
+    #    telecharger_xml(data['textes'], data['cache'])
     
     if action_ranger:
         logger.info('Rangement des données dans la base de données')
