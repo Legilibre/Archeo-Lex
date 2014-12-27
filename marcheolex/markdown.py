@@ -54,7 +54,7 @@ def creer_markdown_texte(texte, cache):
         # Lecture du fichier
         chemin_article = os.path.join(chemin_base, 'article', decompose_cid(article.id) + '.xml')
         f_article = open(chemin_article, 'r')
-        soup = BeautifulSoup(f_article.read(), 'bases-xml')
+        soup = BeautifulSoup(f_article.read(), 'xml')
         f_article.close()
         contenu = soup.find('BLOC_TEXTUEL').find('CONTENU').text.strip()
         
