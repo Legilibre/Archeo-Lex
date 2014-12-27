@@ -183,7 +183,7 @@ def ranger_texte_xml(chemin_base, cidTexte, nature_attendue=None):
 def ranger_sections_xml(chemin_base, coll_sections, coll_articles, entree_texte, entree_version_texte, section_parente, version_section_parente, dates_changement, ensemble_versions_sections, ensemble_articles, cidTexte, niv):
     
     # Prévenir les récursions infinies - les specs indiquent un max de 10
-    if niv == 10:
+    if niv == 11:
         raise Exception()
     
     # Traiter les articles à ce niveau
