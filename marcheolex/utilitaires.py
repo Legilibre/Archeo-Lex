@@ -69,6 +69,7 @@ def normalisation_code(code):
         nom = re.sub('[-_]', ' ', code)
         nom = nom[0].upper() + nom[1:]
         repertoire = re.sub('[ _]', '-', code)
+        nom = re.sub(' ', '_', re.sub('é', 'e', nom))
     else:
         nom = code.lower()
         repertoire = code.lower()

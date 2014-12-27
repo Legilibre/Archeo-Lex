@@ -54,13 +54,13 @@ def creer_historique_texte(texte, format, dossier, cache):
     path(os.path.join(dossier, 'décrets')).mkdir_p()
     path(os.path.join(dossier, 'ordonnances')).mkdir_p()
     if texte[2]:
-        identifiant, tmp1 = normalisation_code(nom)
+        identifiant, nom_fichier = normalisation_code(nom)
         dossier = os.path.join(dossier, 'codes', identifiant)
         sousdossier = '.'
         path(dossier).mkdir_p()
         path(os.path.join(dossier, sousdossier)).mkdir_p()
         chemin_base = chemin_texte(cid, True)
-    fichier = os.path.join(dossier, sousdossier, nom + '.md')
+    fichier = os.path.join(dossier, sousdossier, nom_fichier + '.md')
     
     # Créer le dépôt Git
     if not os.path.exists(os.path.join(dossier, '.git')):
@@ -122,7 +122,7 @@ def creer_historique_texte(texte, format, dossier, cache):
         f_texte.close()
         
         # Exécuter Git
-        subprocess.call(['git', 'add', os.path.join(sousdossier, nom + '.md')], cwd=dossier)
+        subprocess.call(['git', 'add', os.path.join(sousdossier, nom_fichier + '.md')], cwd=dossier)
         subprocess.call(['git', 'commit', '--author="Législateur <>"', '--date="' + str(version_texte.debut) + 'T00:00:00Z"', '-m', 'Version consolidée au {}'.format(date_fr), '-q', '--no-status'], cwd=dossier)
         
         if version_texte.fin == None:
