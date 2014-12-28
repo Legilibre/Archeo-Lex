@@ -21,6 +21,7 @@ import datetime
 from path import path
 from bs4 import BeautifulSoup
 from marcheolex import logger
+from marcheolex import version_archeolex
 from marcheolex.basededonnees import Version_texte
 from marcheolex.basededonnees import Version_section
 from marcheolex.basededonnees import Article
@@ -122,8 +123,9 @@ def creer_historique_texte(texte, format, dossier, cache):
         f_texte.close()
         
         # Exécuter Git
+        date_base_legi = '{} {} {} {}:{}:{}'.format('18', 'juillet', '2014', '11', '30', '10') # TODO changer cela
         subprocess.call(['git', 'add', os.path.join(sousdossier, nom_fichier + '.md')], cwd=dossier)
-        subprocess.call(['git', 'commit', '--author="Législateur <>"', '--date="' + str(version_texte.debut) + 'T00:00:00Z"', '-m', 'Version consolidée au {}'.format(date_fr), '-q', '--no-status'], cwd=dossier)
+        subprocess.call(['git', 'commit', '--author="Législateur <>"', '--date="' + str(version_texte.debut) + 'T00:00:00Z"', '-m', 'Version consolidée au {}\n\nVersions :\n- base LEGI : {}\n- programme Archéo Lex : {}'.format(date_fr, date_base_legi, version_archeolex), '-q', '--no-status'], cwd=dossier)
         
         if version_texte.fin == None:
             logger.info('Version {} enregistrée (du {} à maintenant)'.format(i_version, version_texte.debut))
