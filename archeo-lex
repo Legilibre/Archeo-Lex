@@ -19,19 +19,25 @@ from docopt import docopt
 from marcheolex import logger
 from marcheolex.basededonnees import initialisation_bdd
 from marcheolex.telecharger import obtenir_identifiants
+from marcheolex.telecharger import telecharger_fichiers_base
 from marcheolex.ranger import ranger
 from marcheolex.exporter import creer_historique
 from marcheolex.exporter import creer_historique_texte
 from marcheolex.utilitaires import nop
 
 # Manuel d’aide
-aide = ('''Usage: archeo-lex [--aide] [--help] [--textes=<TEXTES>] [--format=<FORMAT>] [--versionnement=<VERS>] [--metadonnees] [--initialisation] [--rechercher-xml] [--ranger] [--lier] [--exporter] [--mise-a-jour | --nouveau] [--base=<fichier>] [--cache=<dossier>] [--dossier=<dossier>]
+aide = ('''Usage: archeo-lex [--aide] [--help] [--textes=<TEXTES>] [--base=<BASE>] [--livraison=<DATE>] [--format=<FORMAT>] [--versionnement=<VERS>] [--metadonnees] [--initialisation] [--rechercher-xml] [--télécharger] [--ranger] [--lier] [--exporter] [--mise-a-jour | --nouveau] [--bdd=<fichier>] [--cache=<dossier>] [--dossier=<dossier>]
 
 -t --textes=<TEXTES>       Types de textes à télécharger :
                              - "constitution-de-1958",
                              - "codes",
-                             - nom du code ("code pénal"…),
+                             - nom du code ("code-pénal"…),
                              - identifiant Légifrance (paramètre « cidTexte »)
+-b --base=<BASE>           Base de données DILA ("LEGI"…)
+-l --livraison=<DATE>      Date et heure de la livraison souhaitée
+                             - "AAAAMMJJ-HHMMSS ("20140718-113010"…)
+                             - "fondation"
+                             - "dernière"
 -f --format=<FORMAT>       Format de sortie des textes :
                              - "markdown" (défaut)
 -v --versionnement=<VERS>  Versionner avec le système :
@@ -39,18 +45,19 @@ aide = ('''Usage: archeo-lex [--aide] [--help] [--textes=<TEXTES>] [--format=<FO
                              - "fichiers" : plusieurs fichiers avec les dates
 -m --metadonnees           Afficher les métadonnées dans le texte
 
--i --initialisation        Vérifier les dépendances, initialiser la base
--t --rechercher-xml        Rechercher les textes dans les données XML
--r --ranger                Ranger les données dans la base de données
--l --lier                  Lier les versions d’articles aux versions de textes
--e --exporter              Exporter les textes
+   --initialisation        Vérifier les dépendances, initialiser la base
+   --rechercher-xml        Rechercher les textes dans les données XML
+   --télécharger           Télécharger la base XML
+   --ranger                Ranger les données dans la base de données
+   --lier                  Lier les versions d’articles aux versions de textes
+   --exporter              Exporter les textes
 
--m --mise-a-jour           Effectuer seulement une mise à jour
--n --nouveau               Effacer et repartir du début, sauf le téléchargement
+   --mise-a-jour           Effectuer seulement une mise à jour
+   --nouveau               Effacer et repartir du début, sauf le téléchargement
 
--b --base=<fichier>        Nom de la base de données, par défaut "bdd.sqlite"
--c --cache=<dossier>       Dossier de cache, par défaut "cache"
--s --dossier=<dossier>     Dossier de sortie, par défaut "textes"
+   --bdd=<fichier>         Nom de la base de données, par défaut "bdd.sqlite"
+   --cache=<dossier>       Dossier de cache, par défaut "cache"
+   --dossier=<dossier>     Dossier de sortie, par défaut "textes"
 
 -a --aide                  Afficher ce message d’aide
 -h --help                  Afficher ce message d’aide
@@ -67,22 +74,25 @@ def principal(arguments):
     # Actions à considérer
     action_initialisation = arguments.get('--initialisation') or False
     action_rechercher_xml = arguments.get('--rechercher-xml') or False
+    action_telecharger = arguments.get('--télécharger') or False
     action_ranger = arguments.get('--ranger') or False
     action_lier = arguments.get('--lier') or False
     action_exporter = arguments.get('--exporter') or False
     
-    if not(action_initialisation or action_rechercher_xml or action_ranger or action_lier or action_exporter):
-        action_initialisation = action_rechercher_xml = action_ranger = action_lier = action_exporter = True
+    if not(action_initialisation or action_rechercher_xml or action_telecharger or action_ranger or action_lier or action_exporter):
+        action_initialisation = action_rechercher_xml = action_telecharger = action_ranger = action_lier = action_exporter = True
     
     # Lecture des données de format
     data = {}
     data['textes'] = ((arguments.get('--textes') or '').decode('utf-8') or 'code-de-la-propriété-intellectuelle').split(',')
+    data['base'] = arguments.get('--base') or 'LEGI'
+    data['livraison'] = arguments.get('--livraison') or 'fondation'
     data['format'] = arguments.get('--format') or 'markdown'
     data['historique'] = arguments.get('--historique') or 'git'
     data['metadonnees'] = arguments.get('--metadonnees') or False
     
     # Lecture des autres paramètres
-    data['base'] = (arguments.get('--base') or '').decode('utf-8') or 'bdd.sqlite'
+    data['bdd'] = (arguments.get('--bdd') or '').decode('utf-8') or 'archeo-lex.sqlite'
     data['cache'] = (arguments.get('--cache') or '').decode('utf-8') or 'cache'
     data['dossier'] = (arguments.get('--dossier') or '').decode('utf-8') or 'textes'
     data['effacer'] = not arguments.get('--mise-a-jour') or arguments.get('--nouveau') or False
@@ -98,14 +108,14 @@ def principal(arguments):
     # Exécution des actions
     if action_initialisation:
         logger.info('Initialisation de la base de données')
-        initialisation_bdd(data['base'], data['cache'], data['effacer'])
+        initialisation_bdd(data['bdd'], data['cache'], data['effacer'])
     
     if action_rechercher_xml:
         nop()
     
-    #if action_telecharger:
-    #    logger.info('Téléchargement des fichiers XML')
-    #    telecharger_xml(data['textes'], data['cache'])
+    if action_telecharger:
+        logger.info('Téléchargement des fichiers XML')
+        telecharger_fichiers_base(data['base'], data['livraison'], data['cache'])
     
     if action_ranger:
         logger.info('Rangement des données dans la base de données')

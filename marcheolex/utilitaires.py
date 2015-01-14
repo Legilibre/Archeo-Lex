@@ -88,6 +88,15 @@ def normalise_date(texte):
     return datetime.date(int(fm.group(1)), int(fm.group(2)), int(fm.group(3)))
 
 
+def normalise_datetime(texte):
+    
+    texte = texte.strip()
+    fm = re.match('(\d{4})(\d{2})(\d{2})-(\d{2})(\d{2})(\d{2})', texte)
+    if not fm:
+        return None
+    return datetime.datetime(int(fm.group(1)), int(fm.group(2)), int(fm.group(3)), int(fm.group(4)), int(fm.group(5)), int(fm.group(6)))
+
+
 def chemin_texte(cidTexte, code=True, vigueur=True):
     
     if vigueur:
