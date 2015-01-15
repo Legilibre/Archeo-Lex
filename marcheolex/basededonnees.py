@@ -36,6 +36,21 @@ bd.connect()
 
 ## Définition des classes représentant les articles, textes et leur versionnement
 
+# Classe représentant une livraison d’une base
+
+class Livraison(Model):
+    
+    class Meta:
+        
+        database = bd
+    
+    date = DateTimeField(primary_key=True) # date de la livraison
+    type = CharField(max_length=9) # 'fondation' ou 'miseajour' (fondation = dump complet, miseajour = dump incrémental)
+    base = CharField(max_length=4) # 'LEGI', etc.
+    precedent = ForeignKeyField('self', null=True, related_name='livraison_precedente') # si type='miseajour', date de la livraison précédente
+    fondation = ForeignKeyField('self', null=True, related_name='livraison_fondation') # si type='miseajour', date de la livraison fondation
+
+
 # Classe représentant un texte
 
 class Texte(Model):

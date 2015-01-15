@@ -16,6 +16,7 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 from docopt import docopt
+
 from marcheolex import logger
 from marcheolex.basededonnees import initialisation_bdd
 from marcheolex.telecharger import obtenir_identifiants

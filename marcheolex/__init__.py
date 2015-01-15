@@ -47,3 +47,62 @@ logger = logging.getLogger(__name__)
 
 version_archeolex = '0.2.0-alpha';
 
+
+#
+# Constantes
+#
+
+# Bases gérées
+bases = ['LEGI'] #['JORF', 'LEGI', 'KALI', 'CNIL', 'CONSTIT']
+
+# Adresses des serveurs et noms des fichiers
+# Voir http://rip.journal-officiel.gouv.fr/index.php/pages/juridiques
+serveurs = {
+    'JORF': ('ftp', 'ftp2.journal-officiel.gouv.fr', 'jorf', 'open1234', '/'),
+    'LEGI': ('ftp', 'ftp2.journal-officiel.gouv.fr', 'legi', 'open1234', '/'),
+    'KALI': ('ftp', 'ftp2.journal-officiel.gouv.fr', 'kali', 'open1234', '/'),
+    'CNIL': ('ftp', 'ftp2.journal-officiel.gouv.fr', 'cnil', 'open1234', '/'),
+    'CONSTIT': ('ftp', 'ftp2.journal-officiel.gouv.fr', \
+                'constit', 'open1234', '/'),
+    'CIRCULAIRES': ('ftp', 'echanges.dila.gouv.fr:6370', \
+                    'anonymous', '', '/CIRCULAIRES/FLUX/'),
+}
+fichiers_fond = {
+    'JORF': 'Freemium_jorf_global_%Y%m%d-%H%M%S.tar.gz',
+    'LEGI': 'Freemium_legi_global_%Y%m%d-%H%M%S.tar.gz',
+    'KALI': 'Freemium_kali__%Y%m%d-%H%M%S.tar\.gz',
+    'CNIL': 'Freemium_cnil_global_%Y%m%d-%H%M%S.tar.gz',
+    'CONSTIT': 'Freemium_constit_global_%Y%m%d-%H%M%S.tar.gz',
+    'CIRCULAIRES': None
+}
+fichiers_majo = {
+    'JORF': 'jorf_%Y%m%d-%H%M%S.tar.gz',
+    'LEGI': 'legi_%Y%m%d-%H%M%S.tar.gz',
+    'KALI': 'kali_%Y%m%d-%H%M%S.tar.gz',
+    'CNIL': 'cnil_%Y%m%d-%H%M%S.tar.gz',
+    'CONSTIT': 'constit_%Y%m%d-%H%M%S.tar.gz',
+    'CIRCULAIRES': 'circulaire_%d%m%Y%Hh%M.tar.gz'
+}
+
+
+#
+# Exceptions
+#
+
+class NonImplementeException(Exception):
+    pass
+
+class NomBaseException(Exception):
+    pass
+
+class FondationNonUniqueException(Exception):
+    pass
+
+class FondationNonTrouveeException(Exception):
+    pass
+
+'''
+class (Exception):
+    pass
+'''
+

@@ -18,14 +18,24 @@ from __future__ import print_function
 import os
 import re
 import string
+import shutil
+
 import ftplib
 import subprocess
 from datetime import datetime
 from path import path
 from bs4 import BeautifulSoup
+import peewee
+
+from marcheolex import NonImplementeException, \
+                       NomBaseException, FondationNonUniqueException, \
+                       FondationNonTrouveeException
+from marcheolex import bases, serveurs, fichiers_fond, fichiers_majo
+from marcheolex.basededonnees import Livraison  
 from marcheolex.utilitaires import telecharger
 from marcheolex.utilitaires import telecharger_cache
 from marcheolex.utilitaires import verif_taille
+
 
 def telecharger_legifrance(url, fichier, cache_html, force=False):
     
@@ -84,169 +94,194 @@ def telecharger_index_codes(cache):
     
     return codes, sedoc
 
-
-def telecharger_fichiers_base(identifiant, date_maj, cache):
+# Télécharger une base spécifiée à une livraison spécifiée
+# 
+# @param str base 'JORF', 'LEGI', 'KALI', 'CNIL', 'CONSTIT', 'CIRCULAIRES'
+# @param str|datetime livraison 'tout' pour télécharger toute la base
+#                               'fondation' pour télécharger la fondation
+#                               objet datetime pour tout jusqu’à la date
+#                               'AAAAMMJJ-HHMMJJ' idem datetime
+# @param str cache
+def telecharger_fichiers_base(base, livraison='fondation', cache='cache'):
     
-    identifiant = identifiant.upper()
-    type, dates = telecharger_base(identifiant, 'fondation', cache)
-    date_fondation = dates[0]
+    # Vérification des paramètres
+    base = base.upper()
+    if base not in bases:
+        raise NomBaseException()
+    if livraison not in ['fondation','tout'] and \
+       not isinstance(livraison, datetime):
+        livraison = datetime.strptime(livraison, '%Y%m%d-%H%M%S')
     
-    # Télécharger les mises à jour
-    dates_miseajour = []
-    if date_maj != 'fondation' and date_fondation != date_maj:
-        if date_maj == 'dernière':
-            date_maj = '29990101'
-        type, dates_miseajour = telecharger_base(identifiant, date_maj, cache)
+    # Télécharger les fichiers
+    date_fond, dates_majo = telecharger_base(base, livraison, cache)
     
-    # Décompresser les fichiers
-    if not os.path.exists(os.path.join(cache, 'bases-xml', date_fondation, 'fond-'+date_fondation)):
-        path(os.path.join(cache, 'bases-xml', date_fondation)).mkdir_p()
-        path(os.path.join(cache, 'bases-xml', date_fondation, 'fond-'+date_fondation)).mkdir_p()
-        subprocess.call(['tar', 'xzf', os.path.join(cache, 'tar', identifiant + '-fond-' + date_fondation + '.tar.gz'), '-C', os.path.join(cache, 'bases-xml', date_fondation, 'fond-'+date_fondation)])
-        
-        # Inscrire cette livraison dans la base de données
-        entree_livraison = Livraison.create(
-                date=normalise_datetime(date_fondation),
-                type='fondation',
-                base=identifiant,
-                precedent=None,
-                fondation=None
-            )
-        entree_livraison_fondation = entree_livraison
-    
-    if type == 'majo':
-        for date in range(0,len(dates_miseajour)):
-            if not os.path.exists(os.path.join(cache, 'bases-xml', date_fondation, 'majo-'+dates_miseajour[date])):
-                path(os.path.join(cache, 'bases-xml', date_fondation, 'majo-'+dates_miseajour[date])).mkdir_p()
-                subprocess.call(['tar', 'xzf', '-C', os.path.join(cache, 'bases-xml', date_fondation, 'majo-'+dates_miseajour[date]), os.path.join(cache, 'tar', identifiant + '-majo-' + dates_miseajour[date] + '.tar.gz')])
-                
-                # Inscrire cette livraison dans la base de données
-                entree_livraison = Livraison.create(
-                        date=normalise_datetime(dates_miseajour[date]),
-                        type='miseajour',
-                        base=identifiant,
-                        precedent=entree_livraison,
-                        fondation=entree_livraison_fondation
-                    )
-
+    # Télécharger les fichiers
+    decompresser_base(base, date_fond, dates_majo, cache)
 
 
 # Téléchargement des bases juridiques
 # 
-# @param str identifiant 'JORF', 'LEGI', 'KALI', 'CNIL', 'CONSTIT', 'CIRCULAIRES'
-# @param str/int/None date_maj None pour télécharger toute la base
-#                              Pour la plus récente mise à jour avant une certaine date, utiliser 'AAAAMMJJ[-HHMMSS]', par exemple '29990101' (clin d’œil)
-#                              Pour la dernière, avant-dernière, etc. mise à jour, utiliser '0', '-1', etc. (ou 0, -1, etc.)
+# @param str base 'JORF', 'LEGI', 'KALI', 'CNIL', 'CONSTIT', 'CIRCULAIRES'
+# @param str|datetime livraison 'tout' pour télécharger toute la base
+#                               'fondation' pour télécharger la fondation
+#                               objet datetime pour tout jusqu’à la date
+#                               'AAAAMMJJ-HHMMJJ' idem datetime
 # @param str cache
-# 
-# Voici des exemples d’URLs :
-# - ftp://jorf:open1234@ftp2.journal-officiel.gouv.fr/LicenceFreemium_jorf_jorf_global_20140718-104554.tar.gz
-# - ftp://legi:open1234@ftp2.journal-officiel.gouv.fr/LicenceFreemium_legi_legi_global_20140718-113010.tar.gz
-# - ftp://kali:open1234@ftp2.journal-officiel.gouv.fr/LicenceFreemium_kali_kali__20140718-142314.tar.gz
-# - ftp://cnil:open1234@ftp2.journal-officiel.gouv.fr/LicenceFreemium_CNIL_cnil_global_20140718-104251.tar.gz
-# - ftp://constit:open1234@ftp2.journal-officiel.gouv.fr/LicenceFreemium_CONSTIT_constit_global_20140718-104144.tar.gz
-# - ftp://anonymous:@echanges.dila.gouv.fr:6370/CIRCULAIRES/ (non-testé, très probablement non-fonctionnel)
-# Voir http://rip.journal-officiel.gouv.fr/index.php/pages/juridiques
-def telecharger_base(identifiant, date_maj, cache):
+def telecharger_base(base, livraison='tout', cache='cache'):
     
-    identifiant = identifiant.upper()
-    if identifiant not in ['JORF', 'LEGI', 'KALI', 'CNIL', 'CONSTIT']:
-        raise Exception()
-    if isinstance(date_maj, int):
-        date_maj = str(date_maj)
-    elif not isinstance(date_maj, str) and not date_maj == None and date_maj != 'fondation':
-        raise Exception()
+    # Vérification des paramètres
+    base = base.upper()
+    if base not in bases:
+        raise NomBaseException()
+    if livraison not in ['fondation','tout'] and \
+       not isinstance(livraison, datetime):
+        livraison = datetime.strptime(livraison, '%Y%m%d-%H%M%S')
+    if serveurs[base][0] != 'ftp':
+        raise NonImplementeException()
+    
+    # Créer le dossier de cache des fichiers téléchargés
     path(os.path.join(cache, 'tar')).mkdir_p()
     
-    serveur = {
-        'JORF': ('ftp', 'ftp2.journal-officiel.gouv.fr', 'jorf', 'open1234'),
-        'LEGI': ('ftp', 'ftp2.journal-officiel.gouv.fr', 'legi', 'open1234'),
-        'KALI': ('ftp', 'ftp2.journal-officiel.gouv.fr', 'kali', 'open1234'),
-        'CNIL': ('ftp', 'ftp2.journal-officiel.gouv.fr', 'cnil', 'open1234'),
-        'CONSTIT': ('ftp', 'ftp2.journal-officiel.gouv.fr', 'constit', 'open1234'),
-        'CIRCULAIRES': ('ftp', 'echanges.dila.gouv.fr:6370/CIRCULAIRES/', 'anonymous', ''),
-    }
-    fichier_base = {
-        'JORF': 'Freemium_jorf_global_%Y%m%d-%H%M%S.tar.gz',
-        'LEGI': 'Freemium_legi_global_%Y%m%d-%H%M%S.tar.gz',
-        'KALI': 'Freemium_kali__%Y%m%d-%H%M%S.tar.gz',
-        'CNIL': 'Freemium_cnil_global_%Y%m%d-%H%M%S.tar.gz',
-        'CONSTIT': 'Freemium_constit_global_%Y%m%d-%H%M%S.tar.gz',
-        'CIRCULAIRES': ''
-    }
-    fichier_majo = {
-        'JORF': 'jorf_%Y%m%d-%H%M%S.tar.gz',
-        'LEGI': 'legi_%Y%m%d-%H%M%S.tar.gz',
-        'KALI': 'kali_%Y%m%d-%H%M%S.tar.gz',
-        'CNIL': 'cnil_%Y%m%d-%H%M%S.tar.gz',
-        'CONSTIT': 'constit_%Y%m%d-%H%M%S.tar.gz',
-        'CIRCULAIRES': ''
-    }
-    
     # Connexion FTP
-    connexion_ftp = ftplib.FTP(serveur[identifiant][1], serveur[identifiant][2], serveur[identifiant][3])
-    liste_fichiers = connexion_ftp.nlst()
+    serveur = serveurs[base][0] + ':' + \
+              '//' + serveurs[base][2] + ':' + serveurs[base][3] + \
+              '@' + serveurs[base][1] + serveurs[base][4]
     
-    # Recherche du fichier le plus récent et toutefois antérieure à la date demandée
-    if date_maj == None or date_maj == 'fondation':
-        prefixe = string.split(fichier_base[identifiant], '%')[0]
-        type_fichier = 'fond'
-    else:
-        prefixe = string.split(fichier_majo[identifiant], '%')[0]
-        type_fichier = 'majo'
-    dates = []
-    for fichier in liste_fichiers:
-        if fichier.startswith(prefixe):
-            dates.append(re.sub(prefixe + '([0-9-]+)\.tar\.gz', r'\1', fichier))
-    dates.sort(None, None, True)
-    date_selectionnee = 0
-    dates_selectionnees = []
-    if date_maj and date_maj != 'fondation':
-        if len(date_maj) == 8:
-            date_maj = date_maj + '-235959'
-        if re.match('^(0|-\d+)$', date_maj):
-            date_selectionnee = -int(date_maj)
-        else:
-            while date_selectionnee < len(dates) and dates[date_selectionnee] > date_maj:
-                dates_selectionnees[date_selectionnee] = dates[date_selectionnee]
-                date_selectionnee = date_selectionnee + 1
-            if date_selectionnee == len(dates):
-                raise Exception()
-    else:
-        dates_selectionnees.append(dates[0])
-    recent = dates[date_selectionnee]
+    connexion_ftp = ftplib.FTP(serveurs[base][1], \
+                               serveurs[base][2], \
+                               serveurs[base][3])
     
-    # Téléchargement des fichiers
-    for date_selectionnee in range(0,len(dates_selectionnees)):
-        
-        # Création de l’URL
-        url = serveur[identifiant][0] + '://' + serveur[identifiant][2] + ':' + serveur[identifiant][3] + '@' + serveur[identifiant][1] + '/' + prefixe + dates_selectionnees[date_selectionnee] + '.tar.gz'
-        
-        # Vérification de la taille disponible
-        if not verif_taille(connexion_ftp.size(prefixe + recent + '.tar.gz'), cache) and not os.path.exists(identifiant + '-' + type_fichier + '-' + dates_selectionnees[date_selectionnee] + '.tar.gz'):
-            raise Exception()
-        
-        # Téléchargement de la base demandée
-        telecharger_cache(url, os.path.join(cache, 'tar', identifiant + '-' + type_fichier + '-' + dates_selectionnees[date_selectionnee] + '.tar.gz'))
+    # Reconnaître les dates des fichiers
+    connexion_ftp.cwd(serveurs[base][4])
+    fichiers = connexion_ftp.nlst()
+    date_fond = None
+    dates_majo = []
     
+    for fichier in fichiers:
+        
+        # Si c’est un fichier de dump complet
+        try:
+            datetime.strptime(fichier, fichiers_fond[base])
+            if date_fond: raise FondationNonUniqueException()
+            date_fond = datetime.strptime(fichier, fichiers_fond[base])
+        except ValueError:
+            pass
+        
+        # Si c’est un fichier de dump incrémental
+        try:
+            dates_majo.append(datetime.strptime(fichier, fichiers_majo[base]))
+        except ValueError:
+            pass
+    
+    # Normaliser les paramètres relatifs aux dates
+    dates_majo.sort()
+    if not date_fond:
+        raise FondationNonTrouveeException()
+    if livraison == 'fondation':
+        livraison = date_fond
+    if livraison == 'tout':
+        livraison = dates_majo[-1]
+    dates_majo = [date for date in dates_majo if date <= livraison]
+    
+    # Téléchargement du dump complet
+    telecharger_cache(serveur + date_fond.strftime(fichiers_fond[base]),
+                      os.path.join(cache, 'tar', base + 
+                      date_fond.strftime('-fond-%Y%m%d-%H%M%S.tar.gz')))
+    
+    # Téléchargement des dumps incrémentaux
+    for date_majo in dates_majo:
+        
+        telecharger_cache(serveur + date_majo.strftime(fichiers_majo[base]),
+                          os.path.join(cache, 'tar', base + 
+                          date_majo.strftime('-majo-%Y%m%d-%H%M%S.tar.gz')))
+    
+    # Clôturer la connexion
     connexion_ftp.close()
     
-    return type_fichier, dates_selectionnees
+    return date_fond, dates_majo
 
-# Dépacketer la base
-def ouvrir_base(identifiant, date_maj, cache):
+
+# Décompresser les fichiers téléchargés
+# 
+# @param str base 'JORF', 'LEGI', 'KALI', 'CNIL', 'CONSTIT', 'CIRCULAIRES'
+# @param datetime date_fond date du dump complet
+# @param list[datetime] date_majo dates des dumps incrémentaux
+# @param str cache
+def decompresser_base(base, date_fond, dates_majo, cache='cache'):
     
-    identifiant = identifiant.upper()
-    if identifiant not in ['JORF', 'LEGI', 'KALI', 'CNIL', 'CONSTIT']:
-        raise Exception()
-    if isinstance(date_maj, int):
-        date_maj = str(date_maj)
-    elif not isinstance(date_maj, str) and not date_maj == None:
-        raise Exception()
-    if date_maj == None:
-        type_fichier = 'fond'
-    else:
-        type_fichier = 'majo'
+    # Vérification des paramètres
+    base = base.upper()
+    if base not in bases:
+        raise NomBaseException()
+    if not isinstance(date_fond, datetime) or not isinstance(dates_majo, list):
+        raise ValueError()
+    for date in dates_majo:
+        if not isinstance(date, datetime):
+            raise ValueError()
     
-    subprocess.call(['tar', 'xzf', os.path.join(cache, 'tar', identifiant + '-' + type_fichier + '-' + date_maj + '.tar.gz')])
+    # Créer le répertoire rattaché à ce dump complet
+    rep = os.path.join(cache, 'bases-xml', date_fond.strftime('%Y%m%d-%H%M%S'))
+    path(rep).mkdir_p()
     
+    # Décompresser le dump complet
+    date = date_fond.strftime('%Y%m%d-%H%M%S')
+    if not os.path.exists(os.path.join(rep, 'fond-' + date)) or \
+       os.path.exists(os.path.join(rep, 'fond-' + date, 'erreur-tar')):
+        
+        if os.path.exists(os.path.join(rep, 'fond-' + date, 'erreur-tar')):
+            shutil.rmtree(os.path.join(rep, 'fond-' + date))
+        path(os.path.join(rep, 'fond-' + date)).mkdir_p()
+        open(os.path.join(rep, 'fond-' + date, 'erreur-tar'), 'w').close()
+        subprocess.call(['tar', 'xzf',
+            os.path.join(cache, 'tar', base + '-fond-' + date + '.tar.gz'),
+            '-C', os.path.join(rep, 'fond-' + date)])
+        os.remove(os.path.join(rep, 'fond-' + date, 'erreur-tar'))
+        
+    
+    # Inscrire cette livraison dans la base de données
+    try:
+        entree_livraison = Livraison.get(Livraison.date == date_fond)
+    except Livraison.DoesNotExist:
+        entree_livraison = Livraison.create(
+                date=date_fond,
+                type='fondation',
+                base=base,
+                precedent=None,
+                fondation=None
+            )
+    entree_livraison_fondation = entree_livraison
+    
+    # Décompresser les dumps incrémentaux
+    for date_majo in dates_majo:
+        
+        date = date_majo.strftime('%Y%m%d-%H%M%S')
+        if not os.path.exists(os.path.join(rep, 'majo-' + date)) or \
+           os.path.exists(os.path.join(rep, date)) or \
+           os.path.exists(os.path.join(rep, 'majo-' + date, 'erreur-tar')):
+            
+            if os.path.exists(os.path.join(rep, date)):
+                shutil.rmtree(os.path.join(rep, date), True)
+                shutil.rmtree(os.path.join(rep, 'majo-' + date), True)
+            if os.path.exists(os.path.join(rep, 'majo-' + date, 'erreur-tar')):
+                shutil.rmtree(os.path.join(rep, 'majo-' + date), True)
+            path(os.path.join(rep, date)).mkdir_p()
+            open(os.path.join(rep, date, 'erreur-tar'), 'w').close()
+            subprocess.call(['tar', 'xzf',
+                os.path.join(cache, 'tar', base + '-majo-' + date + '.tar.gz'),
+                '-C', rep])
+            os.rename(os.path.join(rep, date),
+                      os.path.join(rep, 'majo-' + date))
+            os.remove(os.path.join(rep, 'majo-' + date, 'erreur-tar'))
+        
+        # Inscrire cette livraison dans la base de données
+        try:
+            entree_livraison = Livraison.get(Livraison.date == date_majo)
+        except Livraison.DoesNotExist:
+            entree_livraison = Livraison.create(
+                    date=date_majo,
+                    type='miseajour',
+                    base=base,
+                    precedent=entree_livraison,
+                    fondation=entree_livraison_fondation
+                )
+
