@@ -101,7 +101,8 @@ def principal(arguments):
     
     # Recherche des identifiants
     logger.info('Recherche des identifiants')
-    data['textes'] = obtenir_identifiants(data['textes'], data['cache'])
+    #data['textes'] = obtenir_identifiants(data['textes'], data['cache'])
+    data['textes'] = [('Code du tourisme', 'LEGITEXT000006074073', True, None)]
     logger.info('Textes demandés')
     for t in data['textes']:
         logger.info('* {} : {}'.format(t[1], t[0]))
@@ -114,13 +115,13 @@ def principal(arguments):
     if action_rechercher_xml:
         nop()
     
-    if action_telecharger:
-        logger.info('Téléchargement des fichiers XML')
-        telecharger_fichiers_base(data['base'], data['livraison'], data['cache'])
+    #if action_telecharger:
+    #    logger.info('Téléchargement des fichiers XML')
+    #    telecharger_fichiers_base(data['base'], data['livraison'], data['cache'])
     
     if action_ranger:
         logger.info('Rangement des données dans la base de données')
-        ranger(data['textes'], data['cache'])
+        ranger(data['base'], data['textes'], data['livraison'], data['cache'])
     
     #if action_lier:
     #    lier(data['textes'], data['cache'])

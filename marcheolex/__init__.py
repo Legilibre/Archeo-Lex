@@ -101,6 +101,9 @@ class FondationNonUniqueException(Exception):
 class FondationNonTrouveeException(Exception):
     pass
 
+class FichierNonExistantException(Exception):
+    pass
+
 '''
 class (Exception):
     pass

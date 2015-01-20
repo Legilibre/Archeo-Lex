@@ -21,7 +21,7 @@ from path import path
 from bs4 import BeautifulSoup
 from marcheolex.basededonnees import Version_texte
 from marcheolex.basededonnees import Version_section
-from marcheolex.basededonnees import Article
+from marcheolex.basededonnees import Version_article
 from marcheolex.utilitaires import normalisation_code
 from marcheolex.utilitaires import chemin_texte
 from marcheolex.utilitaires import decompose_cid
@@ -37,7 +37,7 @@ def creer_markdown_texte(texte, cache):
     
     # Informations de base
     cid = texte[1]
-    articles = Article.select(Article.id).where(Article.texte == cid)
+    articles = Version_article.select(Version_article.id).where(Version_article.texte == cid)
     chemin_base = os.path.join(cache, 'bases-xml', chemin_texte(cid))
     
     # Créer le répertoire de cache

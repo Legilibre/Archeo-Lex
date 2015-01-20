@@ -24,7 +24,7 @@ from marcheolex import logger
 from marcheolex import version_archeolex
 from marcheolex.basededonnees import Version_texte
 from marcheolex.basededonnees import Version_section
-from marcheolex.basededonnees import Article
+from marcheolex.basededonnees import Version_article
 from marcheolex.markdown import creer_markdown
 from marcheolex.markdown import creer_markdown_texte
 from marcheolex.utilitaires import normalisation_code
@@ -89,12 +89,12 @@ def creer_historique_texte(texte, format, dossier, cache):
             continue
         
         # Sélectionner les versions d’articles et sections présentes dans cette version de texte, c’est-à-dire celles créées avant et détruites après (ou jamais)
-        articles =                                                                       \
-            Article.select()                                                             \
-                   .where(  (Article.texte == cid)                                       \
-                          & (Article.debut <= version_texte.debut)                       \
-                          & ((Article.fin >= version_texte.fin) | (Article.fin == None)) \
-                         )
+        articles =                                                                                               \
+            Version_article.select()                                                                             \
+                           .where(  (Version_article.texte == cid)                                               \
+                                  & (Version_article.debut <= version_texte.debut)                               \
+                                  & ((Version_article.fin >= version_texte.fin) | (Version_article.fin == None)) \
+                                 )
         
         versions_sections =                                                                              \
             Version_section.select()                                                                     \
@@ -166,8 +166,8 @@ def creer_articles_section(texte, niveau, version_section_parente, articles, ver
     for i in range(niveau):
         marque_niveau = marque_niveau + '#'
     
-    # Champ Article
-    articles_section = articles.select().where(Article.version_section == version_section_parente)
+    # Champ Version_article
+    articles_section = articles.select().where(Version_article.version_section == version_section_parente)
     
     # Itérer sur les articles de cette section
     for article in articles_section:
@@ -182,7 +182,7 @@ def creer_articles_section(texte, niveau, version_section_parente, articles, ver
         f_article.close()
         
         texte = texte                                                      \
-                + marque_niveau + ' Article ' + article.num.strip() + '\n' \
+                + marque_niveau + ' Article ' + article.nom.strip() + '\n' \
                 + '\n'                                                     \
                 + texte_article + '\n'                                     \
                 + '\n'                                                     \

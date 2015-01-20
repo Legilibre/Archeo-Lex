@@ -117,6 +117,9 @@ def telecharger_fichiers_base(base, livraison='fondation', cache='cache'):
     
     # Télécharger les fichiers
     decompresser_base(base, date_fond, dates_majo, cache)
+    
+    # Chaînage avant des livraisons
+    chainage_avant(date_fond, dates_majo)
 
 
 # Téléchargement des bases juridiques
@@ -246,7 +249,8 @@ def decompresser_base(base, date_fond, dates_majo, cache='cache'):
                 date=date_fond,
                 type='fondation',
                 base=base,
-                precedent=None,
+                precedente=None,
+                suivante=None,
                 fondation=None
             )
     entree_livraison_fondation = entree_livraison
@@ -281,7 +285,29 @@ def decompresser_base(base, date_fond, dates_majo, cache='cache'):
                     date=date_majo,
                     type='miseajour',
                     base=base,
-                    precedent=entree_livraison,
+                    precedente=entree_livraison,
+                    suivante=None,
                     fondation=entree_livraison_fondation
                 )
+
+
+
+def chainage_avant(date_fond, dates_majo):
+    
+    dates = [date_fond] + dates_majo[0:-1]
+    if not dates_majo:
+        return
+    
+    entree_livraison_suivante = Livraison.get(Livraison.date == date_majo[-1])
+    
+    for date in dates:
+        
+        entree_livraison = Livraison.get(Livraison.date == date)
+        
+        if entree_livraison.suivante:
+            break
+        
+        entree_livraison.suivante = entree_livraison_suivante
+        entree_livraison.save()
+        entree_livraison_suivante = entree_livraison
 
