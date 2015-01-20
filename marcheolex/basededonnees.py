@@ -154,7 +154,7 @@ class Version_article(BaseModel):
     ]
     
     id = CharField(max_length=20, primary_key=True) # identifiant technique id
-    version_section = ForeignKeyField(Version_section) # section parente de cet article
+    version_section = ForeignKeyField(Version_section, null=True) # section parente de cet article
     nom = CharField(max_length=200) # titre de l’article
     etat_juridique = CharField(max_length=25) # état juridique de l’article au moment de la livraison
     numero = CharField(max_length=200) # numéro de l’article (e.g. L321-3-1)
