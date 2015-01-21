@@ -107,7 +107,7 @@ class Version_texte(BaseModel):
         ('décret-loi', 'Décret-loi')
     ]
     
-    id = IntegerField(primary_key=True) # identifiant non-significatif id
+    #id = IntegerField(primary_key=True) # identifiant non-significatif id
     titre = CharField(max_length=200) # titre (court) du texte
     titre_long = CharField(max_length=200) # titre (long) du texte
     nature = CharField(max_length=20, choices=enum_natures) # nature du texte, 'code' pour l’instant
@@ -168,7 +168,7 @@ class Version_article(BaseModel):
 
 class Livraison_texte(BaseModel):
     
-    id = IntegerField(primary_key=True) # identifiant non-significatif
+    #id = IntegerField(primary_key=True) # identifiant non-significatif
     livraison = ForeignKeyField(Livraison) # livraison mise en correspondance
     version_texte = ForeignKeyField(Version_texte) # version de texte mise en correspondance
     texte = ForeignKeyField(Texte) # texte mis en correspondance
@@ -178,7 +178,7 @@ class Livraison_texte(BaseModel):
 
 class Liste_sections(BaseModel):
     
-    id = IntegerField(primary_key=True) # identifiant non-significatif
+    #id = IntegerField(primary_key=True) # identifiant non-significatif
     version_section = ForeignKeyField(Version_section) # version de section mise en correspondance
     version_texte = ForeignKeyField(Version_texte) # version de texte mise en correspondance
 
@@ -187,7 +187,7 @@ class Liste_sections(BaseModel):
 
 class Liste_articles(BaseModel):
     
-    id = IntegerField(primary_key=True) # identifiant non-significatif
+    #id = IntegerField(primary_key=True) # identifiant non-significatif
     version_article = ForeignKeyField(Version_article) # version de section mise en correspondance
     version_texte = ForeignKeyField(Version_texte) # version de texte mise en correspondance
 

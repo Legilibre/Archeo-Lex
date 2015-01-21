@@ -32,6 +32,7 @@ from marcheolex.basededonnees import Liste_articles
 from marcheolex.utilitaires import chemin_texte
 from marcheolex.utilitaires import normalise_date
 from marcheolex.utilitaires import comp_infini
+from marcheolex.utilitaires import comp_infini_strict
 
 
 # Ranger un ensemble de textes d’une base XML
@@ -99,7 +100,10 @@ def lire_code_xml(base, cle, livraison, cache):
         ranger_texte_xml(entree_livraison, base, chemin, cidTexte, 'code')
         
         # Ouvrir la livraison suivante
-        entree_livraison = Livraison.get(Livraison.suivante == entree_livraison)
+        try:
+            entree_livraison = Livraison.get(Livraison.suivante == entree_livraison)
+        except Livraison.DoesNotExist:
+            entree_livraison = None
 
 
 # Vérifier si le texte existe, et en fonction de cela ajouter ou mettre à jour
@@ -133,48 +137,153 @@ def ranger_texte_xml(livraison, base, chemin_base, cidTexte, nature_attendue=Non
             base=base,
             livraison=None
         )
-    '''
-    # Enregistrement de la Version_texte d’autorité
-    # TODO gérer les mises à jour
     
-    try:
-        entree_version_texte = Version_texte.get(Version_texte.texte == entree_texte)
-    except:
-        entree_version_texte = Version_texte.create(
-            titre=version['TITRE'],
-            titre_long=version['TITREFULL'],
-            nature=version['NATURE'].lower(),
-            date_texte=version['DATE_TEXTE'],
-            date_publi=version['DATE_PUBLI'],
-            date_modif=version['DERNIERE_MODIFICATION'],
-            etat_juridique=version['ETAT'].lower(),
-            vigueur_debut=version['DATE_DEBUT'],
-            vigueur_fin=version['DATE_FIN'],
-            version_prec=None,
-            texte=entree_texte
-        )
-    '''
     # Initialisation du suivi des dates de changement
     dates = set([version['DATE_DEBUT'], version['DATE_FIN']])
-    sections = set()
-    articles = set()
-    rows_sections = set()
-    rows_articles = set()
+    autres_sections = set()
+    autres_articles = set()
+    nouvelles_sections = set()
+    nouveaux_articles = set()
     
     # Ajouter récursivement les sections et articles
-    dates, sections, articles, rows_sections, rows_articles = ranger_sections_xml(chemin_base, struct['LIEN_SECTION_TA'], struct['LIEN_ART'], entree_texte, None, dates, sections, articles, cidTexte, 1, rows_sections, rows_articles)
+    dates, autres_sections, autres_articles, nouvelles_sections, nouveaux_articles = ranger_sections_xml(chemin_base, struct['LIEN_SECTION_TA'], struct['LIEN_ART'], entree_texte, None, dates, autres_sections, autres_articles, 1, nouvelles_sections, nouveaux_articles)
     print('')
     print(len(dates))
-    print(len(sections))
-    print(len(articles))
-    print(len(rows_sections))
-    print(len(rows_articles))
+    print(len(autres_sections))
+    print(len(autres_articles))
+    print(len(nouvelles_sections))
+    print(len(nouveaux_articles))
     
     # Enregistrer les versions de texte
-    enregistrer_versions_texte(dates, sections, articles, entree_texte, rows_sections, rows_articles)
+    enregistrer_versions_texte(version, livraison, dates, autres_sections, autres_articles, entree_texte, nouvelles_sections, nouveaux_articles)
 
 
-def enregistrer_versions_texte(dates, sections, articles, entree_texte, rows_sections, rows_articles):
+# Parcourir récursivement les sections
+# - enregistrer celles du niveau N (N≥1)
+# - ouvrir les fichiers correspondant à ces sections
+# - appeler ranger_sections_xml sur les nœuds de STRUCTURE_TA
+def ranger_sections_xml(chemin_base, coll_sections, coll_articles, \
+                        entree_texte, version_section_parente, dates, \
+                        autres_sections, autres_articles, niv, \
+                        nouvelles_sections, nouveaux_articles):
+    
+    # Prévenir les récursions infinies - les specs indiquent un max de 10
+    if niv == 11:
+        raise Exception()
+    
+    # Traiter les articles à ce niveau
+    dates, autres_articles, nouveaux_articles = ranger_articles_xml( \
+        chemin_base, coll_articles, entree_texte, dates, autres_articles, \
+        nouveaux_articles)
+    
+    for i, section in enumerate(coll_sections):
+        
+        # Affichage de l’avancement
+        compteur_recursif(i+1, len(coll_sections), False)
+        
+        cid = section['cid']
+        id = section['id']
+        nom = section.text
+        etat_juridique = section['etat']
+        niveau = section['niv']
+        vigueur_debut = normalise_date(section['debut'])
+        vigueur_fin = normalise_date(section['fin'])
+        url = section['url'][1:]
+        numero = i+1
+        
+        # Prise en compte de cette version de section
+        try:
+            entree_version_section = Version_section.select().where(
+                (Version_section.id == id) &
+                #(Version_section.id_parent == version_section_parente) &
+                (Version_section.nom == nom) &
+                (Version_section.etat_juridique == etat_juridique) &
+                (Version_section.niveau == niveau) &
+                (Version_section.numero == numero) &
+                (Version_section.vigueur_debut == vigueur_debut) &
+                (Version_section.vigueur_fin == vigueur_fin) &
+                (Version_section.texte == entree_texte)
+            ).get()
+            autres_sections |= {(id, nom, etat_juridique, niveau, numero, \
+                                 vigueur_debut, vigueur_fin, entree_texte.cid)}
+        except Version_section.DoesNotExist:
+            nouvelles_sections |= {(id, nom, etat_juridique, niveau, numero, \
+                                    vigueur_debut, vigueur_fin, \
+                                    entree_texte.cid)}
+            dates |= {vigueur_debut, vigueur_fin}
+        
+        # Prise en compte des dates de vigueur
+        #dates |= {vigueur_debut, vigueur_fin}
+        
+        # Continuer récursivement
+        section_ta = lire_base_section_ta(chemin_base, url)
+        
+        dates, autres_sections, autres_articles, nouvelles_sections, \
+            nouveaux_articles = ranger_sections_xml(chemin_base, \
+            section_ta['LIEN_SECTION_TA'], section_ta['LIEN_ART'], \
+            entree_texte, None, dates, autres_sections, autres_articles, \
+            niv+1, nouvelles_sections, nouveaux_articles)
+        
+        # Affichage de l’avancement
+        compteur_recursif()
+    
+    return dates, autres_sections, autres_articles, nouvelles_sections, \
+           nouveaux_articles
+
+
+def ranger_articles_xml(chemin_base, coll_articles, entree_texte, dates, \
+                        autres_articles, nouveaux_articles):
+    
+    # Si pas d’article dans cette section
+    if coll_articles == None:
+        return dates, autres_articles, nouveaux_articles
+    
+    # Sinon itérer sur les articles
+    for i, article in enumerate(coll_articles):
+        
+        # Affichage de l’avancement
+        compteur_recursif(i+1, len(coll_articles), True)
+        
+        # Lecture brute des attributs XML
+        id = article['id']
+        nom = article['num']
+        etat_juridique = article['etat']
+        vigueur_debut = normalise_date(article['debut'])
+        vigueur_fin = normalise_date(article['fin'])
+        numero = i+1
+        
+        # Prise en compte de cette version d’article        
+        try:
+            entree_article = Version_article.select().where(
+                (Version_article.id == id) &
+                #(Version_article.version_section == entree_version_section) &
+                (Version_article.nom == nom) &
+                (Version_article.etat_juridique == etat_juridique) &
+                (Version_article.numero == numero) &
+                (Version_article.vigueur_debut == vigueur_debut) &
+                (Version_article.vigueur_fin == vigueur_fin) &
+                (Version_article.condensat == None) &
+                (Version_article.texte == entree_texte)
+            ).get()
+            autres_articles |= {(id,  nom, etat_juridique, numero, \
+                                 vigueur_debut, vigueur_fin, None, \
+                                 entree_texte.cid)}
+        except Version_article.DoesNotExist:
+            nouveaux_articles |= {(id,  nom, etat_juridique, numero, \
+                                   vigueur_debut, vigueur_fin, None, \
+                                   entree_texte.cid)}
+            dates |= {vigueur_debut, vigueur_fin}
+        
+        # Prise en compte des dates de vigueur
+        #dates |= {vigueur_debut, vigueur_fin}
+        
+        # Affichage de l’avancement
+        compteur_recursif()
+    
+    return dates, autres_articles, nouveaux_articles
+
+
+def enregistrer_versions_texte(version, livraison, dates, autres_sections, autres_articles, entree_texte, nouvelles_sections, nouveaux_articles):
     
     # Chercher les versions de textes de cette livraison
     dates = list(dates)
@@ -206,46 +315,54 @@ def enregistrer_versions_texte(dates, sections, articles, entree_texte, rows_sec
     # Il ne semble pas possible d’ajouter plus de 500 enregistrements
     #  par appel à insert_many, dont acte
     slice = 500
-    rows_sections = list(rows_sections)
-    rows_articles = list(rows_articles)
-    for i in range(0,int(len(rows_sections)/slice+1)):
-        Version_section.insert_many(obtenir_sections(rows_sections[i*slice:(i+1)*slice])).execute()
-    for i in range(0,int(len(rows_articles)/slice+1)):
-        Version_article.insert_many(obtenir_articles(rows_articles[i*slice:(i+1)*slice])).execute()
-    #Version_section.insert_many(obtenir_sections(rows_sections)).execute()
-    #Version_article.insert_many(obtenir_articles(rows_articles)).execute()
+    nouvelles_sections = list(nouvelles_sections)
+    nouveaux_articles = list(nouveaux_articles)
+    for i in range(0,int(len(nouvelles_sections)/slice+1)):
+        Version_section.insert_many(obtenir_sections(nouvelles_sections[i*slice:(i+1)*slice])).execute()
+    for i in range(0,int(len(nouveaux_articles)/slice+1)):
+        Version_article.insert_many(obtenir_articles(nouveaux_articles[i*slice:(i+1)*slice])).execute()
+    #Version_section.insert_many(obtenir_sections(nouvelles_sections)).execute()
+    #Version_article.insert_many(obtenir_articles(nouveaux_articles)).execute()
     
-    
+    # Remonter la dernière livraison (branche) jusqu’à la première
+    # version commune avec cette nouvelle livraison
+    entree_version_texte = None
+    nouvelles_versions = set()
     if entree_texte.livraison:
-        entree_version_texte = Livraison_texte.select().where(
+        livraison_texte = Livraison_texte.select().where(
             Livraison_texte.livraison == entree_texte.livraison &
             Livraison_texte.texte == entree_texte
-        ).order_by(Livraison_texte.version_texte.desc()).limit(1)
+        ).order_by(Livraison_texte.version_texte.desc()).get()
+        entree_version_texte = livraison_texte.version_texte
         
-        while entree_version_texte.version_texte.date != dates[0]:
-            entree_version_texte = Version_texte.select().where(
-                Version_texte.precedent == entree_version_texte
-            )
+        # Cette boucle représente la première date de vigueur de la
+        # nouvelle livraison. Réfléchir avec le croquis ci-dessous
+        # en faisant varier N1 (N=nouveau) entre avant V1 et V3
+        #    V1---------V2-----------V3-------V4-------V5
+        #           N1-----------N2                   
+        while not(entree_version_texte.vigueur_debut <= dates[0] and \
+              comp_infini_strict(dates[0], entree_version_texte.vigueur_fin)):
+            if entree_version_texte.version_prec == None:
+                entree_version_texte = None
+                break
             
-    
-    for i in range(len(dates) - 1):
-        
-        # Enregistrement de cette version de texte, sauf si elle existe
-        try:
             entree_version_texte = Version_texte.select().where(
-                Version_texte.titre == version['TITRE'] &
-                Version_texte.titre_long == version['TITREFULL'] &
-                Version_texte.nature == version['NATURE'].lower() &
-                Version_texte.date_texte == version['DATE_TEXTE'] &
-                Version_texte.date_publi == version['DATE_PUBLI'] &
-                Version_texte.date_modif == version['DERNIERE_MODIFICATION'] &
-                Version_texte.etat_juridique == version['ETAT'].lower() &
-                Version_texte.vigueur_debut == dates[i] &
-                Version_texte.vigueur_fin == dates[i+1] &
-                Version_texte.texte == entree_texte #&
-                #Version_texte.version_prec == entree_version_texte
-            )
-        except Version_texte.DoesNotExist:
+                Version_texte.id == entree_version_texte.version_prec
+            ).get()
+        # TODO décider quoi faire si le titre ou une autre donnée
+        #      mineure change -> nouvelle branche ? je dirais oui
+        #      mais réfléchir finement, e.g. à etat_juridique
+        if entree_version_texte != None and entree_version_texte.version_prec != None:
+            entree_version_texte = Version_texte.select().where(
+                Version_texte.id == entree_version_texte.version_prec
+            ).get()
+        
+        # La première nouvelle version est à cheval entre deux
+        # versions précédentes, il faut compléter l’intervalle VX-N1
+        # J’imagine que ce cas ne doit jamais apparaître
+        if entree_version_texte.vigueur_debut < dates[0] and \
+           comp_infini_strict(dates[0], entree_version_texte.vigueur_fin):
+            
             entree_version_texte = Version_texte.create(
                 titre = version['TITRE'],
                 titre_long = version['TITREFULL'],
@@ -254,137 +371,81 @@ def enregistrer_versions_texte(dates, sections, articles, entree_texte, rows_sec
                 date_publi=version['DATE_PUBLI'],
                 date_modif=version['DERNIERE_MODIFICATION'],
                 etat_juridique = version['ETAT'].lower(),
-                vigueur_debut = dates[i],
-                vigueur_fin = dates[i+1],
+                vigueur_debut = entree_version_texte.vigueur_debut,
+                vigueur_fin = dates[0],
                 texte = entree_texte,
-                #version_prec=entree_version_texte
+                version_prec=entree_version_texte
             )
+            #nouvelles_versions |= {entree_version_texte}
+            
+            Livraison_texte.create(
+                livraison = livraison,
+                version_texte = entree_version_texte,
+                texte = entree_texte
+            )
+            
+            # TODO recopier les sections et articles de VX
+            raise NonImplementeException()
+    
+    compteur_recursif(0, 0, True)
+    
+    for i in range(len(dates) - 1):
         
-        # Inscription du lien entre texte, livraison et version de texte
+        compteur_recursif(i+1, len(dates)-1, True)
+        
+        # Enregistrement de cette version de texte #OK
+        entree_version_texte = Version_texte.create(
+            titre = version['TITRE'],
+            titre_long = version['TITREFULL'],
+            nature=version['NATURE'].lower(),
+            date_texte=version['DATE_TEXTE'],
+            date_publi=version['DATE_PUBLI'],
+            date_modif=version['DERNIERE_MODIFICATION'],
+            etat_juridique = version['ETAT'].lower(),
+            vigueur_debut = dates[i],
+            vigueur_fin = dates[i+1],
+            texte = entree_texte,
+            version_prec=entree_version_texte
+        )
+        nouvelles_versions |= {entree_version_texte}
+        
+        # Inscription du lien entre texte, livraison et version de texte #OK
         Livraison_texte.create(
             livraison = livraison,
             version_texte = entree_version_texte,
             texte = entree_texte
         )
         
-        # Inscription du lien entre livraison et section
-        Liste_sections.create(
-            version_section = entree_version_section,
-            version_texte = entree_version_texte
-        )
+        # Inscription du lien entre livraison et sections
+        sections = list(set(nouvelles_sections) | autres_sections)
+        sections = [section for section in sections if section[5] > entree_version_texte.vigueur_debut or comp_infini_strict(section[6], entree_version_texte.vigueur_fin)]
         
-        # Lister les sections
-        #Liste_
+        def liste_sections(sections,version_texte):
+            for section in sections:
+                #print(section)
+                yield {'version_section': section[0],
+                       'version_texte': version_texte}
+        
+        for i in range(0,int(len(sections)/slice+1)):
+            Liste_sections.insert_many(liste_sections(sections[i*slice:(i+1)*slice], entree_version_texte)).execute()
+        
+        # Inscription du lien entre livraison et articles
+        articles = list(set(nouveaux_articles) | autres_articles)
+        articles = [a for a in articles if a[4] > entree_version_texte.vigueur_debut or comp_infini_strict(a[5], entree_version_texte.vigueur_fin)]
+        
+        def liste_articles(articles,version_texte):
+            for article in articles:
+                yield {'version_article': article[0],
+                       'version_texte': version_texte}
+        
+        for i in range(0,int(len(articles)/slice+1)):
+            Liste_articles.insert_many(liste_articles(articles[i*slice:(i+1)*slice], entree_version_texte)).execute()
+        
+        compteur_recursif()
     
     # Enregistrer cette livraison du texte comme étant calculée
     entree_texte.livraison = livraison
     entree_texte.save()
-
-
-# Parcourir récursivement les sections
-# - enregistrer celles du niveau N (N≥1)
-# - ouvrir les fichiers correspondant à ces sections
-# - appeler ranger_sections_xml sur les nœuds de STRUCTURE_TA
-def ranger_sections_xml(chemin_base, coll_sections, coll_articles, entree_texte, version_section_parente, dates, sections, articles, cidTexte, niv, rows_sections, rows_articles):
-    
-    # Prévenir les récursions infinies - les specs indiquent un max de 10
-    if niv == 11:
-        raise Exception()
-    
-    # Traiter les articles à ce niveau
-    #dates_texte, ensemble_articles = ranger_articles_xml(chemin_base, coll_articles, version_section_parente, entree_texte, dates_texte, ensemble_articles)
-    dates, articles, rows_articles = ranger_articles_xml(chemin_base, coll_articles, entree_texte, dates, articles, rows_articles)
-    
-    for i, section in enumerate(coll_sections):
-        
-        # Affichage de l’avancement
-        compteur_recursif(i+1, len(coll_sections), False)
-        
-        cid = section['cid']
-        id = section['id']
-        nom = section.text
-        etat_juridique = section['etat']
-        niveau = section['niv']
-        vigueur_debut = normalise_date(section['debut'])
-        vigueur_fin = normalise_date(section['fin'])
-        url = section['url'][1:]
-        numero = i+1
-        
-        # Prise en compte de cette version de section
-        try:
-            entree_version_section = Version_section.select().where(
-                (Version_section.id == id) &
-                #(Version_section.id_parent == version_section_parente) &
-                (Version_section.nom == nom) &
-                (Version_section.etat_juridique == etat_juridique) &
-                (Version_section.niveau == niveau) &
-                (Version_section.numero == numero) &
-                (Version_section.vigueur_debut == vigueur_debut) &
-                (Version_section.vigueur_fin == vigueur_fin) &
-                (Version_section.texte == entree_texte)
-            ).get()
-            sections |= {entree_version_section.id}
-        except Version_section.DoesNotExist:
-            rows_sections |= {(id, nom, etat_juridique, niveau, numero, vigueur_debut, vigueur_fin, entree_texte.cid)}
-        
-        # Prise en compte des dates de vigueur
-        dates |= {vigueur_debut, vigueur_fin}
-        
-        # Continuer récursivement
-        section_ta = lire_base_section_ta(chemin_base, url)
-        
-        dates, sections, articles, rows_sections, rows_articles = ranger_sections_xml(chemin_base, section_ta['LIEN_SECTION_TA'], section_ta['LIEN_ART'], entree_texte, None, dates, sections, articles, cidTexte, niv+1, rows_sections, rows_articles)
-        
-        # Affichage de l’avancement
-        compteur_recursif()
-    
-    return dates, sections, articles, rows_sections, rows_articles
-
-
-def ranger_articles_xml(chemin_base, coll_articles, entree_texte, dates, articles, rows_articles):
-    
-    # Si pas d’article dans cette section
-    if coll_articles == None:
-        return dates_texte, ensemble_articles, rows_articles
-    
-    # Sinon itérer sur les articles
-    for i, article in enumerate(coll_articles):
-        
-        # Affichage de l’avancement
-        compteur_recursif(i+1, len(coll_articles), True)
-        
-        # Lecture brute des attributs XML
-        id = article['id']
-        nom = article['num']
-        etat_juridique = article['etat']
-        vigueur_debut = normalise_date(article['debut'])
-        vigueur_fin = normalise_date(article['fin'])
-        numero = i+1
-        
-        # Prise en compte de cette version d’article        
-        try:
-            entree_article = Version_article.select().where(
-                (Version_article.id == id) &
-                #(Version_article.version_section == entree_version_section) &
-                (Version_article.nom == nom) &
-                (Version_article.etat_juridique == etat_juridique) &
-                (Version_article.numero == numero) &
-                (Version_article.vigueur_debut == vigueur_debut) &
-                (Version_article.vigueur_fin == vigueur_fin) &
-                (Version_article.condensat == None) &
-                (Version_article.texte == entree_texte)
-            ).get()
-            articles |= {entree_article.id}
-        except Version_article.DoesNotExist:
-            rows_articles |= {(id,  nom, etat_juridique, numero, vigueur_debut, vigueur_fin, None, entree_texte.cid)}
-        
-        # Prise en compte des dates de vigueur
-        dates |= {vigueur_debut, vigueur_fin}
-        
-        # Affichage de l’avancement
-        compteur_recursif()
-    
-    return dates, articles, rows_articles
 
 
 # Lire les propriétés du fichier texte/version/[cid].xml

@@ -125,6 +125,13 @@ def decompose_cid(cidTexte):
     return os.path.join(FFFF, TTTT, xx1, xx2, xx3, xx4, xx5, cidTexte)
 
 
+#  x   y  résultat
+#  ∞   ∞   0
+#  ∞   N   1
+#  N   ∞  -1
+#  N  N+1 -1
+# N+1  N   1
+#  N   N   0
 def comp_infini(x, y):
     
     if x == y:
@@ -136,6 +143,13 @@ def comp_infini(x, y):
     return -2 * int(x < y) + 1
 
 
+#  x   y  résultat
+#  ∞   ∞  False
+#  ∞   N  False
+#  N   ∞  True
+#  N  N+1 True
+# N+1  N  False
+#  N   N  False
 def comp_infini_strict(x, y):
     
     if x == None and y == None:
@@ -147,6 +161,13 @@ def comp_infini_strict(x, y):
     return x < y
 
 
+#  x   y  résultat
+#  ∞   ∞  True
+#  ∞   N  False
+#  N   ∞  True
+#  N  N+1 True
+# N+1  N  False
+#  N   N  True
 def comp_infini_large(x, y):
     
     if x == y:
