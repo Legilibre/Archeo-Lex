@@ -123,9 +123,10 @@ def creer_historique_texte(texte, format, dossier, cache):
         f_texte.close()
         
         # Exécuter Git
+        date_git = str(version_texte.vigueur_debut)
         date_base_legi = '{} {} {} {}:{}:{}'.format('18', 'juillet', '2014', '11', '30', '10') # TODO changer cela
         subprocess.call(['git', 'add', os.path.join(sousdossier, nom_fichier + '.md')], cwd=dossier)
-        subprocess.call(['git', 'commit', '--author="Législateur <>"', '--date="' + str(version_texte.debut) + 'T00:00:00Z"', '-m', 'Version consolidée au {}\n\nVersions :\n- base LEGI : {}\n- programme Archéo Lex : {}'.format(date_fr, date_base_legi, version_archeolex), '-q', '--no-status'], cwd=dossier)
+        subprocess.call(['git', 'commit', '--author="Législateur <>"', '--date="' + date_git + 'T00:00:00Z"', '-m', 'Version consolidée à {}\n\nVersions :\n- base LEGI : {}\n- programme Archéo Lex : {}'.format(date_fr, date_base_legi, version_archeolex), '-q', '--no-status'], cwd=dossier, env={'GIT_COMMITTER_NAME': 'Législateur'.encode('utf-8'), 'GIT_COMMITTER_EMAIL': '', 'GIT_COMMITTER_DATE': date_git+'T00:00:00Z'})
         
         if version_texte.fin == None:
             logger.info('Version {} enregistrée (du {} à maintenant)'.format(i_version, version_texte.debut))
