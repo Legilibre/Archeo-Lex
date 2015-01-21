@@ -4,7 +4,7 @@
 # – crée un dépôt Git des lois françaises écrites en syntaxe Markdown
 # – ce module gère la structure de la base de données
 # 
-# La version de la base de données manipulée ici est : 2.1
+# La version de la base de données manipulée ici est : 2.2
 # Cette version est incrémentée à chaque changement de la BDD.
 # 
 # This program is free software. It comes without any warranty, to
@@ -192,6 +192,16 @@ class Liste_articles(BaseModel):
     version_texte = ForeignKeyField(Version_texte) # version de texte mise en correspondance
 
 
+# Classe représentant une liste d’articles à markdowniser (ou autre syntaxe)
+
+class Travaux_articles(BaseModel):
+    
+    #id = IntegerField(primary_key=True) # identifiant non-significatif
+    version_article = ForeignKeyField(Version_article) # version de section mise en correspondance
+    chemin = CharField(max_length=250) # chemin où cette version d’article peut être trouvée
+    texte = ForeignKeyField(Texte) # texte mis en correspondance
+
+
 # Initialisation de la base de données
 # 
 # 
@@ -208,7 +218,7 @@ def initialisation_bdd(nom='archeo-lex.sqlite', cache='cache', effacer=False):
     database_proxy.initialize(database)
     
     # Initialisation de la base de données le cas échéant
-    for modele in (Livraison, Texte, Version_texte, Version_section, Version_article, Livraison_texte, Liste_sections, Liste_articles):
+    for modele in (Livraison, Texte, Version_texte, Version_section, Version_article, Livraison_texte, Liste_sections, Liste_articles, Travaux_articles):
         
         if not modele.table_exists():
             modele.create_table()

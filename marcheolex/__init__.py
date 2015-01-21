@@ -84,6 +84,16 @@ fichiers_majo = {
     'CIRCULAIRES': 'circulaire_%d%m%Y%Hh%M.tar.gz'
 }
 
+# Tranches d’insertion dans la base de données, semble fixé par Peewee
+# Changer cette valeur peut bloquer le déroulement du programme, sauf
+# évolution de Peewee
+tranches_bdd = 500
+
+# Taille du condensat tronqué pour indexer le cache des articles
+# Noter qu’un chiffre supplémentaire est ajouté si jamais deux
+# mêmes articles ont le même condensat tronqué
+condensat_tronque = 4
+
 
 #
 # Exceptions

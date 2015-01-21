@@ -17,11 +17,16 @@ from __future__ import division
 from __future__ import print_function
 import os
 import re
+import hashlib
+
 from path import path
 from bs4 import BeautifulSoup
+
+from marcheolex import condensat_tronque
 from marcheolex.basededonnees import Version_texte
 from marcheolex.basededonnees import Version_section
 from marcheolex.basededonnees import Version_article
+from marcheolex.basededonnees import Travaux_articles
 from marcheolex.utilitaires import normalisation_code
 from marcheolex.utilitaires import chemin_texte
 from marcheolex.utilitaires import decompose_cid
@@ -37,8 +42,7 @@ def creer_markdown_texte(texte, cache):
     
     # Informations de base
     cid = texte[1]
-    articles = Version_article.select(Version_article.id).where(Version_article.texte == cid)
-    chemin_base = os.path.join(cache, 'bases-xml', chemin_texte(cid))
+    articles = Travaux_articles.select(Travaux_articles, Version_article).join(Version_article).where(Version_article.texte == cid).execute()
     
     # Créer le répertoire de cache
     path(os.path.join(cache, 'markdown')).mkdir_p()
@@ -47,13 +51,18 @@ def creer_markdown_texte(texte, cache):
     for article in articles:
         
         # Si la markdownisation a déjà été faite, passer
-        chemin_markdown = os.path.join(cache, 'markdown', cid, article.id + '.md')
-        if os.path.exists(chemin_markdown):
+        id = article.version_article.id
+        chemin_xml = article.chemin
+        condensat = str(article.version_article.condensat)
+        print(cid)
+        print(id)
+        print(condensat)
+        chemin_markdown = os.path.join(cache, 'markdown', cid, id + '-' + condensat + '.md')
+        if condensat and os.path.exists(chemin_markdown):
             continue
         
         # Lecture du fichier
-        chemin_article = os.path.join(chemin_base, 'article', decompose_cid(article.id) + '.xml')
-        f_article = open(chemin_article, 'r')
+        f_article = open(chemin_xml, 'r')
         soup = BeautifulSoup(f_article.read(), 'xml')
         f_article.close()
         contenu = soup.find('BLOC_TEXTUEL').find('CONTENU').text.strip()
@@ -86,8 +95,23 @@ def creer_markdown_texte(texte, cache):
             else:
                 contenu = contenu + '\n\n' + lignes[i]
         
-        # Enregistrement
+        # Calcul du condensat
+        md5 = hashlib.md5(contenu.encode('utf-8')).hexdigest()
+        condensat = md5[0:condensat_tronque]
+        ambiguite = 0
+        chemin_markdown = os.path.join(cache, 'markdown', cid, id + '-' + condensat + str(ambiguite) + '.md')
+        while os.path.exists(chemin_markdown):
+            ambiguite = ambiguite+1
+            chemin_markdown = os.path.join(cache, 'markdown', cid, id + '-' + condensat + str(ambiguite) + '.md')
+            if ambiguite == 10:
+                raise Exception()
+        
+        # Enregistrement du fichier
         f_markdown = open(chemin_markdown, 'w')
         f_markdown.write(contenu.encode('utf-8'))
         f_markdown.close()
+        
+        # Inscription dans la base de données
+        Version_article.update(condensat = condensat+str(ambiguite)).where(Version_article.id == id).execute()
+        Travaux_articles.delete().where(Travaux_articles.id == article.id).execute()
 

@@ -17,10 +17,13 @@ from __future__ import division
 from __future__ import print_function
 import os
 import sys
+import math
+
 from bs4 import BeautifulSoup
 from datetime import datetime
 
 from marcheolex import FichierNonExistantException
+from marcheolex import tranches_bdd
 from marcheolex.basededonnees import Livraison
 from marcheolex.basededonnees import Texte
 from marcheolex.basededonnees import Version_texte
@@ -29,7 +32,9 @@ from marcheolex.basededonnees import Version_article
 from marcheolex.basededonnees import Livraison_texte
 from marcheolex.basededonnees import Liste_sections
 from marcheolex.basededonnees import Liste_articles
+from marcheolex.basededonnees import Travaux_articles
 from marcheolex.utilitaires import chemin_texte
+from marcheolex.utilitaires import decompose_cid
 from marcheolex.utilitaires import normalise_date
 from marcheolex.utilitaires import comp_infini
 from marcheolex.utilitaires import comp_infini_strict
@@ -155,7 +160,7 @@ def ranger_texte_xml(livraison, base, chemin_base, cidTexte, nature_attendue=Non
     print(len(nouveaux_articles))
     
     # Enregistrer les versions de texte
-    enregistrer_versions_texte(version, livraison, dates, autres_sections, autres_articles, entree_texte, nouvelles_sections, nouveaux_articles)
+    enregistrer_versions_texte(version, livraison, dates, autres_sections, autres_articles, entree_texte, nouvelles_sections, nouveaux_articles, chemin_base)
 
 
 # Parcourir récursivement les sections
@@ -283,7 +288,7 @@ def ranger_articles_xml(chemin_base, coll_articles, entree_texte, dates, \
     return dates, autres_articles, nouveaux_articles
 
 
-def enregistrer_versions_texte(version, livraison, dates, autres_sections, autres_articles, entree_texte, nouvelles_sections, nouveaux_articles):
+def enregistrer_versions_texte(version, livraison, dates, autres_sections, autres_articles, entree_texte, nouvelles_sections, nouveaux_articles, chemin_base):
     
     # Chercher les versions de textes de cette livraison
     dates = list(dates)
@@ -311,18 +316,26 @@ def enregistrer_versions_texte(version, livraison, dates, autres_sections, autre
                    'condensat': article[6],
                    'texte': article[7]}
     
+    def obtenir_travaux_articles(articles, chemin_base):
+        for article in articles:
+            yield {'version_article': article[0],
+                   'texte': article[7],
+                   'chemin': os.path.join(chemin_base, 'article', decompose_cid(article[0]+'.xml'))}
+    
     # Import des enregistrements sections et articles
     # Il ne semble pas possible d’ajouter plus de 500 enregistrements
     #  par appel à insert_many, dont acte
-    slice = 500
     nouvelles_sections = list(nouvelles_sections)
     nouveaux_articles = list(nouveaux_articles)
-    for i in range(0,int(len(nouvelles_sections)/slice+1)):
-        Version_section.insert_many(obtenir_sections(nouvelles_sections[i*slice:(i+1)*slice])).execute()
-    for i in range(0,int(len(nouveaux_articles)/slice+1)):
-        Version_article.insert_many(obtenir_articles(nouveaux_articles[i*slice:(i+1)*slice])).execute()
+    for i in range(0,int(math.ceil(len(nouvelles_sections)/tranches_bdd))):
+        Version_section.insert_many(obtenir_sections(nouvelles_sections[i*tranches_bdd:(i+1)*tranches_bdd])).execute()
+    for i in range(0,int(math.ceil(len(nouveaux_articles)/tranches_bdd))):
+        Version_article.insert_many(obtenir_articles(nouveaux_articles[i*tranches_bdd:(i+1)*tranches_bdd])).execute()
+    for i in range(0,int(math.ceil(len(nouveaux_articles)/tranches_bdd))):
+        Travaux_articles.insert_many(obtenir_travaux_articles(nouveaux_articles[i*tranches_bdd:(i+1)*tranches_bdd], chemin_base)).execute()
     #Version_section.insert_many(obtenir_sections(nouvelles_sections)).execute()
     #Version_article.insert_many(obtenir_articles(nouveaux_articles)).execute()
+    #Travaux_articles.insert_many(obtenir_travaux_articles(nouveaux_articles, chemin_base)).execute()
     
     # Remonter la dernière livraison (branche) jusqu’à la première
     # version commune avec cette nouvelle livraison
@@ -422,12 +435,11 @@ def enregistrer_versions_texte(version, livraison, dates, autres_sections, autre
         
         def liste_sections(sections,version_texte):
             for section in sections:
-                #print(section)
                 yield {'version_section': section[0],
                        'version_texte': version_texte}
         
-        for i in range(0,int(len(sections)/slice+1)):
-            Liste_sections.insert_many(liste_sections(sections[i*slice:(i+1)*slice], entree_version_texte)).execute()
+        for i in range(0,int(math.ceil(len(sections)/tranches_bdd))):
+            Liste_sections.insert_many(liste_sections(sections[i*tranches_bdd:(i+1)*tranches_bdd], entree_version_texte)).execute()
         
         # Inscription du lien entre livraison et articles
         articles = list(set(nouveaux_articles) | autres_articles)
@@ -438,8 +450,8 @@ def enregistrer_versions_texte(version, livraison, dates, autres_sections, autre
                 yield {'version_article': article[0],
                        'version_texte': version_texte}
         
-        for i in range(0,int(len(articles)/slice+1)):
-            Liste_articles.insert_many(liste_articles(articles[i*slice:(i+1)*slice], entree_version_texte)).execute()
+        for i in range(0,int(math.ceil(len(articles)/tranches_bdd))):
+            Liste_articles.insert_many(liste_articles(articles[i*tranches_bdd:(i+1)*tranches_bdd], entree_version_texte)).execute()
         
         compteur_recursif()
     
