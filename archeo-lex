@@ -128,7 +128,7 @@ def principal(arguments):
     
     if action_exporter:
         logger.info('Création de l’historique')
-        creer_historique(data['textes'], data['format'], data['dossier'], data['cache'])
+        creer_historique(data['livraison'], data['textes'], data['format'], data['dossier'], data['cache'])
 
 if __name__ == "__main__":
     principal(docopt(aide, version=0.1, help=False))

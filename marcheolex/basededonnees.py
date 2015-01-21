@@ -4,7 +4,7 @@
 # – crée un dépôt Git des lois françaises écrites en syntaxe Markdown
 # – ce module gère la structure de la base de données
 # 
-# La version de la base de données manipulée ici est : 2.2
+# La version de la base de données manipulée ici est : 2.3
 # Cette version est incrémentée à chaque changement de la BDD.
 # 
 # This program is free software. It comes without any warranty, to
@@ -155,9 +155,9 @@ class Version_article(BaseModel):
     
     id = CharField(max_length=20, primary_key=True) # identifiant technique id
     version_section = ForeignKeyField(Version_section, null=True) # section parente de cet article
-    nom = CharField(max_length=200) # titre de l’article
+    nom = CharField(max_length=200) # titre de l’article (e.g. L321-3-1)
     etat_juridique = CharField(max_length=25) # état juridique de l’article au moment de la livraison
-    numero = CharField(max_length=200) # numéro de l’article (e.g. L321-3-1)
+    numero = IntegerField() # index de l’article dans la section
     vigueur_debut = DateField() # date d’entrée en vigueur de cette version d’article
     vigueur_fin = DateField(null=True) # date de fin de vigueur de cette version d’article
     condensat = CharField(max_length=5, null=True) # condensat tronqué du texte de l’article
@@ -181,6 +181,7 @@ class Liste_sections(BaseModel):
     #id = IntegerField(primary_key=True) # identifiant non-significatif
     version_section = ForeignKeyField(Version_section) # version de section mise en correspondance
     version_texte = ForeignKeyField(Version_texte) # version de texte mise en correspondance
+    id_parent = ForeignKeyField(Version_section, null=True, related_name='section_parente') # parent hiérarchique de cette section
 
 
 # Classe représentant une liste d’articles rattachée à une version de texte
@@ -188,8 +189,9 @@ class Liste_sections(BaseModel):
 class Liste_articles(BaseModel):
     
     #id = IntegerField(primary_key=True) # identifiant non-significatif
-    version_article = ForeignKeyField(Version_article) # version de section mise en correspondance
+    version_article = ForeignKeyField(Version_article) # version d’article mise en correspondance
     version_texte = ForeignKeyField(Version_texte) # version de texte mise en correspondance
+    id_parent = ForeignKeyField(Version_article, null=True, related_name='section_parente') # parent hiérarchique de cet article
 
 
 # Classe représentant une liste d’articles à markdowniser (ou autre syntaxe)

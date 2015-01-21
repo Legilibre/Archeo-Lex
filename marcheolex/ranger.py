@@ -20,7 +20,7 @@ import sys
 import math
 
 from bs4 import BeautifulSoup
-from datetime import datetime
+from datetime import datetime, date
 
 from marcheolex import FichierNonExistantException
 from marcheolex import tranches_bdd
@@ -38,6 +38,7 @@ from marcheolex.utilitaires import decompose_cid
 from marcheolex.utilitaires import normalise_date
 from marcheolex.utilitaires import comp_infini
 from marcheolex.utilitaires import comp_infini_strict
+from marcheolex.utilitaires import comp_infini_large
 
 
 # Ranger un ensemble de textes d’une base XML
@@ -145,22 +146,27 @@ def ranger_texte_xml(livraison, base, chemin_base, cidTexte, nature_attendue=Non
     
     # Initialisation du suivi des dates de changement
     dates = set([version['DATE_DEBUT'], version['DATE_FIN']])
+    arbre = dict()
     autres_sections = set()
     autres_articles = set()
     nouvelles_sections = set()
     nouveaux_articles = set()
+    date_codification = None
+    if struct['NATURE'] == 'CODE':
+        date_codification = version['DATE_DEBUT']
     
     # Ajouter récursivement les sections et articles
-    dates, autres_sections, autres_articles, nouvelles_sections, nouveaux_articles = ranger_sections_xml(chemin_base, struct['LIEN_SECTION_TA'], struct['LIEN_ART'], entree_texte, None, dates, autres_sections, autres_articles, 1, nouvelles_sections, nouveaux_articles)
+    dates, autres_sections, autres_articles, nouvelles_sections, nouveaux_articles, arbre = ranger_sections_xml(chemin_base, struct['LIEN_SECTION_TA'], struct['LIEN_ART'], entree_texte, None, dates, autres_sections, autres_articles, 1, nouvelles_sections, nouveaux_articles, date_codification, arbre)
     print('')
     print(len(dates))
+    print(len(arbre))
     print(len(autres_sections))
     print(len(autres_articles))
     print(len(nouvelles_sections))
     print(len(nouveaux_articles))
     
     # Enregistrer les versions de texte
-    enregistrer_versions_texte(version, livraison, dates, autres_sections, autres_articles, entree_texte, nouvelles_sections, nouveaux_articles, chemin_base)
+    enregistrer_versions_texte(version, livraison, dates, autres_sections, autres_articles, entree_texte, nouvelles_sections, nouveaux_articles, chemin_base, arbre)
 
 
 # Parcourir récursivement les sections
@@ -170,16 +176,16 @@ def ranger_texte_xml(livraison, base, chemin_base, cidTexte, nature_attendue=Non
 def ranger_sections_xml(chemin_base, coll_sections, coll_articles, \
                         entree_texte, version_section_parente, dates, \
                         autres_sections, autres_articles, niv, \
-                        nouvelles_sections, nouveaux_articles):
+                        nouvelles_sections, nouveaux_articles, date_codification, arbre):
     
     # Prévenir les récursions infinies - les specs indiquent un max de 10
     if niv == 11:
         raise Exception()
     
     # Traiter les articles à ce niveau
-    dates, autres_articles, nouveaux_articles = ranger_articles_xml( \
+    dates, autres_articles, nouveaux_articles, arbre = ranger_articles_xml( \
         chemin_base, coll_articles, entree_texte, dates, autres_articles, \
-        nouveaux_articles)
+        nouveaux_articles, date_codification, version_section_parente, arbre)
     
     for i, section in enumerate(coll_sections):
         
@@ -195,6 +201,16 @@ def ranger_sections_xml(chemin_base, coll_sections, coll_articles, \
         vigueur_fin = normalise_date(section['fin'])
         url = section['url'][1:]
         numero = i+1
+        
+        # HACK - il ne devrait pas y avoir de date antérieure à la codification mais il y en a
+        if date_codification and comp_infini_strict(vigueur_debut, date_codification):
+            print('vigueur_debut section defectueuse {} < {}'.format(vigueur_debut,date_codification))
+            vigueur_debut = date_codification
+        if date_codification and comp_infini_large(vigueur_fin, date_codification):
+            print('vigueur_fin section defectueuse {} <= {}'.format(vigueur_fin,date_codification))
+            raise Exception()
+            compteur_recursif()
+            continue
         
         # Prise en compte de cette version de section
         try:
@@ -212,10 +228,12 @@ def ranger_sections_xml(chemin_base, coll_sections, coll_articles, \
             autres_sections |= {(id, nom, etat_juridique, niveau, numero, \
                                  vigueur_debut, vigueur_fin, entree_texte.cid)}
         except Version_section.DoesNotExist:
-            nouvelles_sections |= {(id, nom, etat_juridique, niveau, numero, \
-                                    vigueur_debut, vigueur_fin, \
+            nouvelles_sections |= {(id, nom, etat_juridique, niveau, \
+                                    numero, vigueur_debut, vigueur_fin, \
                                     entree_texte.cid)}
             dates |= {vigueur_debut, vigueur_fin}
+        
+        arbre[id] = version_section_parente
         
         # Prise en compte des dates de vigueur
         #dates |= {vigueur_debut, vigueur_fin}
@@ -224,24 +242,25 @@ def ranger_sections_xml(chemin_base, coll_sections, coll_articles, \
         section_ta = lire_base_section_ta(chemin_base, url)
         
         dates, autres_sections, autres_articles, nouvelles_sections, \
-            nouveaux_articles = ranger_sections_xml(chemin_base, \
+            nouveaux_articles, arbre = ranger_sections_xml(chemin_base, \
             section_ta['LIEN_SECTION_TA'], section_ta['LIEN_ART'], \
-            entree_texte, None, dates, autres_sections, autres_articles, \
-            niv+1, nouvelles_sections, nouveaux_articles)
+            entree_texte, id, dates, autres_sections, autres_articles, \
+            niv+1, nouvelles_sections, nouveaux_articles, date_codification, arbre)
         
         # Affichage de l’avancement
         compteur_recursif()
     
     return dates, autres_sections, autres_articles, nouvelles_sections, \
-           nouveaux_articles
+           nouveaux_articles, arbre
 
 
 def ranger_articles_xml(chemin_base, coll_articles, entree_texte, dates, \
-                        autres_articles, nouveaux_articles):
+                        autres_articles, nouveaux_articles, \
+                        date_codification, id_parent, arbre):
     
     # Si pas d’article dans cette section
     if coll_articles == None:
-        return dates, autres_articles, nouveaux_articles
+        return dates, autres_articles, nouveaux_articles, arbre
     
     # Sinon itérer sur les articles
     for i, article in enumerate(coll_articles):
@@ -256,6 +275,16 @@ def ranger_articles_xml(chemin_base, coll_articles, entree_texte, dates, \
         vigueur_debut = normalise_date(article['debut'])
         vigueur_fin = normalise_date(article['fin'])
         numero = i+1
+        
+        # HACK - il ne devrait pas y avoir de date antérieure à la codification mais il y en a
+        if date_codification and comp_infini_strict(vigueur_debut, date_codification):
+            print('vigueur_debut article defectueuse {} < {}'.format(vigueur_debut,date_codification))
+            vigueur_debut = date_codification
+        if date_codification and comp_infini_large(vigueur_fin, date_codification):
+            print('vigueur_fin article defectueuse {} <= {}'.format(vigueur_fin,date_codification))
+            raise Exception()
+            compteur_recursif()
+            continue
         
         # Prise en compte de cette version d’article        
         try:
@@ -279,16 +308,18 @@ def ranger_articles_xml(chemin_base, coll_articles, entree_texte, dates, \
                                    entree_texte.cid)}
             dates |= {vigueur_debut, vigueur_fin}
         
+        arbre[id] = id_parent
+        
         # Prise en compte des dates de vigueur
         #dates |= {vigueur_debut, vigueur_fin}
         
         # Affichage de l’avancement
         compteur_recursif()
     
-    return dates, autres_articles, nouveaux_articles
+    return dates, autres_articles, nouveaux_articles, arbre
 
 
-def enregistrer_versions_texte(version, livraison, dates, autres_sections, autres_articles, entree_texte, nouvelles_sections, nouveaux_articles, chemin_base):
+def enregistrer_versions_texte(version, livraison, dates, autres_sections, autres_articles, entree_texte, nouvelles_sections, nouveaux_articles, chemin_base, arbre):
     
     # Chercher les versions de textes de cette livraison
     dates = list(dates)
@@ -327,11 +358,11 @@ def enregistrer_versions_texte(version, livraison, dates, autres_sections, autre
     #  par appel à insert_many, dont acte
     nouvelles_sections = list(nouvelles_sections)
     nouveaux_articles = list(nouveaux_articles)
-    for i in range(0,int(math.ceil(len(nouvelles_sections)/tranches_bdd))):
+    for i in range(0,int(math.ceil(float(len(nouvelles_sections))/tranches_bdd))):
         Version_section.insert_many(obtenir_sections(nouvelles_sections[i*tranches_bdd:(i+1)*tranches_bdd])).execute()
-    for i in range(0,int(math.ceil(len(nouveaux_articles)/tranches_bdd))):
+    for i in range(0,int(math.ceil(float(len(nouveaux_articles))/tranches_bdd))):
         Version_article.insert_many(obtenir_articles(nouveaux_articles[i*tranches_bdd:(i+1)*tranches_bdd])).execute()
-    for i in range(0,int(math.ceil(len(nouveaux_articles)/tranches_bdd))):
+    for i in range(0,int(math.ceil(float(len(nouveaux_articles))/tranches_bdd))):
         Travaux_articles.insert_many(obtenir_travaux_articles(nouveaux_articles[i*tranches_bdd:(i+1)*tranches_bdd], chemin_base)).execute()
     #Version_section.insert_many(obtenir_sections(nouvelles_sections)).execute()
     #Version_article.insert_many(obtenir_articles(nouveaux_articles)).execute()
@@ -400,11 +431,11 @@ def enregistrer_versions_texte(version, livraison, dates, autres_sections, autre
             # TODO recopier les sections et articles de VX
             raise NonImplementeException()
     
-    compteur_recursif(0, 0, True)
+    compteur_recursif(0)
     
     for i in range(len(dates) - 1):
         
-        compteur_recursif(i+1, len(dates)-1, True)
+        compteur_recursif(i+1, len(dates)-1)
         
         # Enregistrement de cette version de texte #OK
         entree_version_texte = Version_texte.create(
@@ -431,27 +462,33 @@ def enregistrer_versions_texte(version, livraison, dates, autres_sections, autre
         
         # Inscription du lien entre livraison et sections
         sections = list(set(nouvelles_sections) | autres_sections)
-        sections = [section for section in sections if section[5] > entree_version_texte.vigueur_debut or comp_infini_strict(section[6], entree_version_texte.vigueur_fin)]
+        sections = [section for section in sections if (section[5] <= entree_version_texte.vigueur_debut) and comp_infini_large(entree_version_texte.vigueur_fin, section[6])]
         
-        def liste_sections(sections,version_texte):
+        def liste_sections(sections, arbre, version_texte):
             for section in sections:
                 yield {'version_section': section[0],
-                       'version_texte': version_texte}
+                       'version_texte': version_texte,
+                       'id_parent': arbre[section[0]]}
         
+        #print('tranches sections={} {} {} {}'.format(len(sections), float(len(sections))/tranches_bdd, math.ceil(float(len(sections))/tranches_bdd), int(math.ceil(float(len(sections))/tranches_bdd))))
         for i in range(0,int(math.ceil(len(sections)/tranches_bdd))):
-            Liste_sections.insert_many(liste_sections(sections[i*tranches_bdd:(i+1)*tranches_bdd], entree_version_texte)).execute()
+            #print('{}'.format(len(sections[i*tranches_bdd:(i+1)*tranches_bdd])))
+            Liste_sections.insert_many(liste_sections(sections[i*tranches_bdd:(i+1)*tranches_bdd], arbre, entree_version_texte)).execute()
         
         # Inscription du lien entre livraison et articles
         articles = list(set(nouveaux_articles) | autres_articles)
-        articles = [a for a in articles if a[4] > entree_version_texte.vigueur_debut or comp_infini_strict(a[5], entree_version_texte.vigueur_fin)]
+        articles = [a for a in articles if (a[4] <= entree_version_texte.vigueur_debut) and comp_infini_large(entree_version_texte.vigueur_fin, a[5])]
         
-        def liste_articles(articles,version_texte):
+        def liste_articles(articles, arbre, version_texte):
             for article in articles:
                 yield {'version_article': article[0],
-                       'version_texte': version_texte}
+                       'version_texte': version_texte,
+                       'id_parent': arbre[article[0]]}
         
+        #print('tranches articles={} {} {} {}'.format(len(articles), float(len(articles))/tranches_bdd, math.ceil(float(len(articles))/tranches_bdd), int(math.ceil(float(len(articles))/tranches_bdd))))
         for i in range(0,int(math.ceil(len(articles)/tranches_bdd))):
-            Liste_articles.insert_many(liste_articles(articles[i*tranches_bdd:(i+1)*tranches_bdd], entree_version_texte)).execute()
+            #print('{}'.format(len(articles[i*tranches_bdd:(i+1)*tranches_bdd])))
+            Liste_articles.insert_many(liste_articles(articles[i*tranches_bdd:(i+1)*tranches_bdd], arbre, entree_version_texte)).execute()
         
         compteur_recursif()
     
@@ -574,11 +611,14 @@ def lire_base_section_ta(chemin_base, chemin_id):
 # Compteur récursif
 def compteur_recursif(index = None, total = None, feuille = False):
     
-    if not hasattr(compteur_recursif, 'avancement') or total == 0:
+    if not hasattr(compteur_recursif, 'avancement') or index == 0:
         compteur_recursif.avancement = []
     
     # Initialisation de l’index
     if index >= 1:
+        
+        if total == None:
+            total = '?'
         
         if index == 1:
             compteur_recursif.avancement += [(index, total, feuille)]
@@ -587,8 +627,10 @@ def compteur_recursif(index = None, total = None, feuille = False):
         
         if feuille:
             print('({}/{})'.format(index, total), end='')
+        elif len(compteur_recursif.avancement) > 1:
+            print(' → {}/{}'.format(index, total), end='')
         else:
-            print('{}/{} → '.format(index, total), end='')
+            print('{}/{}'.format(index, total), end='')
     
     # Effacement de l’index avant de passer au suivant
     elif index == None:
@@ -597,13 +639,15 @@ def compteur_recursif(index = None, total = None, feuille = False):
         total = compteur_recursif.avancement[-1][1]
         feuille = compteur_recursif.avancement[-1][2]
         
-        if index == total:
+        if index == total and total != '?':
             compteur_recursif.avancement.pop()
         
         if feuille:
             taille = len('({}/{})'.format(index, total))
-        else:
+        elif len(compteur_recursif.avancement) > 1:
             taille = len('{}/{}'.format(index, total))+3
+        else:
+            taille = len('{}/{}'.format(index, total))
         
         print('\033[' + str(taille) + 'D' + (''.join([' ' * taille])) + \
               '\033[' + str(taille) + 'D', end='')

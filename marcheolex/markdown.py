@@ -30,6 +30,7 @@ from marcheolex.basededonnees import Travaux_articles
 from marcheolex.utilitaires import normalisation_code
 from marcheolex.utilitaires import chemin_texte
 from marcheolex.utilitaires import decompose_cid
+from marcheolex.ranger import compteur_recursif
 
 
 def creer_markdown(textes, cache):
@@ -48,15 +49,19 @@ def creer_markdown_texte(texte, cache):
     path(os.path.join(cache, 'markdown')).mkdir_p()
     path(os.path.join(cache, 'markdown', cid)).mkdir_p()
     
-    for article in articles:
+    compteur_recursif(0)
+    
+    for i, article in enumerate(articles):
+        
+        compteur_recursif(i+1)
         
         # Si la markdownisation a déjà été faite, passer
         id = article.version_article.id
         chemin_xml = article.chemin
         condensat = str(article.version_article.condensat)
-        print(cid)
-        print(id)
-        print(condensat)
+        #print(cid)
+        #print(id)
+        #print(condensat)
         chemin_markdown = os.path.join(cache, 'markdown', cid, id + '-' + condensat + '.md')
         if condensat and os.path.exists(chemin_markdown):
             continue
@@ -114,4 +119,6 @@ def creer_markdown_texte(texte, cache):
         # Inscription dans la base de données
         Version_article.update(condensat = condensat+str(ambiguite)).where(Version_article.id == id).execute()
         Travaux_articles.delete().where(Travaux_articles.id == article.id).execute()
+        
+        compteur_recursif()
 
