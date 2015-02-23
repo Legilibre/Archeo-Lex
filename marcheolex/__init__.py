@@ -94,6 +94,11 @@ tranches_bdd = 500
 # mêmes articles ont le même condensat tronqué
 condensat_tronque = 4
 
+# Version du dialecte Markdown
+# (lorsque que Archéo Lex arrivera en version 1.0.0, ce chiffre sera remis à
+# 1, ensuite il changera à chaque évolution du dialecte)
+version_markdown = 1
+
 
 #
 # Exceptions

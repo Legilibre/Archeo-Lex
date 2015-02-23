@@ -23,6 +23,7 @@ from path import path
 from bs4 import BeautifulSoup
 
 from marcheolex import condensat_tronque
+from marcheolex import version_markdown
 from marcheolex.basededonnees import Version_texte
 from marcheolex.basededonnees import Version_section
 from marcheolex.basededonnees import Version_article
@@ -43,7 +44,9 @@ def creer_markdown_texte(texte, cache):
     
     # Informations de base
     cid = texte[1]
-    articles = Travaux_articles.select(Travaux_articles, Version_article).join(Version_article).where(Version_article.texte == cid).execute()
+    articles = Travaux_articles.select(Travaux_articles, \
+        Version_article).join(Version_article) \
+        .where(Version_article.texte == cid).execute()
     
     # Créer le répertoire de cache
     path(os.path.join(cache, 'markdown')).mkdir_p()
@@ -59,10 +62,8 @@ def creer_markdown_texte(texte, cache):
         id = article.version_article.id
         chemin_xml = article.chemin
         condensat = str(article.version_article.condensat)
-        #print(cid)
-        #print(id)
-        #print(condensat)
-        chemin_markdown = os.path.join(cache, 'markdown', cid, id + '-' + condensat + '.md')
+        chemin_markdown = os.path.join(cache, 'markdown', cid, \
+                                       id + '-' + condensat + '.md')
         if condensat and os.path.exists(chemin_markdown):
             continue
         
@@ -76,10 +77,13 @@ def creer_markdown_texte(texte, cache):
         lignes = [l.strip() for l in contenu.split('\n')]
         contenu = '\n'.join(lignes)
         
-        # - Retrait des <br/> en début et fin (cela semble être enlevé par BeautifulSoup)
-        if all([lignes[l].startswith(('<br/>', r'<br />')) for l in range(0, len(lignes))]):
+        # - Retrait des <br/> en début et fin
+        # (cela semble être enlevé par BeautifulSoup)
+        if all([lignes[l].startswith(('<br/>', r'<br />'))
+                                              for l in range(0, len(lignes))]):
             lignes[i] = re.sub(r'^<br ?/> *', r'', lignes[i])
-        if all([lignes[l].endswith(('<br/>', r'<br />')) for l in range(0, len(lignes))]):
+        if all([lignes[l].endswith(('<br/>', r'<br />'))
+                                              for l in range(0, len(lignes))]):
             lignes[i] = re.sub(r' *<br ?/>$', r'', lignes[i])
         contenu = '\n'.join(lignes)
         
@@ -104,10 +108,17 @@ def creer_markdown_texte(texte, cache):
         md5 = hashlib.md5(contenu.encode('utf-8')).hexdigest()
         condensat = md5[0:condensat_tronque]
         ambiguite = 0
-        chemin_markdown = os.path.join(cache, 'markdown', cid, id + '-' + condensat + str(ambiguite) + '.md')
+        chemin_markdown = os.path.join(cache, 'markdown', cid,
+            id + '-' + condensat + str(ambiguite) + '.md')
         while os.path.exists(chemin_markdown):
+            f_markdown = open(chemin_markdown, 'w')
+            texte_markdown = f_markdown.read()
+            f_markdown.close()
+            if md5 == hashlib.md5(texte_markdown).hexdigest():
+                break
             ambiguite = ambiguite+1
-            chemin_markdown = os.path.join(cache, 'markdown', cid, id + '-' + condensat + str(ambiguite) + '.md')
+            chemin_markdown = os.path.join(cache, 'markdown', cid,
+                id + '-' + condensat + str(ambiguite) + '.md')
             if ambiguite == 10:
                 raise Exception()
         
@@ -117,8 +128,11 @@ def creer_markdown_texte(texte, cache):
         f_markdown.close()
         
         # Inscription dans la base de données
-        Version_article.update(condensat = condensat+str(ambiguite)).where(Version_article.id == id).execute()
-        Travaux_articles.delete().where(Travaux_articles.id == article.id).execute()
+        Version_article.update(condensat = condensat+str(ambiguite)) \
+                       .where(Version_article.id == id).execute()
+        
+        Travaux_articles.delete() \
+                        .where(Travaux_articles.id == article.id).execute()
         
         compteur_recursif()
 

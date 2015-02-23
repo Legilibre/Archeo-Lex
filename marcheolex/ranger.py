@@ -66,6 +66,13 @@ def lire_code_xml(base, cle, livraison, cache):
                 precedent=None,
                 fondation=None
             )
+    entree_livraison = Livraison.create(
+                date=datetime(2015, 1, 7, 23, 2, 6),
+                type='miseajour',
+                base='LEGI',
+                precedent=entree_livraison,
+                fondation=entree_livraison
+            )
     
     # Obtenir la livraison
     cidTexte = cle[1]
@@ -362,8 +369,8 @@ def enregistrer_versions_texte(version, livraison, dates, autres_sections, autre
         Version_section.insert_many(obtenir_sections(nouvelles_sections[i*tranches_bdd:(i+1)*tranches_bdd])).execute()
     for i in range(0,int(math.ceil(float(len(nouveaux_articles))/tranches_bdd))):
         Version_article.insert_many(obtenir_articles(nouveaux_articles[i*tranches_bdd:(i+1)*tranches_bdd])).execute()
-    for i in range(0,int(math.ceil(float(len(nouveaux_articles))/tranches_bdd))):
-        Travaux_articles.insert_many(obtenir_travaux_articles(nouveaux_articles[i*tranches_bdd:(i+1)*tranches_bdd], chemin_base)).execute()
+    #for i in range(0,int(math.ceil(float(len(nouveaux_articles))/tranches_bdd))):
+        #Travaux_articles.insert_many(obtenir_travaux_articles(nouveaux_articles[i*tranches_bdd:(i+1)*tranches_bdd], chemin_base)).execute()
     #Version_section.insert_many(obtenir_sections(nouvelles_sections)).execute()
     #Version_article.insert_many(obtenir_articles(nouveaux_articles)).execute()
     #Travaux_articles.insert_many(obtenir_travaux_articles(nouveaux_articles, chemin_base)).execute()
