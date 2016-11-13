@@ -97,7 +97,7 @@ Les dépôts Git résultats de ce programme n’ont en aucune manière un caract
 
 ### Licence
 
-Ce programme est sous licence [WTFPL 2.0](http://www.wpfpl.net) avec clause de non-garantie. Voir le fichier COPYING pour les détails.
+Ce programme est sous licence [WTFPL 2.0](http://www.wtfpl.net) avec clause de non-garantie. Voir le fichier COPYING pour les détails.
 
 
 ### Contact
