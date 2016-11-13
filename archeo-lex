@@ -56,7 +56,7 @@ aide = ('''Usage: archeo-lex [--aide] [--help] [--textes=<TEXTES>] [--base=<BASE
    --mise-a-jour           Effectuer seulement une mise à jour
    --nouveau               Effacer et repartir du début, sauf le téléchargement
 
-   --bdd=<fichier>         Nom de la base de données, par défaut "bdd.sqlite"
+   --bdd=<fichier>         Nom de la base de données, par défaut "archeo-lex.sqlite"
    --cache=<dossier>       Dossier de cache, par défaut "cache"
    --dossier=<dossier>     Dossier de sortie, par défaut "textes"
 
