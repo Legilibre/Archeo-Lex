@@ -64,7 +64,7 @@ def normalisation_code(code):
     nom = ''
     repertoire = ''
     
-    if code.startswith('code') or code.startswith('Code'):
+    if code.startswith(('code', 'Code')):
         code = re.sub('\'', '’', code.lower())
         nom = re.sub('[-_]', ' ', code)
         nom = nom[0].upper() + nom[1:]
