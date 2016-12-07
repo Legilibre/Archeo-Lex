@@ -83,7 +83,7 @@ def telecharger_index_codes(cache):
     path(os.path.join(cache, 'html')).mkdir_p()
     telecharger_legifrance('initRechCodeArticle.do', 'recherche.html', os.path.join(cache, 'html'), 86400)
     fichier_recherche = open(os.path.join(cache, 'html', 'recherche.html'), 'r')
-    soup = BeautifulSoup(fichier_recherche.read())
+    soup = BeautifulSoup(fichier_recherche.read(), 'xml')
     
     # Récupérer les informations
     codes_html = soup.select('select[name="cidTexte"]')[0].findAll('option')

@@ -28,6 +28,7 @@ from peewee import CharField
 from peewee import DateField
 from peewee import ForeignKeyField
 from peewee import IntegerField
+from peewee import DateTimeField
 
 # Initialisation de la base de données
 bd = SqliteDatabase('cache/sql/archeo-lex.sqlite')
