@@ -25,6 +25,7 @@ from marcheolex.ranger import ranger
 from marcheolex.exporter import creer_historique
 from marcheolex.exporter import creer_historique_texte
 from marcheolex.utilitaires import nop
+from marcheolex.utilitaires import obtenir_tous_textes
 
 # Manuel d’aide
 aide = ('''Usage: archeo-lex [--aide] [--help] [--textes=<TEXTES>] [--base=<BASE>] [--livraison=<DATE>] [--format=<FORMAT>] [--versionnement=<VERS>] [--metadonnees] [--initialisation] [--rechercher-xml] [--télécharger] [--ranger] [--lier] [--exporter] [--mise-a-jour | --nouveau] [--bdd=<fichier>] [--cache=<dossier>] [--dossier=<dossier>]
@@ -100,11 +101,17 @@ def principal(arguments):
     #data['effacer'] = arguments.get('--nouveau') or not arguments.get('--mise-à-jour') or False
     
     # Recherche des identifiants
-    logger.info('Recherche des identifiants')
-    data['textes'] = obtenir_identifiants(data['textes'], data['cache'])
+    if data['textes'] == ['tous']:
+        data['textes'] = obtenir_tous_textes(data['base'], data['cache'])
+    else:
+        logger.info('Recherche des identifiants')
+        data['textes'] = obtenir_identifiants(data['textes'], data['cache'])
     logger.info('Textes demandés')
-    for t in data['textes']:
-        logger.info('* {} : {}'.format(t[1], t[0]))
+    if len(data['textes']) > 10:
+        logger.info('  ({} textes)'.format(len(data['textes'])))
+    else:
+        for t in data['textes']:
+            logger.info('* {} : {}'.format(t[1], t[0]))
     
     # Exécution des actions
     if action_initialisation:

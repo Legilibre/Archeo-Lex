@@ -131,6 +131,41 @@ def decompose_cid(cidTexte):
     return os.path.join(FFFF, TTTT, xx1, xx2, xx3, xx4, xx5, cidTexte)
 
 
+def obtenir_tous_textes(base, cache, code=True, vigueur=True):
+
+    dir_base = os.path.join(cache, 'bases-xml', base.lower(), 'global')
+    if base == 'LEGI':
+        if vigueur:
+            vigueur = 'en'
+        else:
+            vigueur = 'non'
+
+        if code:
+            code = 'code'
+        else:
+            code = 'TNC'
+
+        dir_base = os.path.join(dir_base, 'code_et_TNC_' + vigueur + '_vigueur', code + '_' + vigueur + '_vigueur')
+
+    result = explorer_textes(dir_base)
+
+    result2 = []
+    for d in result:
+        result2.append((None,d,None,None))
+
+    return result2
+
+def explorer_textes(dir_base):
+
+    list_dir = os.listdir(dir_base)
+    result = []
+    for d in list_dir:
+        if re.match('[a-zA-Z]{4}TEXT[0-9]{12}\\.xml', d):
+            result.append(d[0:20])
+        else:
+            result = result + explorer_textes(os.path.join(dir_base, d))
+    return result
+
 def comp_infini(x, y):
     
     if x == y:
