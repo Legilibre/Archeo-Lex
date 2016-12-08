@@ -17,7 +17,8 @@ from __future__ import division
 from __future__ import print_function
 from docopt import docopt
 
-from marcheolex import logger
+from marcheolex import logging, logger
+from marcheolex import version_archeolex
 from marcheolex.basededonnees import initialisation_bdd
 from marcheolex.telecharger import obtenir_identifiants
 from marcheolex.telecharger import telecharger_fichiers_base
@@ -28,7 +29,7 @@ from marcheolex.utilitaires import nop
 from marcheolex.utilitaires import obtenir_tous_textes
 
 # Manuel d’aide
-aide = ('''Usage: archeo-lex [--aide] [--help] [--textes=<TEXTES>] [--base=<BASE>] [--livraison=<DATE>] [--format=<FORMAT>] [--versionnement=<VERS>] [--metadonnees] [--initialisation] [--rechercher-xml] [--télécharger] [--ranger] [--lier] [--exporter] [--mise-a-jour | --nouveau] [--bdd=<fichier>] [--cache=<dossier>] [--dossier=<dossier>]
+aide = ('''Usage: archeo-lex [--aide] [--debug] [--help] [--textes=<TEXTES>] [--base=<BASE>] [--livraison=<DATE>] [--format=<FORMAT>] [--versionnement=<VERS>] [--metadonnees] [--initialisation] [--rechercher-xml] [--télécharger] [--ranger] [--lier] [--exporter] [--mise-a-jour | --nouveau] [--bdd=<fichier>] [--cache=<dossier>] [--dossier=<dossier>]
 
 -t --textes=<TEXTES>       Types de textes à télécharger :
                              - "constitution-de-1958",
@@ -45,6 +46,7 @@ aide = ('''Usage: archeo-lex [--aide] [--help] [--textes=<TEXTES>] [--base=<BASE
 -v --versionnement=<VERS>  Versionner avec le système :
                              - "git" (défaut)
                              - "fichiers" : plusieurs fichiers avec les dates
+-d --debug                 Données de DEBUG affichées
 -m --metadonnees           Afficher les métadonnées dans le texte
 
    --initialisation        Vérifier les dépendances, initialiser la base
@@ -72,6 +74,11 @@ def principal(arguments):
     if arguments.get('--aide') or arguments.get('--help'):
         print(aide)
         return
+
+    if arguments.get('--debug') or arguments.get('-d'):
+        logger.setLevel(logging.DEBUG)
+    else:
+        logger.setLevel(logging.INFO)
     
     # Actions à considérer
     action_initialisation = arguments.get('--initialisation') or False
@@ -137,5 +144,5 @@ def principal(arguments):
         creer_historique(data['textes'], data['format'], data['dossier'], data['cache'])
 
 if __name__ == "__main__":
-    principal(docopt(aide, version=0.1, help=False))
+    principal(docopt(aide, version=version_archeolex, help=False))
 
