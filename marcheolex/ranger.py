@@ -62,8 +62,6 @@ def lire_code_xml(cle, cache):
         raise Exception()
     
     # Lire les informations sur le texte
-    logger.info(chemin_base)
-    logger.info(cidTexte)
     ranger_texte_xml(chemin_base, cidTexte, 'code')
 
 
@@ -72,7 +70,6 @@ def ranger_texte_xml(chemin_base, cidTexte, nature_attendue=None):
     
     # Lecture brute du fichier XML texte/version
     chemin_texte_version = os.path.join(chemin_base, 'texte', 'version', cidTexte + '.xml')
-    logger.info(chemin_texte_version)
     if not os.path.exists(chemin_texte_version):
         raise Exception()
     f_version = open(chemin_texte_version, 'r')
@@ -133,14 +130,14 @@ def ranger_texte_xml(chemin_base, cidTexte, nature_attendue=None):
     # Vérifications
     if not cidTexte == version_CID:
         raise Exception()
-    if nature_attendue and not version_NATURE == nature_attendue.upper() or not struct_NATURE == nature_attendue.upper():
-        raise Exception()
+    #if nature_attendue and not version_NATURE == nature_attendue.upper() or not struct_NATURE == nature_attendue.upper():
+    #    raise Exception()
     if not version_DATE_TEXTE == struct_DATE_TEXTE:
         raise Exception()
     if not version_DATE_PUBLI == struct_DATE_PUBLI:
         raise Exception()
-    if not len(struct_VERSION) == 1:  # texte/version ne peut avoir qu’une seule version, donc texte/struct également et elles doivent correspondre
-        raise Exception()
+    #if not len(struct_VERSION) == 1:  # texte/version ne peut avoir qu’une seule version, donc texte/struct également et elles doivent correspondre
+    #    raise Exception()
     
     # Enregistrement du Texte
     # TODO gérer les mises à jour
