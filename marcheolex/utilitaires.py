@@ -99,17 +99,23 @@ def normalise_datetime(texte):
 
 def chemin_texte(cidTexte, code=True, vigueur=True):
     
-    if vigueur:
-        vigueur = 'en'
-    else:
-        vigueur = 'non'
+    if cidTexte[0:4] == 'LEGI':
+
+        if vigueur:
+            vigueur = 'en'
+        else:
+            vigueur = 'non'
     
-    if code:
-        code = 'code'
-    else:
-        code = 'TNC'
+        if code:
+            code = 'code'
+        else:
+            code = 'TNC'
     
-    return os.path.join('legi', 'global', 'code_et_TNC_' + vigueur + '_vigueur', code + '_' + vigueur + '_vigueur', decompose_cid(cidTexte))
+        return os.path.join('legi', 'global', 'code_et_TNC_' + vigueur + '_vigueur', code + '_' + vigueur + '_vigueur', decompose_cid(cidTexte))
+
+    else:
+
+        return os.path.join(cidTexte[0:4].lower(), 'global', decompose_cid(cidTexte))
 
 
 def decompose_cid(cidTexte):
