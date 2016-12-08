@@ -38,7 +38,25 @@ def creer_markdown_texte(texte, cache):
     # Informations de base
     cid = texte[1]
     articles = Article.select(Article.id).where(Article.texte == cid)
-    chemin_base = os.path.join(cache, 'bases-xml', chemin_texte(cid))
+    chemin_base = os.path.join(cache, 'bases-xml')
+    if os.path.exists(os.path.join(chemin_base, chemin_texte(cid, True, True))):
+        chemin_base = os.path.join(chemin_base, chemin_texte(cid, True, True))
+    elif os.path.exists(os.path.join(chemin_base, chemin_texte(cid, True, False))):
+        chemin_base = os.path.join(chemin_base, chemin_texte(cid, True, False))
+    elif os.path.exists(os.path.join(chemin_base, chemin_texte(cid, False, True))):
+        chemin_base = os.path.join(chemin_base, chemin_texte(cid, False, True))
+    elif os.path.exists(os.path.join(chemin_base, chemin_texte(cid, False, False))):
+        chemin_base = os.path.join(chemin_base, chemin_texte(cid, False, False))
+    elif os.path.exists(os.path.join(chemin_base, chemin_texte(cid, True, True)+'.xml')):
+        chemin_base = os.path.join(chemin_base, chemin_texte(cid, True, True))
+    elif os.path.exists(os.path.join(chemin_base, chemin_texte(cid, True, False)+'.xml')):
+        chemin_base = os.path.join(chemin_base, chemin_texte(cid, True, False))
+    elif os.path.exists(os.path.join(chemin_base, chemin_texte(cid, False, True)+'.xml')):
+        chemin_base = os.path.join(chemin_base, chemin_texte(cid, False, True))
+    elif os.path.exists(os.path.join(chemin_base, chemin_texte(cid, False, False)+'.xml')):
+        chemin_base = os.path.join(chemin_base, chemin_texte(cid, False, False))
+    else:
+        raise Exception()
     
     # Créer le répertoire de cache
     path(os.path.join(cache, 'markdown')).mkdir_p()

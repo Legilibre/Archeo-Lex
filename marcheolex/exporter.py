@@ -22,6 +22,7 @@ from path import path
 from bs4 import BeautifulSoup
 from marcheolex import logger
 from marcheolex import version_archeolex
+from marcheolex.basededonnees import Texte
 from marcheolex.basededonnees import Version_texte
 from marcheolex.basededonnees import Version_section
 from marcheolex.basededonnees import Article
@@ -45,23 +46,38 @@ def creer_historique(textes, format, dossier, cache):
 def creer_historique_texte(texte, format, dossier, cache):
     
     # Créer le dossier si besoin
-    nom = texte[0]
-    cid = texte[1]
     sousdossier = '.'
+    cid = texte[1]
+    nom = texte[0] or cid
+    
     path(dossier).mkdir_p()
-    path(os.path.join(dossier, 'codes')).mkdir_p()
-    path(os.path.join(dossier, 'constitutions')).mkdir_p()
-    path(os.path.join(dossier, 'lois')).mkdir_p()
-    path(os.path.join(dossier, 'décrets')).mkdir_p()
-    path(os.path.join(dossier, 'ordonnances')).mkdir_p()
+    entree_texte = Texte.get(Texte.cid == cid)
+    if entree_texte.nature in ('code', 'loi', 'ordonnance'):
+        if not os.path.exists(os.path.join(dossier, entree_texte.nature+'s')):
+            os.makedirs(os.path.join(dossier, entree_texte.nature+'s'))
+        sousdossier = texte.nature+'s'
+    elif entree_texte.nature == 'decret':
+        if not os.path.exists(os.path.join(dossier, u'décrets')):
+            os.makedirs(os.path.join(dossier, u'décrets'))
+        sousdossier = 'décrets'
+    elif entree_texte.nature == 'arrete':
+        if not os.path.exists(os.path.join(dossier, u'arrêtés')):
+            os.makedirs(os.path.join(dossier, u'arrêtés'))
+        sousdossier = 'arrêtés'
+        
     if texte[2]:
         identifiant, nom_fichier = normalisation_code(nom)
-        dossier = os.path.join(dossier, 'codes', identifiant)
-        sousdossier = '.'
-        path(dossier).mkdir_p()
+        sousdossier = os.path.join('codes', identifiant)
         path(os.path.join(dossier, sousdossier)).mkdir_p()
         chemin_base = chemin_texte(cid, True)
-    fichier = os.path.join(dossier, sousdossier, nom_fichier + '.md')
+    else:
+        sousdossier = os.path.join(sousdossier, nom)
+        nom_fichier = cid
+    dossier = os.path.join(dossier, sousdossier)
+    sousdossier = '.'
+    if not os.path.exists(dossier):
+        os.makedirs(dossier)
+    fichier = os.path.join(dossier, nom_fichier + '.md')
     
     # Créer le dépôt Git
     if not os.path.exists(os.path.join(dossier, '.git')):
@@ -156,6 +172,10 @@ def creer_sections(texte, niveau, version_section_parente, versions_sections, ar
         texte = creer_sections(texte, niveau+1, version_section, versions_sections, articles, version_texte, cid, cache)
         
         texte = creer_articles_section(texte, niveau, version_section, articles, version_texte, cid, cache)
+    
+    if len(versions_section) == 0:
+        
+        texte = creer_articles_section(texte, niveau, None, articles, version_texte, cid, cache)
     
     return texte
 
