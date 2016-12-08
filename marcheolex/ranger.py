@@ -43,21 +43,21 @@ def lire_code_xml(cle, cache):
     cidTexte = cle[1]
     chemin_base = os.path.join(cache, 'bases-xml')
     if os.path.exists(os.path.join(chemin_base, chemin_texte(cidTexte, True, True))):
-        chemin_base = os.path.join(chemin_base, chemin_texte(cidTexte))
+        chemin_base = os.path.join(chemin_base, chemin_texte(cidTexte, True, True))
     elif os.path.exists(os.path.join(chemin_base, chemin_texte(cidTexte, True, False))):
-        chemin_base = os.path.join(chemin_base, chemin_texte(cidTexte))
+        chemin_base = os.path.join(chemin_base, chemin_texte(cidTexte, True, False))
     elif os.path.exists(os.path.join(chemin_base, chemin_texte(cidTexte, False, True))):
-        chemin_base = os.path.join(chemin_base, chemin_texte(cidTexte))
+        chemin_base = os.path.join(chemin_base, chemin_texte(cidTexte, False, True))
     elif os.path.exists(os.path.join(chemin_base, chemin_texte(cidTexte, False, False))):
-        chemin_base = os.path.join(chemin_base, chemin_texte(cidTexte))
+        chemin_base = os.path.join(chemin_base, chemin_texte(cidTexte, False, False))
     elif os.path.exists(os.path.join(chemin_base, chemin_texte(cidTexte, True, True)+'.xml')):
-        chemin_base = os.path.join(chemin_base, chemin_texte(cidTexte))
+        chemin_base = os.path.join(chemin_base, chemin_texte(cidTexte, True, True))
     elif os.path.exists(os.path.join(chemin_base, chemin_texte(cidTexte, True, False)+'.xml')):
-        chemin_base = os.path.join(chemin_base, chemin_texte(cidTexte))
+        chemin_base = os.path.join(chemin_base, chemin_texte(cidTexte, True, False))
     elif os.path.exists(os.path.join(chemin_base, chemin_texte(cidTexte, False, True)+'.xml')):
-        chemin_base = os.path.join(chemin_base, chemin_texte(cidTexte))
+        chemin_base = os.path.join(chemin_base, chemin_texte(cidTexte, False, True))
     elif os.path.exists(os.path.join(chemin_base, chemin_texte(cidTexte, False, False)+'.xml')):
-        chemin_base = os.path.join(chemin_base, chemin_texte(cidTexte))
+        chemin_base = os.path.join(chemin_base, chemin_texte(cidTexte, False, False))
     else:
         raise Exception()
     
@@ -72,6 +72,7 @@ def ranger_texte_xml(chemin_base, cidTexte, nature_attendue=None):
     
     # Lecture brute du fichier XML texte/version
     chemin_texte_version = os.path.join(chemin_base, 'texte', 'version', cidTexte + '.xml')
+    logger.info(chemin_texte_version)
     if not os.path.exists(chemin_texte_version):
         raise Exception()
     f_version = open(chemin_texte_version, 'r')
