@@ -19,23 +19,19 @@ LOGGING = {
     'disable_existing_loggers': False,
     'handlers': {
         'null': {
-            'level': 'DEBUG',
             'class': 'logging.NullHandler',
         },
         'console': {
-            'level': 'DEBUG',
             'class': 'logging.StreamHandler',
         },
     },
     'loggers': {
         'peewee': {
             'handlers': ['null'],
-            'level': 'DEBUG',
             'propagate': False,
         },
         '': {
             'handlers': ['console'],
-            'level': 'DEBUG',
             'propagate': True,
         }
     }
