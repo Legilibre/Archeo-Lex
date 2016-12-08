@@ -30,6 +30,11 @@ from peewee import ForeignKeyField
 from peewee import IntegerField
 from peewee import DateTimeField
 
+
+# Création du dossier contenant la base de données
+if not os.path.exists('cache/sql'):
+    print("Création du dossier cache/sql")
+    os.makedirs('cache/sql')
 # Initialisation de la base de données
 bd = SqliteDatabase('cache/sql/archeo-lex.sqlite')
 bd.connect()
