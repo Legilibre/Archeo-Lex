@@ -18,6 +18,8 @@ from __future__ import print_function
 import os
 import sys
 from bs4 import BeautifulSoup
+from marcheolex import logger
+from marcheolex.basededonnees import Texte
 from marcheolex.basededonnees import Texte
 from marcheolex.basededonnees import Version_texte
 from marcheolex.basededonnees import Section
@@ -30,6 +32,7 @@ from marcheolex.utilitaires import comp_infini
 
 def ranger(textes, cache):
     
+    logger.info(textes)
     for texte in textes:
         
         lire_code_xml(texte, cache)
@@ -37,15 +40,30 @@ def ranger(textes, cache):
 
 def lire_code_xml(cle, cache):
     
-    if not cle[2]:
-        return
-    
     cidTexte = cle[1]
-    chemin_base = os.path.join(cache, 'bases-xml', chemin_texte(cidTexte))
-    if not os.path.exists(chemin_base):
+    chemin_base = os.path.join(cache, 'bases-xml')
+    if os.path.exists(os.path.join(chemin_base, chemin_texte(cidTexte, True, True))):
+        chemin_base = os.path.join(chemin_base, chemin_texte(cidTexte))
+    elif os.path.exists(os.path.join(chemin_base, chemin_texte(cidTexte, True, False))):
+        chemin_base = os.path.join(chemin_base, chemin_texte(cidTexte))
+    elif os.path.exists(os.path.join(chemin_base, chemin_texte(cidTexte, False, True))):
+        chemin_base = os.path.join(chemin_base, chemin_texte(cidTexte))
+    elif os.path.exists(os.path.join(chemin_base, chemin_texte(cidTexte, False, False))):
+        chemin_base = os.path.join(chemin_base, chemin_texte(cidTexte))
+    elif os.path.exists(os.path.join(chemin_base, chemin_texte(cidTexte, True, True)+'.xml')):
+        chemin_base = os.path.join(chemin_base, chemin_texte(cidTexte))
+    elif os.path.exists(os.path.join(chemin_base, chemin_texte(cidTexte, True, False)+'.xml')):
+        chemin_base = os.path.join(chemin_base, chemin_texte(cidTexte))
+    elif os.path.exists(os.path.join(chemin_base, chemin_texte(cidTexte, False, True)+'.xml')):
+        chemin_base = os.path.join(chemin_base, chemin_texte(cidTexte))
+    elif os.path.exists(os.path.join(chemin_base, chemin_texte(cidTexte, False, False)+'.xml')):
+        chemin_base = os.path.join(chemin_base, chemin_texte(cidTexte))
+    else:
         raise Exception()
     
     # Lire les informations sur le texte
+    logger.info(chemin_base)
+    logger.info(cidTexte)
     ranger_texte_xml(chemin_base, cidTexte, 'code')
 
 
