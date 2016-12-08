@@ -191,7 +191,7 @@ class Article(Model):
     debut = DateField()
     fin = DateField(null=True)
     texte = ForeignKeyField(Texte)
-    version_section = ForeignKeyField(Version_section)
+    version_section = ForeignKeyField(Version_section, null=True)
     version_texte = ForeignKeyField(Version_texte)
     #cree_par = ForeignKeyField(Version_texte, related_name='crees_par')
     #article_predecesseur = ForeignKeyField('self', null=True)
