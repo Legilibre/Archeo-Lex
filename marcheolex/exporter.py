@@ -55,7 +55,7 @@ def creer_historique_texte(texte, format, dossier, cache):
     if entree_texte.nature in ('code', 'loi', 'ordonnance'):
         if not os.path.exists(os.path.join(dossier, entree_texte.nature+'s')):
             os.makedirs(os.path.join(dossier, entree_texte.nature+'s'))
-        sousdossier = texte.nature+'s'
+        sousdossier = entree_texte.nature+'s'
     elif entree_texte.nature == 'decret':
         if not os.path.exists(os.path.join(dossier, u'décrets')):
             os.makedirs(os.path.join(dossier, u'décrets'))
