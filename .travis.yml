@@ -1,0 +1,24 @@
+sudo: required
+dist: trusty
+language: generic
+
+env:
+  global:
+    - PLAYBOOK="provisioning/provision.yml"
+    - INVENTORY="provisioning/inventory"
+    - LIMIT="local"
+    - SKIP_TAGS=""
+    - VERBOSE="vvv"
+    - PROVIDER="travis"
+
+script:
+  - sudo ln -s $TRAVIS_BUILD_DIR /vagrant
+  - cd /vagrant && sudo bash ./deployment/ansible.sh
+
+notifications:
+  webhooks:
+    urls:
+    - https://webhooks.gitter.im/e/793e9459f3bffe494287
+    on_success: change
+    on_failure: always
+    on_start: never
