@@ -1,0 +1,12 @@
+{
+  "local": {
+    "provider": "virtualbox",
+    "hosts": [
+      "192.168.50.42"
+    ],
+    "vars": {
+      "hostname": "archeo-lex.fr.test"
+    },
+    "memory": 2048
+  }
+}

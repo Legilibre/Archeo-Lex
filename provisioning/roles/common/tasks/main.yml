@@ -1,0 +1,39 @@
+- set_fact: role_name=common
+
+- name: install dependencies
+  apt: name={{ item }} state=present
+  with_items:
+    - git
+    - toilet
+    - htop
+
+- name: remove unused dependencies
+  apt: name={{ item }} state=absent update_cache=no
+  with_items:
+    - puppet
+    - chef
+  register: result
+
+- name: autoremove unused dependencies
+  command: apt-get -y autoremove
+  when: result|changed
+
+- name: set timezone
+  copy: src=timezone dest=/etc/timezone
+  register: result
+
+- name: update timezone
+  command: dpkg-reconfigure --frontend noninteractive tzdata
+  when: result|changed
+
+- name: set motd
+  shell: toilet {{ environment_name }} > /etc/motd
+  args:
+    creates: /etc/motd
+
+- name: switch to root when running "vagrant ssh"
+  lineinfile: dest=/home/vagrant/.bashrc line="sudo -i"
+  when:
+    - is_development_environment
+    - ansible_os_family == 'Debian'
+    - provider != 'docker'

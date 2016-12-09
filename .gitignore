@@ -9,3 +9,9 @@ README.htm
 # Fichiers de sauvegarde
 *.swp
 *~
+
+# Fichiers Ansible
+provision.retry
+
+# Fichiers Vagrant
+.vagrant

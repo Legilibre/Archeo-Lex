@@ -1,0 +1,18 @@
+- set_fact: role_name=git-generator
+
+- name: install dependencies
+  apt: name={{ item }} state=present
+  with_items:
+    - libxslt1-dev
+    - libxml2-dev
+    - zlib1g-dev
+    - python-dev
+
+- name: install python dependencies
+  pip: name={{ item }} state=present
+  with_items:
+    - beautifulsoup4
+    - docopt
+    - peewee
+    - lxml
+    - path.py
