@@ -1,0 +1,7 @@
+---
+- hosts:
+    - local
+  gather_facts: yes
+  roles:
+    - { role: "common" }
+    - { role: "git-generator" }
