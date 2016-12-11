@@ -16,6 +16,8 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 from docopt import docopt
+import os
+import os.path
 
 from marcheolex import logging, logger
 from marcheolex import version_archeolex
@@ -107,6 +109,11 @@ def principal(arguments):
     data['effacer'] = not arguments.get('--mise-a-jour') or arguments.get('--nouveau') or False
     #data['effacer'] = arguments.get('--nouveau') or not arguments.get('--mise-à-jour') or False
     
+    # Création des dossiers de cache
+    for dir in (data['cache'], data['cache']+'/bases-xml', data['cache']+'/divers', data['cache']+'/html', data['cache']+'/markdown', data['cache']+'/sql', data['dossier']):
+        if not os.path.exists(dir):
+           os.makedirs(dir)
+
     # Recherche des identifiants
     if data['textes'] == ['tous']:
         data['textes'] = obtenir_tous_textes(data['base'], data['cache'])
