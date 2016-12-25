@@ -35,6 +35,7 @@ from marcheolex.basededonnees import Livraison
 from marcheolex.utilitaires import telecharger
 from marcheolex.utilitaires import telecharger_cache
 from marcheolex.utilitaires import verif_taille
+from marcheolex.utilitaires import fusionner
 
 
 def telecharger_legifrance(url, fichier, cache_html, force=False):
@@ -236,7 +237,8 @@ def decompresser_base(base, date_fond, dates_majo, cache='cache'):
             os.path.join(cache, 'tar', base + '-fond-' + date + '.tar.gz'),
             '-C', os.path.join(rep, 'fond-' + date)])
         os.remove(os.path.join(rep, 'fond-' + date, 'erreur-tar'))
-        
+        shutil.move(os.path.join(rep, 'fond-' + date, 'legi'),
+                    os.path.join(cache, 'bases-xml', 'legi'))
     
     # Inscrire cette livraison dans la base de données
     try:
@@ -272,6 +274,8 @@ def decompresser_base(base, date_fond, dates_majo, cache='cache'):
             os.rename(os.path.join(rep, date),
                       os.path.join(rep, 'majo-' + date))
             os.remove(os.path.join(rep, 'majo-' + date, 'erreur-tar'))
+            fusionner(os.path.join(rep, 'majo-' + date, 'legi'),
+                      os.path.join(cache, 'bases-xml', 'legi'))
         
         # Inscrire cette livraison dans la base de données
         try:
