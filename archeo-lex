@@ -42,7 +42,7 @@ aide = ('''Usage: archeo-lex [--aide] [--debug] [--help] [--textes=<TEXTES>] [--
 -l --livraison=<DATE>      Date et heure de la livraison souhaitée
                              - "AAAAMMJJ-HHMMSS ("20140718-113010"…)
                              - "fondation"
-                             - "dernière"
+                             - "tout"
 -f --format=<FORMAT>       Format de sortie des textes :
                              - "markdown" (défaut)
 -v --versionnement=<VERS>  Versionner avec le système :

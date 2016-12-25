@@ -204,7 +204,7 @@ def initialisation_bdd(nom='archeo-lex.sqlite', cache='cache', effacer=False):
     #bd = SqliteDatabase(os.path.join(cache, 'sql', nom))
     #bd.connect()
     
-    for modele in (Section, Texte, Version_texte, Version_section, Article):
+    for modele in (Livraison, Section, Texte, Version_texte, Version_section, Article):
         
         if effacer:
             modele.drop_table(fail_silently=True)
