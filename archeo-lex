@@ -42,7 +42,7 @@ aide = ('''Usage: archeo-lex [--aide] [--debug] [--help] [--version] [--textes=<
 -l --livraison=<DATE>      Date et heure de la livraison souhaitée
                              - "AAAAMMJJ-HHMMSS ("20140718-113010"…)
                              - "fondation"
-                             - "dernière"
+                             - "tout"
 
 
    --initialisation        Vérifier les dépendances, initialiser la base
