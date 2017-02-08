@@ -31,7 +31,7 @@ from marcheolex.utilitaires import nop
 from marcheolex.utilitaires import obtenir_tous_textes
 
 # Manuel d’aide
-aide = ('''Usage: archeo-lex [--aide] [--debug] [--help] [--textes=<TEXTES>] [--base=<BASE>] [--livraison=<DATE>] [--format=<FORMAT>] [--versionnement=<VERS>] [--metadonnees] [--initialisation] [--rechercher-xml] [--télécharger] [--ranger] [--lier] [--exporter] [--mise-a-jour | --nouveau] [--bdd=<fichier>] [--cache=<dossier>] [--dossier=<dossier>]
+aide = ('''Usage: archeo-lex [--aide] [--debug] [--help] [--version] [--textes=<TEXTES>] [--base=<BASE>] [--livraison=<DATE>] [--initialisation] [--rechercher-xml] [--télécharger] [--ranger] [--lier] [--exporter] [--mise-a-jour | --nouveau] [--dialecte=<DIALECTE>] [--historique=<HISTORIQUE>] [--métadonnées] [--bdd=<fichier>] [--cache=<dossier>] [--dossier=<dossier>]
 
 -t --textes=<TEXTES>       Types de textes à télécharger :
                              - "constitution-de-1958",
@@ -43,13 +43,6 @@ aide = ('''Usage: archeo-lex [--aide] [--debug] [--help] [--textes=<TEXTES>] [--
                              - "AAAAMMJJ-HHMMSS ("20140718-113010"…)
                              - "fondation"
                              - "tout"
--f --format=<FORMAT>       Format de sortie des textes :
-                             - "markdown" (défaut)
--v --versionnement=<VERS>  Versionner avec le système :
-                             - "git" (défaut)
-                             - "fichiers" : plusieurs fichiers avec les dates
--d --debug                 Données de DEBUG affichées
--m --metadonnees           Afficher les métadonnées dans le texte
 
    --initialisation        Vérifier les dépendances, initialiser la base
    --rechercher-xml        Rechercher les textes dans les données XML
@@ -58,20 +51,38 @@ aide = ('''Usage: archeo-lex [--aide] [--debug] [--help] [--textes=<TEXTES>] [--
    --lier                  Lier les versions d’articles aux versions de textes
    --exporter              Exporter les textes
 
+
    --mise-a-jour           Effectuer seulement une mise à jour
    --nouveau               Effacer et repartir du début, sauf le téléchargement
+
+
+   --dialecte=<DIALECTE>   Dialecte de structuration des textes :
+                             - "markdown" (défaut)
+   --historique=<VERS>     Fabrique l’historique avec le système :
+                             - "git" (défaut)
+                             - "fichiers" : plusieurs fichiers avec les dates
+   --métadonnées           Afficher les métadonnées dans le texte
+
 
    --bdd=<fichier>         Nom de la base de données, par défaut "archeo-lex.sqlite"
    --cache=<dossier>       Dossier de cache, par défaut "cache"
    --dossier=<dossier>     Dossier de sortie, par défaut "textes"
 
+
 -a --aide                  Afficher ce message d’aide
 -h --help                  Afficher ce message d’aide
+-d --debug                 Données de DEBUG affichées
+-v --version               Version d’Archéo Lex
 ''')
 
 
 def principal(arguments):
     
+    # Action "version"
+    if arguments.get('--version') or arguments.get('-v'):
+        print('Archéo Lex – pure Histoire de Loi française – version '+version_archeolex)
+        return
+
     # Action "aide"
     if arguments.get('--aide') or arguments.get('--help'):
         print(aide)
@@ -98,9 +109,10 @@ def principal(arguments):
     data['textes'] = ((arguments.get('--textes') or '').decode('utf-8') or 'code-de-la-propriété-intellectuelle').split(',')
     data['base'] = arguments.get('--base') or 'LEGI'
     data['livraison'] = arguments.get('--livraison') or 'fondation'
-    data['format'] = arguments.get('--format') or 'markdown'
-    data['historique'] = arguments.get('--historique') or 'git'
-    data['metadonnees'] = arguments.get('--metadonnees') or False
+    data['format'] = {}
+    data['format']['dialecte'] = arguments.get('--format') or 'markdown'
+    data['format']['historique'] = arguments.get('--historique') or 'git'
+    data['format']['metadonnees'] = arguments.get('--metadonnees') or False
     
     # Lecture des autres paramètres
     data['bdd'] = (arguments.get('--bdd') or '').decode('utf-8') or 'archeo-lex.sqlite'
@@ -151,5 +163,6 @@ def principal(arguments):
         creer_historique(data['textes'], data['format'], data['dossier'], data['cache'])
 
 if __name__ == "__main__":
-    principal(docopt(aide, version=version_archeolex, help=False))
+    principal(docopt(aide, help=False))
 
+# vim: set ts=4 sw=4 sts=4 et:
