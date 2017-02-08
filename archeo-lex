@@ -44,6 +44,7 @@ aide = ('''Usage: archeo-lex [--aide] [--debug] [--help] [--version] [--textes=<
                              - "fondation"
                              - "tout"
 
+
    --initialisation        Vérifier les dépendances, initialiser la base
    --rechercher-xml        Rechercher les textes dans les données XML
    --télécharger           Télécharger la base XML
