@@ -31,7 +31,7 @@ from marcheolex.utilitaires import nop
 from marcheolex.utilitaires import obtenir_tous_textes
 
 # Manuel d’aide
-aide = ('''Usage: archeo-lex [--aide] [--debug] [--help] [--version] [--textes=<TEXTES>] [--base=<BASE>] [--livraison=<DATE>] [--initialisation] [--rechercher-xml] [--télécharger] [--ranger] [--lier] [--exporter] [--mise-a-jour | --nouveau] [--dialecte=<DIALECTE>] [--historique=<HISTORIQUE>] [--métadonnées] [--bdd=<fichier>] [--cache=<dossier>] [--dossier=<dossier>]
+aide = ('''Usage: archeo-lex [--aide] [--debug] [--help] [--version] [--textes=<TEXTES>] [--base=<BASE>] [--livraison=<DATE>] [--initialisation] [--rechercher-xml] [--telecharger] [--ranger] [--lier] [--exporter] [--mise-a-jour | --nouveau] [--dialecte=<DIALECTE>] [--historique=<HISTORIQUE>] [--métadonnées] [--bdd=<fichier>] [--cache=<dossier>] [--dossier=<dossier>]
 
 -t --textes=<TEXTES>       Types de textes à télécharger :
                              - "constitution-de-1958",
@@ -47,7 +47,7 @@ aide = ('''Usage: archeo-lex [--aide] [--debug] [--help] [--version] [--textes=<
 
    --initialisation        Vérifier les dépendances, initialiser la base
    --rechercher-xml        Rechercher les textes dans les données XML
-   --télécharger           Télécharger la base XML
+   --telecharger           Télécharger la base XML
    --ranger                Ranger les données dans la base de données
    --lier                  Lier les versions d’articles aux versions de textes
    --exporter              Exporter les textes
@@ -97,7 +97,7 @@ def principal(arguments):
     # Actions à considérer
     action_initialisation = arguments.get('--initialisation') or False
     action_rechercher_xml = arguments.get('--rechercher-xml') or False
-    action_telecharger = arguments.get('--télécharger') or False
+    action_telecharger = arguments.get('--telecharger') or False
     action_ranger = arguments.get('--ranger') or False
     action_lier = arguments.get('--lier') or False
     action_exporter = arguments.get('--exporter') or False
@@ -109,7 +109,7 @@ def principal(arguments):
     data = {}
     data['textes'] = ((arguments.get('--textes') or '').decode('utf-8') or 'code-de-la-propriété-intellectuelle').split(',')
     data['base'] = arguments.get('--base') or 'LEGI'
-    data['livraison'] = arguments.get('--livraison') or 'fondation'
+    data['livraison'] = arguments.get('--livraison') or 'tout'
     data['format'] = {}
     data['format']['dialecte'] = arguments.get('--format') or 'markdown'
     data['format']['historique'] = arguments.get('--historique') or 'git'
