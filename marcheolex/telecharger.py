@@ -181,7 +181,7 @@ def telecharger_base(base, livraison='tout', cache='cache'):
         livraison = date_fond
     if livraison == 'tout':
         livraison = dates_majo[-1]
-    dates_majo = [date for date in dates_majo if date <= livraison]
+    dates_majo = [date for date in dates_majo if date_fond <= date <= livraison]
     
     # Téléchargement du dump complet
     telecharger_cache(serveur + date_fond.strftime(fichiers_fond[base]),
