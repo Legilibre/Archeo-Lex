@@ -239,6 +239,7 @@ def decompresser_base(base, date_fond, dates_majo, cache='cache'):
         os.remove(os.path.join(rep, 'fond-' + date, 'erreur-tar'))
         shutil.move(os.path.join(rep, 'fond-' + date, 'legi'),
                     os.path.join(cache, 'bases-xml', 'legi'))
+        shutil.rmtree(os.path.join(rep, 'fond-' + date))
     
     # Inscrire cette livraison dans la base de données
     try:
@@ -276,6 +277,7 @@ def decompresser_base(base, date_fond, dates_majo, cache='cache'):
             os.remove(os.path.join(rep, 'majo-' + date, 'erreur-tar'))
             fusionner(os.path.join(rep, 'majo-' + date, 'legi'),
                       os.path.join(cache, 'bases-xml', 'legi'))
+            shutil.rmtree(os.path.join(rep, 'majo-' + date))
         
         # Inscrire cette livraison dans la base de données
         try:
@@ -288,4 +290,9 @@ def decompresser_base(base, date_fond, dates_majo, cache='cache'):
                     precedent=entree_livraison,
                     fondation=entree_livraison_fondation
                 )
+    
+    try:
+        os.rmdir(rep)
+    except OSError:
+        pass
 
