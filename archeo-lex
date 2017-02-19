@@ -59,10 +59,14 @@ aide = ('''Usage: archeo-lex [--aide] [--debug] [--help] [--version] [--textes=<
 
    --dialecte=<DIALECTE>   Dialecte de structuration des textes :
                              - "markdown" (défaut)
-   --historique=<VERS>     Fabrique l’historique avec le système :
+   --historique=<HIST>     Fabrique l’historique avec le système :
                              - "git" (défaut)
-                             - "fichiers" : plusieurs fichiers avec les dates
+                             - "fichiers" : plusieurs fichiers avec les dates [inactif]
    --métadonnées           Afficher les métadonnées dans le texte
+   --organisation=<TYPE>   Organisation de l’arborescence des fichiers :
+                             - "fichier-unique" (défaut) : unique fichier
+                             - "répertoires-simple" : un répertoire par article, sans hiérarchie [inactif]
+                             - "répertoires-hiérarchie" : un répertoire par section ou article [inactif]
 
 
    --bdd=<fichier>         Nom de la base de données, par défaut "archeo-lex.sqlite"
@@ -114,6 +118,7 @@ def principal(arguments):
     data['format']['dialecte'] = arguments.get('--format') or 'markdown'
     data['format']['historique'] = arguments.get('--historique') or 'git'
     data['format']['metadonnees'] = arguments.get('--metadonnees') or False
+    data['format']['organisation'] = arguments.get('--organisation') or 'fichier-unique'
     
     # Lecture des autres paramètres
     data['bdd'] = (arguments.get('--bdd') or '').decode('utf-8') or 'archeo-lex.sqlite'

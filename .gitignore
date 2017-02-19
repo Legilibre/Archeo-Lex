@@ -1,6 +1,6 @@
 # Données du programme
-cache
-textes
+/cache
+/textes
 
 # Fichiers compilés
 *.pyc
@@ -11,7 +11,7 @@ README.htm
 *~
 
 # Fichiers Ansible
-provision.retry
+/provision.retry
 
 # Fichiers Vagrant
-.vagrant
+/.vagrant
