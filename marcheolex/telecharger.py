@@ -232,6 +232,8 @@ def decompresser_base(base, date_fond, dates_majo, cache='cache'):
         if os.path.exists(os.path.join(rep, 'fond-' + date, 'erreur-tar')):
             shutil.rmtree(os.path.join(rep, 'fond-' + date))
         path(os.path.join(rep, 'fond-' + date)).mkdir_p()
+        
+        # Décompression - en cas d’arrêt le fichier 'erreur-tar' reste
         open(os.path.join(rep, 'fond-' + date, 'erreur-tar'), 'w').close()
         subprocess.call(['tar', 'xzf',
             os.path.join(cache, 'tar', base + '-fond-' + date + '.tar.gz'),
@@ -268,6 +270,8 @@ def decompresser_base(base, date_fond, dates_majo, cache='cache'):
             if os.path.exists(os.path.join(rep, 'majo-' + date, 'erreur-tar')):
                 shutil.rmtree(os.path.join(rep, 'majo-' + date), True)
             path(os.path.join(rep, date)).mkdir_p()
+            
+            # Décompression - en cas d’arrêt le fichier 'erreur-tar' reste
             open(os.path.join(rep, date, 'erreur-tar'), 'w').close()
             subprocess.call(['tar', 'xzf',
                 os.path.join(cache, 'tar', base + '-majo-' + date + '.tar.gz'),
@@ -275,6 +279,20 @@ def decompresser_base(base, date_fond, dates_majo, cache='cache'):
             os.rename(os.path.join(rep, date),
                       os.path.join(rep, 'majo-' + date))
             os.remove(os.path.join(rep, 'majo-' + date, 'erreur-tar'))
+            
+            # Retrait des fichiers à supprimer
+            if os.path.exists(os.path.join(rep, 'majo-' + date, 'liste_suppression_legi.dat')):
+                f_liste = open(os.path.join(rep, 'majo-' + date, 'liste_suppression_legi.dat'), 'r')
+                liste_fichiers_sup = f_liste.read().strip().split('\n')
+                f_liste.close()
+                for fichier_sup in liste_fichiers_sup:
+                    print('Retrait de '+os.path.join(cache, 'bases-xml', fichier_sup.strip()+'.xml'))
+                    if os.path.exists(os.path.join(cache, 'bases-xml', fichier_sup.strip()+'.xml')):
+                        os.remove(os.path.join(cache, 'bases-xml', fichier_sup.strip()+'.xml'))
+                    else:
+                        print('Erreur')
+            
+            # Intégration des nouveaux fichiers dans l’arborescence existante
             fusionner(os.path.join(rep, 'majo-' + date, 'legi'),
                       os.path.join(cache, 'bases-xml', 'legi'))
             shutil.rmtree(os.path.join(rep, 'majo-' + date))
