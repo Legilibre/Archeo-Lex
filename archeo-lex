@@ -31,7 +31,7 @@ from marcheolex.utilitaires import nop
 from marcheolex.utilitaires import obtenir_tous_textes
 
 # Manuel d’aide
-aide = ('''Usage: archeo-lex [--aide] [--debug] [--help] [--version] [--textes=<TEXTES>] [--base=<BASE>] [--livraison=<DATE>] [--initialisation] [--rechercher-xml] [--telecharger] [--ranger] [--lier] [--exporter] [--mise-a-jour | --nouveau] [--dialecte=<DIALECTE>] [--historique=<HISTORIQUE>] [--métadonnées] [--bdd=<fichier>] [--cache=<dossier>] [--dossier=<dossier>]
+aide = ('''Usage: archeo-lex [--aide] [--debug] [--help] [--version] [--textes=<TEXTES>] [--base=<BASE>] [--livraison=<DATE>] [--initialisation] [--rechercher-xml] [--telecharger] [--ranger] [--lier] [--exporter] [--mise-a-jour | --nouveau] [--dialecte=<DIALECTE>] [--historique=<HISTORIQUE>] [--métadonnées] [--organisation=<TYPE>] [--bdd=<fichier>] [--cache=<dossier>] [--dossier=<dossier>]
 
 -t --textes=<TEXTES>       Types de textes à télécharger :
                              - "constitution-de-1958",
@@ -65,8 +65,8 @@ aide = ('''Usage: archeo-lex [--aide] [--debug] [--help] [--version] [--textes=<
    --métadonnées           Afficher les métadonnées dans le texte
    --organisation=<TYPE>   Organisation de l’arborescence des fichiers :
                              - "fichier-unique" (défaut) : unique fichier
-                             - "répertoires-simple" : un répertoire par article, sans hiérarchie [inactif]
-                             - "répertoires-hiérarchie" : un répertoire par section ou article [inactif]
+                             - "repertoires-simple" : un répertoire par article, sans hiérarchie
+                             - "repertoires-hiérarchie" : un répertoire par section ou article [inactif]
 
 
    --bdd=<fichier>         Nom de la base de données, par défaut "archeo-lex.sqlite"

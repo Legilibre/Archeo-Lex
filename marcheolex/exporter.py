@@ -129,18 +129,28 @@ def creer_historique_texte(texte, format, dossier, cache):
                   + '- [Lien permanent Légifrance](http://legifrance.gouv.fr/affichCode.do?cidTexte=' + cid + '&dateTexte=' + str(version_texte.debut.year) + '{:02d}'.format(version_texte.debut.month) + '{:02d}'.format(version_texte.debut.day) + ')\n' \
                   + '\n' \
                   + '\n'
-        
+
+        # Enregistrement du fichier
+        if format['organisation'] != 'fichier-unique':
+            f_texte = open('README.md', 'w')
+            f_texte.write(contenu.encode('utf-8'))
+            f_texte.close()
+
+            # Retrait des fichiers des anciennes versions
+            subprocess.call('rm *.md', cwd=dossier, shell=True)
+
         # Créer les sections (donc tout le texte)
-        contenu = creer_sections(contenu, 1, None, versions_sections, articles, version_texte, cid, cache)
+        contenu = creer_sections(contenu, 1, None, versions_sections, articles, version_texte, cid, format, [], dossier, cache)
         
         # Enregistrement du fichier
-        f_texte = open(fichier, 'w')
-        f_texte.write(contenu.encode('utf-8'))
-        f_texte.close()
+        if format['organisation'] == 'fichier-unique':
+            f_texte = open(fichier, 'w')
+            f_texte.write(contenu.encode('utf-8'))
+            f_texte.close()
         
         # Exécuter Git
         date_base_legi = '{} {} {} {}:{}:{}'.format('18', 'juillet', '2014', '11', '30', '10') # TODO changer cela
-        subprocess.call(['git', 'add', os.path.join(sousdossier, nom_fichier + '.md')], cwd=dossier)
+        subprocess.call(['git', 'add', '.'], cwd=dossier)
         subprocess.call(['git', 'commit', '--author="Législateur <>"', '--date="' + str(version_texte.debut) + 'T00:00:00Z"', '-m', 'Version consolidée au {}\n\nVersions :\n- base LEGI : {}\n- programme Archéo Lex : {}'.format(date_fr, date_base_legi, version_archeolex), '-q', '--no-status'], cwd=dossier)
         
         if version_texte.fin == None:
@@ -149,8 +159,10 @@ def creer_historique_texte(texte, format, dossier, cache):
             logger.info('Version {} enregistrée (du {} au {})'.format(i_version, version_texte.debut, version_texte.fin))
 
 
-def creer_sections(texte, niveau, version_section_parente, versions_sections, articles, version_texte, cid, cache):
+def creer_sections(texte, niveau, version_section_parente, versions_sections, articles, version_texte, cid, format, sections, dossier, cache):
     
+    #print(sections)
+
     marque_niveau = ''
     for i in range(niveau):
         marque_niveau = marque_niveau + '#'
@@ -168,19 +180,22 @@ def creer_sections(texte, niveau, version_section_parente, versions_sections, ar
         texte = texte                                                      \
                 + marque_niveau + ' ' + version_section.nom.strip() + '\n' \
                 + '\n'
+
+        nouv_sections = sections
+        nouv_sections.append( version_section.nom.strip() )
+
+        texte = creer_sections(texte, niveau+1, version_section, versions_sections, articles, version_texte, cid, format, nouv_sections, dossier, cache)
         
-        texte = creer_sections(texte, niveau+1, version_section, versions_sections, articles, version_texte, cid, cache)
-        
-        texte = creer_articles_section(texte, niveau, version_section, articles, version_texte, cid, cache)
+        texte = creer_articles_section(texte, niveau+1, version_section, articles, version_texte, cid, format, nouv_sections, dossier, cache)
     
     if len(versions_section) == 0:
         
-        texte = creer_articles_section(texte, niveau, None, articles, version_texte, cid, cache)
+        texte = creer_articles_section(texte, niveau+1, None, articles, version_texte, cid, format, sections, dossier, cache)
     
     return texte
 
 
-def creer_articles_section(texte, niveau, version_section_parente, articles, version_texte, cid, cache):
+def creer_articles_section(texte, niveau, version_section_parente, articles, version_texte, cid, format, sections, dossier, cache):
     
     marque_niveau = ''
     for i in range(niveau):
@@ -207,6 +222,15 @@ def creer_articles_section(texte, niveau, version_section_parente, articles, ver
                 + texte_article + '\n'                                     \
                 + '\n'                                                     \
                 + '\n'
+
+        # Format « 1 dossier = 1 article »
+        fichier = os.path.join(dossier, article.num.strip() + '.md')
+        if format['organisation'] == 'repertoires-simple':
+            texte_article = texte_article + '\n'
+            f_texte = open(fichier, 'w')
+            f_texte.write(texte_article.encode('utf-8'))
+            f_texte.close()
         
     return texte
 
+# vim: set ts=4 sw=4 sts=4 et:
