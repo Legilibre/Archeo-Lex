@@ -1,0 +1,7 @@
+legi
+beautifulsoup4
+peewee
+path.py
+BeautifulSoup
+docopt
+lxml
