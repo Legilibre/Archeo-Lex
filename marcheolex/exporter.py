@@ -18,7 +18,7 @@ from __future__ import print_function
 import os
 import subprocess
 import datetime
-from path import path
+from path import Path
 from bs4 import BeautifulSoup
 from marcheolex import logger
 from marcheolex import version_archeolex
@@ -50,7 +50,7 @@ def creer_historique_texte(texte, format, dossier, cache):
     cid = texte[1]
     nom = texte[0] or cid
     
-    path(dossier).mkdir_p()
+    Path(dossier).mkdir_p()
     entree_texte = Texte.get(Texte.cid == cid)
     if entree_texte.nature in ('code', 'loi', 'ordonnance'):
         if not os.path.exists(os.path.join(dossier, entree_texte.nature+'s')):
@@ -68,7 +68,7 @@ def creer_historique_texte(texte, format, dossier, cache):
     if texte[2]:
         identifiant, nom_fichier = normalisation_code(nom)
         sousdossier = os.path.join('codes', identifiant)
-        path(os.path.join(dossier, sousdossier)).mkdir_p()
+        Path(os.path.join(dossier, sousdossier)).mkdir_p()
         chemin_base = chemin_texte(cid, True)
     else:
         sousdossier = os.path.join(sousdossier, nom)

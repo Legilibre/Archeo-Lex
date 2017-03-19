@@ -23,7 +23,7 @@ import shutil
 import ftplib
 import subprocess
 from datetime import datetime
-from path import path
+from path import Path
 from bs4 import BeautifulSoup
 import peewee
 
@@ -81,7 +81,7 @@ def telecharger_index_codes(cache):
     sedoc = {}
     
     # Télécharger le cas échéant le formulaire de recherche contenant le nom des codes
-    path(os.path.join(cache, 'html')).mkdir_p()
+    Path(os.path.join(cache, 'html')).mkdir_p()
     telecharger_legifrance('initRechCodeArticle.do', 'recherche.html', os.path.join(cache, 'html'), 86400)
     fichier_recherche = open(os.path.join(cache, 'html', 'recherche.html'), 'r')
     soup = BeautifulSoup(fichier_recherche.read(), 'xml')
@@ -141,7 +141,7 @@ def telecharger_base(base, livraison='tout', cache='cache'):
         raise NonImplementeException()
     
     # Créer le dossier de cache des fichiers téléchargés
-    path(os.path.join(cache, 'tar')).mkdir_p()
+    Path(os.path.join(cache, 'tar')).mkdir_p()
     
     # Connexion FTP
     serveur = serveurs[base][0] + ':' + \
@@ -222,7 +222,7 @@ def decompresser_base(base, date_fond, dates_majo, cache='cache'):
     
     # Créer le répertoire rattaché à ce dump complet
     rep = os.path.join(cache, 'bases-xml', date_fond.strftime('%Y%m%d-%H%M%S'))
-    path(rep).mkdir_p()
+    Path(rep).mkdir_p()
     
     # Décompresser le dump complet
     date = date_fond.strftime('%Y%m%d-%H%M%S')
@@ -231,7 +231,7 @@ def decompresser_base(base, date_fond, dates_majo, cache='cache'):
         
         if os.path.exists(os.path.join(rep, 'fond-' + date, 'erreur-tar')):
             shutil.rmtree(os.path.join(rep, 'fond-' + date))
-        path(os.path.join(rep, 'fond-' + date)).mkdir_p()
+        Path(os.path.join(rep, 'fond-' + date)).mkdir_p()
         
         # Décompression - en cas d’arrêt le fichier 'erreur-tar' reste
         open(os.path.join(rep, 'fond-' + date, 'erreur-tar'), 'w').close()
@@ -269,7 +269,7 @@ def decompresser_base(base, date_fond, dates_majo, cache='cache'):
                 shutil.rmtree(os.path.join(rep, 'majo-' + date), True)
             if os.path.exists(os.path.join(rep, 'majo-' + date, 'erreur-tar')):
                 shutil.rmtree(os.path.join(rep, 'majo-' + date), True)
-            path(os.path.join(rep, date)).mkdir_p()
+            Path(os.path.join(rep, date)).mkdir_p()
             
             # Décompression - en cas d’arrêt le fichier 'erreur-tar' reste
             open(os.path.join(rep, date, 'erreur-tar'), 'w').close()

@@ -27,11 +27,12 @@ from marcheolex.telecharger import telecharger_fichiers_base
 from marcheolex.ranger import ranger
 from marcheolex.exporter import creer_historique
 from marcheolex.exporter import creer_historique_texte
+from marcheolex.exporterlegi import creer_historique_legi
 from marcheolex.utilitaires import nop
 from marcheolex.utilitaires import obtenir_tous_textes
 
 # Manuel d’aide
-aide = ('''Usage: archeo-lex [--aide] [--debug] [--help] [--version] [--textes=<TEXTES>] [--base=<BASE>] [--livraison=<DATE>] [--initialisation] [--rechercher-xml] [--telecharger] [--ranger] [--lier] [--exporter] [--mise-a-jour | --nouveau] [--dialecte=<DIALECTE>] [--historique=<HISTORIQUE>] [--métadonnées] [--organisation=<TYPE>] [--bdd=<fichier>] [--cache=<dossier>] [--dossier=<dossier>]
+aide = ('''Usage: archeo-lex [--aide] [--debug] [--help] [--version] [--textes=<TEXTES>] [--base=<BASE>] [--livraison=<DATE>] [--initialisation] [--rechercher-xml] [--telecharger] [--ranger] [--lier] [--exporter] [--exporterlegi] [--mise-a-jour | --nouveau] [--dialecte=<DIALECTE>] [--historique=<HISTORIQUE>] [--métadonnées] [--organisation=<TYPE>] [--bdd=<fichier>] [--bddlegi=<fichier>] [--cache=<dossier>] [--dossier=<dossier>]
 
 -t --textes=<TEXTES>       Types de textes à télécharger :
                              - "constitution-de-1958",
@@ -51,6 +52,7 @@ aide = ('''Usage: archeo-lex [--aide] [--debug] [--help] [--version] [--textes=<
    --ranger                Ranger les données dans la base de données
    --lier                  Lier les versions d’articles aux versions de textes
    --exporter              Exporter les textes
+   --exporterlegi          Exporter les textes (legi.py)
 
 
    --mise-a-jour           Effectuer seulement une mise à jour
@@ -70,6 +72,7 @@ aide = ('''Usage: archeo-lex [--aide] [--debug] [--help] [--version] [--textes=<
 
 
    --bdd=<fichier>         Nom de la base de données, par défaut "archeo-lex.sqlite"
+   --bddlegi=<fichier>     Nom de la base de données de legi.py, par défaut "legi.sqlite"
    --cache=<dossier>       Dossier de cache, par défaut "cache"
    --dossier=<dossier>     Dossier de sortie, par défaut "textes"
 
@@ -105,9 +108,10 @@ def principal(arguments):
     action_ranger = arguments.get('--ranger') or False
     action_lier = arguments.get('--lier') or False
     action_exporter = arguments.get('--exporter') or False
+    action_exporterlegi = arguments.get('--exporterlegi') or False
     
-    if not(action_initialisation or action_rechercher_xml or action_telecharger or action_ranger or action_lier or action_exporter):
-        action_initialisation = action_rechercher_xml = action_telecharger = action_ranger = action_lier = action_exporter = True
+    if not(action_initialisation or action_rechercher_xml or action_telecharger or action_ranger or action_lier or action_exporter or action_exporterlegi):
+        action_initialisation = action_rechercher_xml = action_telecharger = action_ranger = action_lier = action_exporter = action_exporterlegi = True
     
     # Lecture des données de format
     data = {}
@@ -122,6 +126,7 @@ def principal(arguments):
     
     # Lecture des autres paramètres
     data['bdd'] = (arguments.get('--bdd') or '').decode('utf-8') or 'archeo-lex.sqlite'
+    data['bddlegi'] = (arguments.get('--bddlegi') or '').decode('utf-8') or 'cache/sql/legi.sqlite'
     data['cache'] = (arguments.get('--cache') or '').decode('utf-8') or 'cache'
     data['dossier'] = (arguments.get('--dossier') or '').decode('utf-8') or 'textes'
     data['effacer'] = not arguments.get('--mise-a-jour') or arguments.get('--nouveau') or False
@@ -167,6 +172,10 @@ def principal(arguments):
     if action_exporter:
         logger.info('Création de l’historique')
         creer_historique(data['textes'], data['format'], data['dossier'], data['cache'])
+
+    if action_exporterlegi:
+        logger.info('Création de l’historique (legi.py)')
+        creer_historique_legi(data['textes'], data['format'], data['dossier'], data['cache'], data['bddlegi'])
 
 if __name__ == "__main__":
     principal(docopt(aide, help=False))

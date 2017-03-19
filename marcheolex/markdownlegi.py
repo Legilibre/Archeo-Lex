@@ -19,44 +19,26 @@ import os
 import re
 from path import Path
 from bs4 import BeautifulSoup
-from marcheolex.basededonnees import Version_texte
-from marcheolex.basededonnees import Version_section
-from marcheolex.basededonnees import Article
 from marcheolex.utilitaires import normalisation_code
 from marcheolex.utilitaires import chemin_texte
 from marcheolex.utilitaires import decompose_cid
 
 
-def creer_markdown(textes, cache):
+def creer_markdown(textes, db, cache):
     
     for texte in textes:
-        creer_markdown_texte(texte, cache)
+        creer_markdown_texte(texte, db, cache)
 
 
-def creer_markdown_texte(texte, cache):
+def creer_markdown_texte(texte, db, cache):
     
     # Informations de base
     cid = texte[1]
-    articles = Article.select(Article.id).where(Article.texte == cid)
-    chemin_base = os.path.join(cache, 'bases-xml')
-    if os.path.exists(os.path.join(chemin_base, chemin_texte(cid, True, True))):
-        chemin_base = os.path.join(chemin_base, chemin_texte(cid, True, True))
-    elif os.path.exists(os.path.join(chemin_base, chemin_texte(cid, True, False))):
-        chemin_base = os.path.join(chemin_base, chemin_texte(cid, True, False))
-    elif os.path.exists(os.path.join(chemin_base, chemin_texte(cid, False, True))):
-        chemin_base = os.path.join(chemin_base, chemin_texte(cid, False, True))
-    elif os.path.exists(os.path.join(chemin_base, chemin_texte(cid, False, False))):
-        chemin_base = os.path.join(chemin_base, chemin_texte(cid, False, False))
-    elif os.path.exists(os.path.join(chemin_base, chemin_texte(cid, True, True)+'.xml')):
-        chemin_base = os.path.join(chemin_base, chemin_texte(cid, True, True))
-    elif os.path.exists(os.path.join(chemin_base, chemin_texte(cid, True, False)+'.xml')):
-        chemin_base = os.path.join(chemin_base, chemin_texte(cid, True, False))
-    elif os.path.exists(os.path.join(chemin_base, chemin_texte(cid, False, True)+'.xml')):
-        chemin_base = os.path.join(chemin_base, chemin_texte(cid, False, True))
-    elif os.path.exists(os.path.join(chemin_base, chemin_texte(cid, False, False)+'.xml')):
-        chemin_base = os.path.join(chemin_base, chemin_texte(cid, False, False))
-    else:
-        raise Exception()
+    articles = db.all("""
+        SELECT id, bloc_textuel
+        FROM articles
+        WHERE cid = '{0}'
+    """.format(cid))
     
     # Créer le répertoire de cache
     Path(os.path.join(cache, 'markdown')).mkdir_p()
@@ -65,26 +47,20 @@ def creer_markdown_texte(texte, cache):
     for article in articles:
         
         # Si la markdownisation a déjà été faite, passer
-        chemin_markdown = os.path.join(cache, 'markdown', cid, article.id + '.md')
+        chemin_markdown = os.path.join(cache, 'markdown', cid, article[0] + '.md')
         if os.path.exists(chemin_markdown):
             continue
         
         # Lecture du fichier
-        chemin_article = os.path.join(chemin_base, 'article', decompose_cid(article.id) + '.xml')
-        f_article = open(chemin_article, 'r')
-        soup = BeautifulSoup(f_article.read(), 'xml')
-        f_article.close()
-        contenu = soup.find('BLOC_TEXTUEL').find('CONTENU').text.strip()
+        contenu = article[1]
         
         # Logique de transformation en Markdown
         lignes = [l.strip() for l in contenu.split('\n')]
         contenu = '\n'.join(lignes)
         
         # - Retrait des <br/> en début et fin (cela semble être enlevé par BeautifulSoup)
-        if all([lignes[l].startswith(('<br/>', r'<br />')) for l in range(0, len(lignes))]):
-            lignes[i] = re.sub(r'^<br ?/> *', r'', lignes[i])
-        if all([lignes[l].endswith(('<br/>', r'<br />')) for l in range(0, len(lignes))]):
-            lignes[i] = re.sub(r' *<br ?/>$', r'', lignes[i])
+        lignes = [re.sub(r'^<br ?/> *', r'', lignes[l]) for l in range(0, len(lignes))]
+        lignes = [re.sub(r' *<br ?/>$', r'', lignes[l]) for l in range(0, len(lignes))]
         contenu = '\n'.join(lignes)
         
         # - Markdownisation des listes numérotées

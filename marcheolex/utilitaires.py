@@ -19,8 +19,9 @@ import os
 import re
 import subprocess
 import datetime
+import time
 import shutil
-from path import path
+from path import Path
 
 MOIS = {
     'janvier': '01',
@@ -169,33 +170,66 @@ def explorer_textes(dir_base):
 
 def comp_infini(x, y):
     
+    dateinf = datetime.date(2999, 1, 1)
+
+    if isinstance(x, basestring):
+        x = datetime.date(*(time.strptime(x, '%Y-%m-%d')[0:3]))
+    if isinstance(y, basestring):
+        y = datetime.date(*(time.strptime(y, '%Y-%m-%d')[0:3]))
+    if x == dateinf:
+        x = None
+    if y == dateinf:
+        y = None
+
     if x == y:
-        return 0
-    if x == None:
+        return 0;
+    elif x == None:
         return 1
-    if y == None:
+    elif y == None:
         return -1
     return -2 * int(x < y) + 1
 
 
 def comp_infini_strict(x, y):
     
+    dateinf = datetime.date(2999, 1, 1)
+
+    if isinstance(x, basestring):
+        x = datetime.date(*(time.strptime(x, '%Y-%m-%d')[0:3]))
+    if isinstance(y, basestring):
+        y = datetime.date(*(time.strptime(y, '%Y-%m-%d')[0:3]))
+    if x == dateinf:
+        x = None
+    if y == dateinf:
+        y = None
+
     if x == None and y == None:
         return False
-    if x == None:
+    elif x == None:
         return False
-    if y == None:
+    elif y == None:
         return True
     return x < y
 
 
 def comp_infini_large(x, y):
     
+    dateinf = datetime.date(2999, 1, 1)
+
+    if isinstance(x, basestring):
+        x = datetime.date(*(time.strptime(x, '%Y-%m-%d')[0:3]))
+    if isinstance(y, basestring):
+        y = datetime.date(*(time.strptime(y, '%Y-%m-%d')[0:3]))
+    if x == dateinf:
+        x = None
+    if y == dateinf:
+        y = None
+
     if x == y:
         return True
-    if x == None:
+    elif x == None:
         return False
-    if y == None:
+    elif y == None:
         return True
     return x < y
 
