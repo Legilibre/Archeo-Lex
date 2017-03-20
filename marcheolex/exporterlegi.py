@@ -45,7 +45,6 @@ def creer_historique_legi(textes, format, dossier, cache, bdd):
 def creer_historique_texte(texte, format, dossier, cache, bdd):
 
     # Connexion à la base de données
-    #print(bdd)
     db = legi.utils.connect_db(bdd)
 
     # Créer le dossier si besoin
@@ -141,7 +140,7 @@ def creer_historique_texte(texte, format, dossier, cache, bdd):
         contenu = nom + '\n'   \
                   + '\n'   \
                   + '- Date de consolidation : ' + date_fr + '\n'            \
-                  + '- [Lien permanent Légifrance](http://legifrance.gouv.fr/affichCode.do?cidTexte=' + cid + '&dateTexte=' + str(version_texte[0].year) + '{:02d}'.format(version_texte[0].month) + '{:02d}'.format(version_texte[0].day) + ')\n' \
+                  + '- [Lien permanent Légifrance](https://www.legifrance.gouv.fr/affichCode.do?cidTexte=' + cid + '&dateTexte=' + str(version_texte[0].year) + '{:02d}'.format(version_texte[0].month) + '{:02d}'.format(version_texte[0].day) + ')\n' \
                   + '\n' \
                   + '\n'
 
@@ -176,8 +175,6 @@ def creer_historique_texte(texte, format, dossier, cache, bdd):
 
 def creer_sections(texte, niveau, parent, version_texte, sql, arborescence, format, dossier, db, cache):
  
-    #print(parent)
-
     marque_niveau = ''
     for i in range(niveau):
         marque_niveau = marque_niveau + '#'
@@ -186,7 +183,7 @@ def creer_sections(texte, niveau, parent, version_texte, sql, arborescence, form
     if parent == None:
         sql_section_parente = "parent IS NULL OR parent = ''"
 
-    toutes_sections = db.all("""
+    sections = db.all("""
         SELECT *
         FROM sommaires
         WHERE ({0})
@@ -194,16 +191,11 @@ def creer_sections(texte, niveau, parent, version_texte, sql, arborescence, form
         ORDER BY position
     """.format(sql_section_parente, sql))
 
-    sections = []
-    articles = []
-
     # Itérer sur les sections de cette section
-    for section in toutes_sections:
+    for section in sections:
 
-        #id, section, num, date_debut, date_fin, bloc_textuel, cid = article
         rcid, rparent, relement, rdebut, rfin, retat, rnum, rposition, r_source = section
-        #print(relement)
-        #print(rnum)
+        #print('Article '+rnum+' : '+relement)
 
         if comp_infini_strict(version_texte[0], rdebut) or comp_infini_strict(rfin, version_texte[1]):
             raise Exception(u'section non valide (version texte de {} a {}, version section de {} à {})'.format(version_texte[0], version_texte[1], rdebut, rfin))
@@ -216,83 +208,44 @@ def creer_sections(texte, niveau, parent, version_texte, sql, arborescence, form
                 FROM sections
                 WHERE id='{0}'
             """.format(relement))
-            sections.append( (relement, tsection[0].strip()) )
+            rarborescence = arborescence
+            rarborescence.append( tsection[0].strip() )
+            texte = texte                                  \
+                    + marque_niveau + ' ' + tsection[0].strip() + '\n' \
+                    + '\n'
+            texte = creer_sections(texte, niveau+1, relement, version_texte, sql, rarborescence, format, dossier, db, cache)
 
         # L’élément est un article, l’ajouter à la liste
         elif relement[4:8] == 'ARTI':
-            articles.append( relement )
 
-    if len(sections) > 0 and len(articles) > 0:
-        print('La section '+parent+'a a la fois des articles et des sections')
+            article = db.one("""
+                SELECT id, section, num, date_debut, date_fin, bloc_textuel, cid
+                FROM articles
+                WHERE id = '{0}'
+            """.format(relement))
+            id, section, num, date_debut, date_fin, bloc_textuel, cid = article
+            if comp_infini_strict(version_texte[0], date_debut) or comp_infini_strict(date_fin, version_texte[1]):
+                continue
+            chemin_markdown = os.path.join(cache, 'markdown', cid, id + '.md')
+            f_article = open(chemin_markdown, 'r')
+            texte_article = f_article.read().decode('utf-8')
+            f_article.close()
+ 
+            texte = texte                                                        \
+                    + marque_niveau + ' Article ' + num.strip() + '\n' \
+                    + '\n'                                                       \
+                    + texte_article + '\n'                                       \
+                    + '\n'                                                       \
+                    + '\n'
 
-    if len(articles):
-        texte = creer_articles_section(texte, niveau, articles, version_texte, arborescence, format, dossier, db, cache)
+            # Format « 1 dossier = 1 article »
+            fichier = os.path.join(dossier, id + '.md')
+            if format['organisation'] == 'repertoires-simple':
+                texte_article = texte_article + '\n'
+                f_texte = open(fichier, 'w')
+                f_texte.write(texte_article.encode('utf-8'))
+                f_texte.close()
 
-    for section in sections:
-        rarborescence = arborescence
-        rarborescence.append( section )
-        texte = texte                                  \
-                + marque_niveau + ' ' + section[1] + '\n' \
-                + '\n'
-        texte = creer_sections(texte, niveau+1, section[0], version_texte, sql, rarborescence, format, dossier, db, cache)
-
-    return texte
-
-
-#def creer_sections(texte, niveau, parent, version_texte, sql, arborescence, format, dossier, db, cache):
-#def creer_articles_section(texte, niveau, version_section_parente, articles, version_texte, cid, format, sections, dossier, cache):
-def creer_articles_section(texte, niveau, articles, version_texte, arborescence, format, dossier, db, cache):
-
-    marque_niveau = ''
-    for i in range(niveau):
-        marque_niveau = marque_niveau + '#'
-
-    textes_articles = db.all("""
-        SELECT id, section, num, date_debut, date_fin, bloc_textuel, cid
-        FROM articles
-        WHERE id IN ('{0}')
-    """.format("','".join(articles)))
-    darticles = {}
-
-    # Itérer sur les articles de cette section
-    for article in textes_articles:
-        
-        id, section, num, date_debut, date_fin, bloc_textuel, cid = article
-        #print(num)
-        #print(bloc_textuel)
-        #print(section)
-        #print(version_section_parente)
-        #print(version_texte[0])
-        #print(date_debut)
-        #print(version_texte[1])
-        #print(date_fin)
-
-        if comp_infini_strict(version_texte[0], date_debut) or comp_infini_strict(date_fin, version_texte[1]):
-            continue
-
-        darticles[id] = (num.strip(), bloc_textuel)
-
-    for article in articles:
-        chemin_markdown = os.path.join(cache, 'markdown', cid, article + '.md')
-        f_article = open(chemin_markdown, 'r')
-        texte_article = f_article.read().decode('utf-8')
-        f_article.close()
-        
-        texte = texte                                                        \
-                + marque_niveau + ' Article ' + darticles[article][0] + '\n' \
-                + '\n'                                                       \
-                + texte_article + '\n'                                       \
-                + '\n'                                                       \
-                + '\n'
-
-        # Format « 1 dossier = 1 article »
-        fichier = os.path.join(dossier, darticles[article][0] + '.md')
-        if format['organisation'] == 'repertoires-simple':
-            texte_article = texte_article + '\n'
-            f_texte = open(fichier, 'w')
-            f_texte.write(texte_article.encode('utf-8'))
-            f_texte.close()
-        
     return texte
 
 # vim: set ts=4 sw=4 sts=4 et:
