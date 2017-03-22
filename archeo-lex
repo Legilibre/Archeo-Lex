@@ -1,24 +1,21 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# 
+#
 # Archéo Lex – Pure Histoire de la Loi française
 # – crée un dépôt Git des lois françaises écrites en syntaxe Markdown
-# 
+#
 # This program is free software. It comes without any warranty, to
 # the extent permitted by applicable law. You can redistribute it
 # and/or modify it under the terms of the Do What The Fuck You Want
 # To Public License, Version 2, as published by Sam Hocevar. See
 # the LICENSE file for more details.
 
-# Imports
+# Imports nécessaires immédiatement
+from __future__ import unicode_literals
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
 from docopt import docopt
-import os
-import os.path
-
-from marcheolex import logging, logger
-from marcheolex import version_archeolex
-from marcheolex.exporterlegi import creer_historique_legi
-from marcheolex.pousserlestextes import pousser_les_textes_sur_gitlab
 
 # Manuel d’aide
 aide = ('''Usage: archeo-lex [--aide] [--debug] [--help] [--version] [--textes=<TEXTES>] [--base=<BASE>] [--livraison=<DATE>] [--exporterlegi] [--mise-a-jour | --nouveau] [--dialecte=<DIALECTE>] [--historique=<HISTORIQUE>] [--metadonnees] [--organisation=<TYPE>] [--dates-git] [--dates-git-pre-1970] [--dates-git-post-2100] [--bddlegi=<fichier>] [--dossier=<dossier>] [--production] [--gitlab-host=<GITHOST>] [--gitlab-token=<GITTOKEN>] [--gitlab-group=<GITGROUP>] [--git-server=<GITSERVER>] [--git-key=<GITKEY>] [--calcules=<FICHIER>]
@@ -83,32 +80,49 @@ aide = ('''Usage: archeo-lex [--aide] [--debug] [--help] [--version] [--textes=<
 
 
 def principal(arguments):
-    
-    # Action "version"
-    if arguments.get('--version') or arguments.get('-v'):
-        print('Archéo Lex – pure Histoire de Loi française – version '+version_archeolex)
-        return
 
     # Action "aide"
     if arguments.get('--aide') or arguments.get('--help'):
         print(aide)
         return
 
+    # Action "version"
+    from marcheolex import version_archeolex
+    if arguments.get('--version') or arguments.get('-v'):
+        print('Archéo Lex – pure Histoire de Loi française – version '+version_archeolex)
+        return
+
+    # Suite des imports
+    import os
+    import os.path
+
+    from marcheolex import logging, logger
+    from marcheolex.basededonnees import initialisation_bdd
+    from marcheolex.telecharger import obtenir_identifiants
+    from marcheolex.telecharger import telecharger_fichiers_base
+    from marcheolex.ranger import ranger
+    from marcheolex.exporter import creer_historique
+    from marcheolex.exporter import creer_historique_texte
+    from marcheolex.exporterlegi import creer_historique_legi
+    from marcheolex.utilitaires import nop
+    from marcheolex.utilitaires import obtenir_tous_textes
+    from marcheolex.pousserlestextes import pousser_les_textes_sur_gitlab
+
     if arguments.get('--debug') or arguments.get('-d'):
         logger.setLevel(logging.DEBUG)
     else:
         logger.setLevel(logging.INFO)
-    
+
     # Actions à considérer
     action_exporterlegi = arguments.get('--exporterlegi') or True
 
     action_gitlab = False
     if arguments.get('--gitlab-host') and arguments.get('--gitlab-token') and arguments.get('--gitlab-group') and arguments.get('--git-server') and arguments.get('--git-key'):
         action_gitlab = True
-    
+
     if not(action_exporterlegi):
         action_exporterlegi = True
-    
+
     # Lecture des données de format
     data = {}
     data['textes'] = ((arguments.get('--textes') or '') or 'LEGITEXT000006069414')
@@ -121,7 +135,7 @@ def principal(arguments):
     data['format']['organisation'] = arguments.get('--organisation') or 'texte'
     data['format']['dates-git-pre-1970'] = arguments.get('--dates-git-pre-1970') or arguments.get('--dates-git') or False
     data['format']['dates-git-post-2100'] = arguments.get('--dates-git-post-2100') or arguments.get('--dates-git') or False
-    
+
     # Lecture des autres paramètres
     data['bddlegi'] = (arguments.get('--bddlegi') or '') or 'cache/sql/legi.sqlite'
     data['dossier'] = (arguments.get('--dossier') or '') or 'textes'
@@ -134,7 +148,7 @@ def principal(arguments):
     data['git-server'] = arguments.get('--git-server') or ''
     data['git-key'] = arguments.get('--git-key') or ''
     data['calcules'] = arguments.get('--calcules') or ''
-    
+
     # Création du dossiers des textes
     if not os.path.exists(data['dossier']):
        os.makedirs(data['dossier'])
@@ -143,7 +157,7 @@ def principal(arguments):
     if action_exporterlegi:
         logger.info('Création de l’historique (legi.py)')
         textes = creer_historique_legi(data['textes'], data['format'], data['dossier'], data['bddlegi'], data['production'])
-    
+
     if action_gitlab:
         logger.info('Envoi sur Gitlab')
         pousser_les_textes_sur_gitlab(textes, data['dossier'], data['gitlab-host'], data['gitlab-token'], data['gitlab-group'], data['git-server'], data['git-key'], data['calcules'])
