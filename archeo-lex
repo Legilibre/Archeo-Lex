@@ -82,7 +82,8 @@ aide = ('''Usage: archeo-lex [--aide] [--debug] [--help] [--version] [--textes=<
 def principal(arguments):
 
     # Action "aide"
-    if arguments.get('--aide') or arguments.get('--help'):
+    if arguments.get('--aide') or arguments.get('--help') \
+                               or set(arguments.values()) == set([None, False]):
         print(aide)
         return
 
