@@ -80,6 +80,22 @@ fichiers_majo = {
     'CIRCULAIRES': 'circulaire_%d%m%Y%Hh%M.tar.gz'
 }
 
+natures = {
+    'CONSTITUTION': 'constitution',
+    'LOI_CONSTIT': 'loi constitutionnelle',
+    'LOI_ORGANIQUE': 'loi organique',
+    'LOI': 'loi',
+    'CODE': 'code',
+    'ORDONNANCE': 'ordonnance',
+    'DECRET_LOI': 'décret-loi',
+    'DECRET': 'décret',
+    'CONVENTION': 'convention',
+    'ARRETE': 'arrêté',
+    'CIRCULAIRE': 'circulaire',
+    'DECISION': 'décision',
+    'DECLARATION': 'déclaration'
+}
+
 
 #
 # Exceptions
@@ -102,3 +118,4 @@ class (Exception):
     pass
 '''
 
+# vim: set ts=4 sw=4 sts=4 et:

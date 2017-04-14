@@ -25,6 +25,7 @@ import legi
 import legi.utils
 from marcheolex import logger
 from marcheolex import version_archeolex
+from marcheolex import natures
 from marcheolex.markdownlegi import creer_markdown
 from marcheolex.markdownlegi import creer_markdown_texte
 from marcheolex.utilitaires import normalisation_code
@@ -49,36 +50,32 @@ def creer_historique_texte(texte, format, dossier, cache, bdd):
 
     # Créer le dossier si besoin
     sousdossier = '.'
-    cid = texte[1]
-    nom = texte[0] or cid
+    id = texte[1]
+    nom = texte[0] or id
 
     Path(dossier).mkdir_p()
     entree_texte = db.one("""
-        SELECT id, nature, titre, titrefull, etat, date_debut, date_fin
+        SELECT id, nature, titre, titrefull, etat, date_debut, date_fin, num, cid
         FROM textes_versions
         WHERE id = '{0}'
-    """.format(cid))
-    if entree_texte[1].lower() in ('code', 'loi', 'ordonnance'):
-        if not os.path.exists(os.path.join(dossier, entree_texte[1].lower()+'s')):
-            os.makedirs(os.path.join(dossier, entree_texte[1].lower()+'s'))
-        sousdossier = entree_texte[1].lower()+'s'
-    elif entree_texte[1].lower() == 'decret':
-        if not os.path.exists(os.path.join(dossier, u'décrets')):
-            os.makedirs(os.path.join(dossier, u'décrets'))
-        sousdossier = 'décrets'
-    elif entree_texte[1].lower() == 'arrete':
-        if not os.path.exists(os.path.join(dossier, u'arrêtés')):
-            os.makedirs(os.path.join(dossier, u'arrêtés'))
-        sousdossier = 'arrêtés'
-        
-    if texte[2]:
-        identifiant, nom_fichier = normalisation_code(nom)
-        sousdossier = os.path.join('codes', identifiant)
+    """.format(id))
+    cid = entree_texte[8]
+    if entree_texte[1] in natures.keys():
+        if not os.path.exists(os.path.join(dossier, natures[entree_texte[1]]+'s')):
+            os.makedirs(os.path.join(dossier, natures[entree_texte[1]]+'s'))
+        sousdossier = natures[entree_texte[1]]+'s'
+
+    if entree_texte[1] and (entree_texte[1] in natures.keys()) and entree_texte[7]:
+        identifiant = natures[entree_texte[1]]+' '+entree_texte[7]
+        identifiant = identifiant.replace(' ','_')
+        nom_fichier = identifiant
+        sousdossier = os.path.join(natures[entree_texte[1]]+'s', identifiant)
         Path(os.path.join(dossier, sousdossier)).mkdir_p()
-        chemin_base = chemin_texte(cid, True)
+        chemin_base = chemin_texte(id, entree_texte[1] == 'CODE')
     else:
+        raise Exception('Type bizarre ou inexistant')
         sousdossier = os.path.join(sousdossier, nom)
-        nom_fichier = cid
+        nom_fichier = id
     dossier = os.path.join(dossier, sousdossier)
     sousdossier = '.'
     if not os.path.exists(dossier):
@@ -95,31 +92,34 @@ def creer_historique_texte(texte, format, dossier, cache, bdd):
         raise Exception('Fichier existant : la mise à jour de fichiers existants n’est pas encore prise en charge.')
 
     # Vérifier que les articles ont été transformés en Markdown ou les créer le cas échéant
-    creer_markdown_texte(texte, db, cache)
+    print(texte)
+    print(cid)
+    creer_markdown_texte((texte[0],cid,texte[2],texte[3]), db, cache)
     
     # Sélection des versions du texte
     versions_texte_db = db.all("""
-          SELECT debut
+          SELECT debut, fin
           FROM sommaires
           WHERE cid = '{0}'
-        UNION
-          SELECT fin
-          FROM sommaires
-          WHERE cid = '{0}'
-    """.format(cid, cid))
+    """.format(cid))
     dates_texte = []
+    dates_fin_texte = []
     versions_texte = []
-    for vt in versions_texte_db:
-        vt = vt[0]
+    for vers in versions_texte_db:
+        vt = vers[0]
         if isinstance(vt, basestring):
             vt = datetime.date(*(time.strptime(vt, '%Y-%m-%d')[0:3]))
         dates_texte.append( vt )
-    for i in range(0,len(dates_texte)-1):
-        debut = dates_texte[i]
-        fin = dates_texte[i+1]
-        versions_texte.append( (debut, fin) )
+        vt = vers[1]
+        if isinstance(vt, basestring):
+            vt = datetime.date(*(time.strptime(vt, '%Y-%m-%d')[0:3]))
+        dates_fin_texte.append( vt )
+    versions_texte = sorted(set(dates_texte).union(set(dates_fin_texte)))
     
     sql_texte = "cid = '{0}'".format(cid)
+    #print(sorted(set(versions_texte)))
+    versions_texte = sorted(list(set(versions_texte)))
+    [print(a) for a in versions_texte]
 
     # Pour chaque version
     # - rechercher les sections et articles associés
@@ -130,17 +130,22 @@ def creer_historique_texte(texte, format, dossier, cache, bdd):
         # Passer les versions 'nulles'
         #if version_texte.base is None:
         #    continue
+        if i_version >= len(versions_texte)-1:
+            break
 
-        sql = sql_texte + " AND debut <= '{0}' AND ( fin >= '{1}' OR fin == '2999-01-01' )".format(version_texte[0], version_texte[1])
+        debut = versions_texte[i_version]
+        fin = versions_texte[i_version+1]
+
+        sql = sql_texte + " AND debut <= '{0}' AND ( fin >= '{1}' OR fin == '2999-01-01' )".format(debut,fin)
 
         # Créer l’en-tête
-        date_fr = '{} {} {}'.format(version_texte[0].day, MOIS2[int(version_texte[0].month)], version_texte[0].year)
-        if version_texte[0].day == 1:
-            date_fr = '1er {} {}'.format(MOIS2[int(version_texte[0].month)], version_texte[0].year)
+        date_fr = '{} {} {}'.format(debut.day, MOIS2[int(debut.month)], debut.year)
+        if debut.day == 1:
+            date_fr = '1er {} {}'.format(MOIS2[int(debut.month)], debut.year)
         contenu = nom + '\n'   \
                   + '\n'   \
                   + '- Date de consolidation : ' + date_fr + '\n'            \
-                  + '- [Lien permanent Légifrance](https://www.legifrance.gouv.fr/affichCode.do?cidTexte=' + cid + '&dateTexte=' + str(version_texte[0].year) + '{:02d}'.format(version_texte[0].month) + '{:02d}'.format(version_texte[0].day) + ')\n' \
+                  + '- [Lien permanent Légifrance](https://www.legifrance.gouv.fr/affichCode.do?cidTexte=' + cid + '&dateTexte=' + debut.isoformat().replace('-','') + ')\n' \
                   + '\n' \
                   + '\n'
 
@@ -154,7 +159,7 @@ def creer_historique_texte(texte, format, dossier, cache, bdd):
             subprocess.call('rm *.md', cwd=dossier, shell=True)
 
         # Créer les sections (donc tout le texte)
-        contenu = creer_sections(contenu, 1, None, version_texte, sql, [], format, dossier, db, cache)
+        contenu = creer_sections(contenu, 1, None, (debut,fin), sql, [], format, dossier, db, cache)
         
         # Enregistrement du fichier
         if format['organisation'] == 'fichier-unique':
@@ -165,12 +170,13 @@ def creer_historique_texte(texte, format, dossier, cache, bdd):
         # Exécuter Git
         date_base_legi = '{} {} {} {}:{}:{}'.format('18', 'juillet', '2014', '11', '30', '10') # TODO changer cela
         subprocess.call(['git', 'add', '.'], cwd=dossier)
-        subprocess.call(['git', 'commit', '--author="Législateur <>"', '--date="' + str(version_texte[0]) + 'T00:00:00Z"', '-m', 'Version consolidée au {}\n\nVersions :\n- base LEGI : {}\n- programme Archéo Lex : {}'.format(date_fr, date_base_legi, version_archeolex), '-q', '--no-status'], cwd=dossier)
+        #subprocess.call(['git', 'commit', '--author="Législateur <>"', '--date="' + str(debut) + 'T00:00:00Z"', '-m', 'Version consolidée au {}\n\nVersions :\n- base LEGI : {}\n- programme Archéo Lex : {}'.format(date_fr, date_base_legi, version_archeolex), '-q', '--no-status'], cwd=dossier)
+        subprocess.call(['git', 'commit', '--author="Législateur <>"', '--date="' + str(debut) + 'T00:00:00Z"', '-m', 'Version consolidée au {}'.format(date_fr), '-q', '--no-status'], cwd=dossier)
         
-        if version_texte[1] == None:
-            logger.info('Version {} enregistrée (du {} à maintenant)'.format(i_version+1, version_texte[0]))
+        if fin == None or str(fin) == '2999-01-01':
+            logger.info('Version {} enregistrée (du {} à maintenant)'.format(i_version+1, debut))
         else:
-            logger.info('Version {} enregistrée (du {} au {})'.format(i_version+1, version_texte[0], version_texte[1]))
+            logger.info('Version {} enregistrée (du {} au {})'.format(i_version+1, debut, fin))
 
 
 def creer_sections(texte, niveau, parent, version_texte, sql, arborescence, format, dossier, db, cache):
@@ -239,7 +245,7 @@ def creer_sections(texte, niveau, parent, version_texte, sql, arborescence, form
                     + '\n'
 
             # Format « 1 dossier = 1 article »
-            fichier = os.path.join(dossier, id + '.md')
+            fichier = os.path.join(dossier, 'Article_' + num.replace(' ', '_') + '.md')
             if format['organisation'] == 'repertoires-simple':
                 texte_article = texte_article + '\n'
                 f_texte = open(fichier, 'w')
