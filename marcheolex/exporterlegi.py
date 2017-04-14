@@ -72,6 +72,12 @@ def creer_historique_texte(texte, format, dossier, cache, bdd):
         sousdossier = os.path.join(natures[entree_texte[1]]+'s', identifiant)
         Path(os.path.join(dossier, sousdossier)).mkdir_p()
         chemin_base = chemin_texte(id, entree_texte[1] == 'CODE')
+    elif entree_texte[1] and (entree_texte[1] in natures.keys()) and entree_texte[2]:
+        identifiant = entree_texte[2][0].lower()+entree_texte[2][1:].replace(' ','_')
+        nom_fichier = identifiant
+        sousdossier = os.path.join(natures[entree_texte[1]]+'s', identifiant)
+        Path(os.path.join(dossier, sousdossier)).mkdir_p()
+        chemin_base = chemin_texte(id, entree_texte[1] == 'CODE')
     else:
         raise Exception('Type bizarre ou inexistant')
         sousdossier = os.path.join(sousdossier, nom)
