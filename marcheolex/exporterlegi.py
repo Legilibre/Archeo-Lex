@@ -50,8 +50,8 @@ def creer_historique_texte(texte, format, dossier, cache, bdd):
 
     # Créer le dossier si besoin
     sousdossier = '.'
-    id = texte[1]
-    nom = texte[0] or id
+    id = texte
+    nom = texte
 
     Path(dossier).mkdir_p()
     entree_texte = db.one("""
@@ -98,9 +98,7 @@ def creer_historique_texte(texte, format, dossier, cache, bdd):
         raise Exception('Fichier existant : la mise à jour de fichiers existants n’est pas encore prise en charge.')
 
     # Vérifier que les articles ont été transformés en Markdown ou les créer le cas échéant
-    print(texte)
-    print(cid)
-    creer_markdown_texte((texte[0],cid,texte[2],texte[3]), db, cache)
+    creer_markdown_texte((None, cid, None, None), db, cache)
     
     # Sélection des versions du texte
     versions_texte_db = db.all("""
@@ -123,9 +121,7 @@ def creer_historique_texte(texte, format, dossier, cache, bdd):
     versions_texte = sorted(set(dates_texte).union(set(dates_fin_texte)))
     
     sql_texte = "cid = '{0}'".format(cid)
-    #print(sorted(set(versions_texte)))
     versions_texte = sorted(list(set(versions_texte)))
-    [print(a) for a in versions_texte]
 
     # Pour chaque version
     # - rechercher les sections et articles associés
@@ -207,7 +203,6 @@ def creer_sections(texte, niveau, parent, version_texte, sql, arborescence, form
     for section in sections:
 
         rcid, rparent, relement, rdebut, rfin, retat, rnum, rposition, r_source = section
-        #print('Article '+rnum+' : '+relement)
 
         if comp_infini_strict(version_texte[0], rdebut) or comp_infini_strict(rfin, version_texte[1]):
             raise Exception(u'section non valide (version texte de {} a {}, version section de {} à {})'.format(version_texte[0], version_texte[1], rdebut, rfin))

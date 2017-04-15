@@ -41,7 +41,7 @@ dictConfig(LOGGING)
 
 logger = logging.getLogger(__name__)
 
-version_archeolex = '0.2.0-alpha';
+version_archeolex = '0.3.0-alpha';
 
 
 #

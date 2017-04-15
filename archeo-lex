@@ -21,18 +21,18 @@ import os.path
 
 from marcheolex import logging, logger
 from marcheolex import version_archeolex
-from marcheolex.basededonnees import initialisation_bdd
-from marcheolex.telecharger import obtenir_identifiants
-from marcheolex.telecharger import telecharger_fichiers_base
-from marcheolex.ranger import ranger
-from marcheolex.exporter import creer_historique
-from marcheolex.exporter import creer_historique_texte
+#from marcheolex.basededonnees import initialisation_bdd
+#from marcheolex.telecharger import obtenir_identifiants
+#from marcheolex.telecharger import telecharger_fichiers_base
+#from marcheolex.ranger import ranger
+#from marcheolex.exporter import creer_historique
+#from marcheolex.exporter import creer_historique_texte
 from marcheolex.exporterlegi import creer_historique_legi
 from marcheolex.utilitaires import nop
 from marcheolex.utilitaires import obtenir_tous_textes
 
 # Manuel d’aide
-aide = ('''Usage: archeo-lex [--aide] [--debug] [--help] [--version] [--textes=<TEXTES>] [--base=<BASE>] [--livraison=<DATE>] [--initialisation] [--rechercher-xml] [--telecharger] [--ranger] [--lier] [--exporter] [--exporterlegi] [--mise-a-jour | --nouveau] [--dialecte=<DIALECTE>] [--historique=<HISTORIQUE>] [--métadonnées] [--organisation=<TYPE>] [--bdd=<fichier>] [--bddlegi=<fichier>] [--cache=<dossier>] [--dossier=<dossier>]
+aide = ('''Usage: archeo-lex [--aide] [--debug] [--help] [--version] [--textes=<TEXTES>] [--base=<BASE>] [--livraison=<DATE>] [--exporterlegi] [--mise-a-jour | --nouveau] [--dialecte=<DIALECTE>] [--historique=<HISTORIQUE>] [--métadonnées] [--organisation=<TYPE>] [--bddlegi=<fichier>] [--cache=<dossier>] [--dossier=<dossier>]
 
 -t --textes=<TEXTES>       Types de textes à télécharger :
                              - "constitution-de-1958",
@@ -46,12 +46,6 @@ aide = ('''Usage: archeo-lex [--aide] [--debug] [--help] [--version] [--textes=<
                              - "tout"
 
 
-   --initialisation        Vérifier les dépendances, initialiser la base
-   --rechercher-xml        Rechercher les textes dans les données XML
-   --telecharger           Télécharger la base XML
-   --ranger                Ranger les données dans la base de données
-   --lier                  Lier les versions d’articles aux versions de textes
-   --exporter              Exporter les textes
    --exporterlegi          Exporter les textes (legi.py)
 
 
@@ -71,7 +65,6 @@ aide = ('''Usage: archeo-lex [--aide] [--debug] [--help] [--version] [--textes=<
                              - "repertoires-hiérarchie" : un répertoire par section ou article [inactif]
 
 
-   --bdd=<fichier>         Nom de la base de données, par défaut "archeo-lex.sqlite"
    --bddlegi=<fichier>     Nom de la base de données de legi.py, par défaut "legi.sqlite"
    --cache=<dossier>       Dossier de cache, par défaut "cache"
    --dossier=<dossier>     Dossier de sortie, par défaut "textes"
@@ -102,20 +95,14 @@ def principal(arguments):
         logger.setLevel(logging.INFO)
     
     # Actions à considérer
-    action_initialisation = arguments.get('--initialisation') or False
-    action_rechercher_xml = arguments.get('--rechercher-xml') or False
-    action_telecharger = arguments.get('--telecharger') or False
-    action_ranger = arguments.get('--ranger') or False
-    action_lier = arguments.get('--lier') or False
-    action_exporter = arguments.get('--exporter') or False
-    action_exporterlegi = arguments.get('--exporterlegi') or False
+    action_exporterlegi = arguments.get('--exporterlegi') or True
     
-    if not(action_initialisation or action_rechercher_xml or action_telecharger or action_ranger or action_lier or action_exporter or action_exporterlegi):
-        action_initialisation = action_rechercher_xml = action_telecharger = action_ranger = action_lier = action_exporter = action_exporterlegi = True
+    if not(action_exporterlegi):
+        action_exporterlegi = True
     
     # Lecture des données de format
     data = {}
-    data['textes'] = ((arguments.get('--textes') or '').decode('utf-8') or 'code-de-la-propriété-intellectuelle').split(',')
+    data['textes'] = ((arguments.get('--textes') or '').decode('utf-8') or 'LEGITEXT000006069414').split(',')
     data['base'] = arguments.get('--base') or 'LEGI'
     data['livraison'] = arguments.get('--livraison') or 'tout'
     data['format'] = {}
@@ -125,7 +112,6 @@ def principal(arguments):
     data['format']['organisation'] = arguments.get('--organisation') or 'fichier-unique'
     
     # Lecture des autres paramètres
-    data['bdd'] = (arguments.get('--bdd') or '').decode('utf-8') or 'archeo-lex.sqlite'
     data['bddlegi'] = (arguments.get('--bddlegi') or '').decode('utf-8') or 'cache/sql/legi.sqlite'
     data['cache'] = (arguments.get('--cache') or '').decode('utf-8') or 'cache'
     data['dossier'] = (arguments.get('--dossier') or '').decode('utf-8') or 'textes'
@@ -138,41 +124,18 @@ def principal(arguments):
            os.makedirs(dir)
 
     # Recherche des identifiants
-    if data['textes'] == ['tous']:
-        data['textes'] = obtenir_tous_textes(data['base'], data['cache'])
-    else:
-        logger.info('Recherche des identifiants')
-        data['textes'] = obtenir_identifiants(data['textes'], data['cache'])
-    logger.info('Textes demandés')
-    if len(data['textes']) > 10:
-        logger.info('  ({} textes)'.format(len(data['textes'])))
-    else:
-        for t in data['textes']:
-            logger.info('* {} : {}'.format(t[1], t[0]))
+    #if data['textes'] == ['tous']:
+    #    data['textes'] = obtenir_tous_textes(data['base'], data['cache'])
+    #else:
+    #    logger.info('Recherche des identifiants')
+    #    data['textes'] = obtenir_identifiants(data['textes'], data['cache'])
+    #logger.info('Textes demandés')
+    #if len(data['textes']) > 10:
+    #    logger.info('  ({} textes)'.format(len(data['textes'])))
+    #else:
+    #    for t in data['textes']:
+    #        logger.info('* {} : {}'.format(t[1], t[0]))
     
-    # Exécution des actions
-    if action_initialisation:
-        logger.info('Initialisation de la base de données')
-        initialisation_bdd(data['bdd'], data['cache'], data['effacer'])
-    
-    if action_rechercher_xml:
-        nop()
-    
-    if action_telecharger:
-        logger.info('Téléchargement des fichiers XML')
-        telecharger_fichiers_base(data['base'], data['livraison'], data['cache'])
-    
-    if action_ranger:
-        logger.info('Rangement des données dans la base de données')
-        ranger(data['textes'], data['cache'])
-    
-    #if action_lier:
-    #    lier(data['textes'], data['cache'])
-    
-    if action_exporter:
-        logger.info('Création de l’historique')
-        creer_historique(data['textes'], data['format'], data['dossier'], data['cache'])
-
     if action_exporterlegi:
         logger.info('Création de l’historique (legi.py)')
         creer_historique_legi(data['textes'], data['format'], data['dossier'], data['cache'], data['bddlegi'])
