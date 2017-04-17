@@ -138,7 +138,7 @@ def creer_historique_texte(texte, format, dossier, cache, bdd):
         debut = versions_texte[i_version]
         fin = versions_texte[i_version+1]
 
-        sql = sql_texte + " AND debut <= '{0}' AND ( fin >= '{1}' OR fin == '2999-01-01' )".format(debut,fin)
+        sql = sql_texte + " AND debut <= '{0}' AND ( fin >= '{1}' OR fin == '2999-01-01' OR etat == 'VIGUEUR' )".format(debut,fin)
 
         # Créer l’en-tête
         date_fr = '{} {} {}'.format(debut.day, MOIS2[int(debut.month)], debut.year)
@@ -204,7 +204,7 @@ def creer_sections(texte, niveau, parent, version_texte, sql, arborescence, form
 
         rcid, rparent, relement, rdebut, rfin, retat, rnum, rposition, r_source = section
 
-        if comp_infini_strict(version_texte[0], rdebut) or comp_infini_strict(rfin, version_texte[1]):
+        if comp_infini_strict(version_texte[0], rdebut) or (comp_infini_strict(rfin, version_texte[1]) and retat != 'VIGUEUR'):
             raise Exception(u'section non valide (version texte de {} a {}, version section de {} à {})'.format(version_texte[0], version_texte[1], rdebut, rfin))
             return texte
 
@@ -231,7 +231,7 @@ def creer_sections(texte, niveau, parent, version_texte, sql, arborescence, form
                 WHERE id = '{0}'
             """.format(relement))
             id, section, num, date_debut, date_fin, bloc_textuel, cid = article
-            if comp_infini_strict(version_texte[0], date_debut) or comp_infini_strict(date_fin, version_texte[1]):
+            if comp_infini_strict(version_texte[0], date_debut) or (comp_infini_strict(date_fin, version_texte[1]) and retat != 'VIGUEUR'):
                 continue
             chemin_markdown = os.path.join(cache, 'markdown', cid, id + '.md')
             f_article = open(chemin_markdown, 'r')
