@@ -81,19 +81,19 @@ fichiers_majo = {
 }
 
 natures = {
-    'CONSTITUTION': 'constitution',
-    'LOI_CONSTIT': 'loi constitutionnelle',
-    'LOI_ORGANIQUE': 'loi organique',
-    'LOI': 'loi',
-    'CODE': 'code',
-    'ORDONNANCE': 'ordonnance',
-    'DECRET_LOI': 'décret-loi',
-    'DECRET': 'décret',
-    'CONVENTION': 'convention',
-    'ARRETE': 'arrêté',
-    'CIRCULAIRE': 'circulaire',
-    'DECISION': 'décision',
-    'DECLARATION': 'déclaration'
+    'CONSTITUTION': u'constitution',
+    'LOI_CONSTIT': u'loi constitutionnelle',
+    'LOI_ORGANIQUE': u'loi organique',
+    'LOI': u'loi',
+    'CODE': u'code',
+    'ORDONNANCE': u'ordonnance',
+    'DECRET_LOI': u'décret-loi',
+    'DECRET': u'décret',
+    'CONVENTION': u'convention',
+    'ARRETE': u'arrêté',
+    'CIRCULAIRE': u'circulaire',
+    'DECISION': u'décision',
+    'DECLARATION': u'déclaration'
 }
 
 
