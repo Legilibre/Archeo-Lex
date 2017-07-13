@@ -41,7 +41,7 @@ L’installation de Python et de ses modules peut se faire à l’intérieur d�
 
 La liste complète des modules utilisés est disponible au moyen de `scripts/liste-paquets.sh` (sauf lxml, optionnel mais recommandé).
 
-L’utilisation du programme [legi.py](https://pypi.python.org/pypi/legi.py) est désormais obligatoire.
+L’utilisation du programme [legi.py](https://pypi.python.org/pypi/legi) est désormais obligatoire.
 
 
 ### Lancement
