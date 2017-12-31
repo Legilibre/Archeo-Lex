@@ -9,6 +9,7 @@ Ainsi, chaque texte législatif (loi, code, constitution, etc.) est :
 2. dans une syntaxe minimaliste permettant de structurer le texte, et pouvant être retransformée en page HTML si besoin,
 3. versionné sous Git, permettant d’utiliser toute sa puissance pour faire des comparaisons, pour rechercher dans l’historique et pour avoir une présentation lisible.
 
+**[Site de présentation](https://archeo-lex.fr)**
 
 Utilisation
 -----------
