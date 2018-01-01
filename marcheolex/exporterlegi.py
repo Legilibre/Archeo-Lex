@@ -53,6 +53,16 @@ def creer_historique_texte(texte, format, dossier, cache, bdd):
     id = texte
     nom = texte
 
+    # Obtenir la date de la base LEGI
+    last_update = db.one("""
+        SELECT value
+        FROM db_meta
+        WHERE key = 'last_update'
+    """)
+    last_update_jour = datetime.date(*(time.strptime(last_update, '%Y%m%d-%H%M%S')[0:3]))
+    last_update = datetime.datetime(*(time.strptime(last_update, '%Y%m%d-%H%M%S')[0:6]))
+    logger.info('Dernière mise à jour de la base LEGI : {}'.format(last_update.isoformat()+'+01:00'))
+
     Path(dossier).mkdir_p()
     entree_texte = db.one("""
         SELECT id, nature, titre, titrefull, etat, date_debut, date_fin, num, cid
@@ -88,9 +98,13 @@ def creer_historique_texte(texte, format, dossier, cache, bdd):
         os.makedirs(dossier)
     fichier = os.path.join(dossier, nom_fichier + '.md')
 
-    # Créer le dépôt Git
+    # Créer le dépôt Git avec comme branche maîtresse 'texte' ou 'articles'
+    branche = 'texte'
+    if format['organisation'] == 'repertoires-simple':
+        branche = 'articles'
     if not os.path.exists(os.path.join(dossier, '.git')):
         subprocess.call(['git', 'init'], cwd=dossier)
+        subprocess.call(['git', 'symbolic-ref', 'HEAD', 'refs/heads/'+branche], cwd=dossier)
     else:
         subprocess.call(['git', 'checkout', '--', sousdossier], cwd=dossier)
     
@@ -127,6 +141,7 @@ def creer_historique_texte(texte, format, dossier, cache, bdd):
     # - rechercher les sections et articles associés
     # - créer le fichier texte au format demandé
     # - commiter le fichier
+    futur = False
     for (i_version, version_texte) in enumerate(versions_texte):
         
         # Passer les versions 'nulles'
@@ -137,6 +152,10 @@ def creer_historique_texte(texte, format, dossier, cache, bdd):
 
         debut = versions_texte[i_version]
         fin = versions_texte[i_version+1]
+
+        if not futur and debut > last_update_jour:
+            subprocess.call(['git', 'checkout', '-b', 'futur-'+branche], cwd=dossier)
+            futur = True
 
         sql = sql_texte + " AND debut <= '{0}' AND ( fin >= '{1}' OR fin == '2999-01-01' OR etat == 'VIGUEUR' )".format(debut,fin)
 
@@ -170,15 +189,24 @@ def creer_historique_texte(texte, format, dossier, cache, bdd):
             f_texte.close()
         
         # Exécuter Git
-        date_base_legi = '{} {} {} {}:{}:{}'.format('18', 'juillet', '2014', '11', '30', '10') # TODO changer cela
         subprocess.call(['git', 'add', '.'], cwd=dossier)
-        #subprocess.call(['git', 'commit', '--author="Législateur <>"', '--date="' + str(debut) + 'T00:00:00Z"', '-m', 'Version consolidée au {}\n\nVersions :\n- base LEGI : {}\n- programme Archéo Lex : {}'.format(date_fr, date_base_legi, version_archeolex), '-q', '--no-status'], cwd=dossier)
-        subprocess.call(['git', 'commit', '--author="Législateur <>"', '--date="' + str(debut) + 'T00:00:00Z"', '-m', 'Version consolidée au {}'.format(date_fr), '-q', '--no-status'], cwd=dossier)
+        #subprocess.call(['git', 'commit', '--author="Législateur <>"', '--date="' + str(debut) + 'T00:00:00+01:00"', '-m', 'Version consolidée au {}\n\nVersions :\n- base LEGI : {}\n- programme Archéo Lex : {}'.format(date_fr, date_base_legi, version_archeolex), '-q', '--no-status'], cwd=dossier)
+        subprocess.call(['git', 'commit', '--author="Législateur <>"', '--date="' + str(debut) + 'T00:00:00+01:00"', '-m', 'Version consolidée au {}'.format(date_fr), '-q', '--no-status'], cwd=dossier, env={ 'GIT_COMMITTER_DATE': last_update.isoformat()+'+01:00', 'GIT_COMMITTER_NAME': 'Législateur'.encode('utf-8'), 'GIT_COMMITTER_EMAIL': '' })
         
         if fin == None or str(fin) == '2999-01-01':
             logger.info('Version {} enregistrée (du {} à maintenant)'.format(i_version+1, debut))
         else:
             logger.info('Version {} enregistrée (du {} au {})'.format(i_version+1, debut, fin))
+    
+    if futur:
+        subprocess.call(['git', 'checkout', branche], cwd=dossier)
+    else:
+        subprocess.call(['git', 'branch', 'futur-'+branche], cwd=dossier)
+    
+    # Optimisation du dossier git
+    subprocess.call(['git', 'gc', '--aggressive'], cwd=dossier)
+    subprocess.call('rm -rf .git/hooks .git/refs/heads .git/refs/tags .git/logs .git/COMMIT_EDITMSG .git/branches', cwd=dossier, shell=True)
+    subprocess.call('chmod -x .git/config', cwd=dossier, shell=True)
 
 
 def creer_sections(texte, niveau, parent, version_texte, sql, arborescence, format, dossier, db, cache):
