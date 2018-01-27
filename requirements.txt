@@ -5,3 +5,4 @@ path.py
 BeautifulSoup
 docopt
 lxml
+html2text
