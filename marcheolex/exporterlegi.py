@@ -208,6 +208,9 @@ def creer_historique_texte(texte, format, dossier, cache, bdd):
     subprocess.call('rm -rf .git/hooks .git/refs/heads .git/refs/tags .git/logs .git/COMMIT_EDITMSG .git/branches', cwd=dossier, shell=True)
     subprocess.call('chmod -x .git/config', cwd=dossier, shell=True)
 
+    # Ajout du tag de date éditoriale
+    subprocess.call(['git', 'tag', last_update.strftime('%Y%m%d-%H%M%S')], cwd=dossier)
+
 
 def creer_sections(texte, niveau, parent, version_texte, sql, arborescence, format, dossier, db, cache):
  
