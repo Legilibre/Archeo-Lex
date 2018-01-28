@@ -21,7 +21,7 @@ import datetime
 import time
 import re
 from pytz import timezone
-from string import strip
+from string import strip, join
 from path import Path
 from bs4 import BeautifulSoup
 import legi
@@ -41,8 +41,43 @@ from marcheolex.utilitaires import comp_infini_strict
 
 
 def creer_historique_legi(textes, format, dossier, cache, bdd):
-    
-    if len( textes ) == 1 and os.path.exists( textes[0] ):
+
+    if len( textes ) == 1 and textes[0] == 'tout':
+        db = legi.utils.connect_db(bdd)
+        liste_textes = db.all("""
+              SELECT cid
+              FROM textes_versions
+              ORDER BY cid
+        """)
+        liste_textes = [ x[0] for x in liste_textes ]
+    elif len( textes ) == 1 and textes[0] == 'tout-obsolete':
+        db = legi.utils.connect_db(bdd)
+        last_update = db.one("""
+            SELECT value
+            FROM db_meta
+            WHERE key = 'last_update'
+        """)
+        liste_textes = db.all("""
+              SELECT cid
+              FROM textes_versions
+              WHERE mtime > {0}
+              ORDER BY cid
+        """.format(last_update))
+        liste_textes = [ x[0] for x in liste_textes ]
+        print( '\nListe de textes :\n' + join( liste_textes, '\n' ) + '\n' )
+    elif len( textes ) == 1 and re.match( r'^aleatoire-([0-9]+)$', textes[0] ):
+        db = legi.utils.connect_db(bdd)
+        m = re.match( r'^aleatoire-([0-9]+)$', textes[0] )
+        m = int( m.group(1) )
+        liste_textes = db.all("""
+              SELECT cid
+              FROM textes_versions
+              ORDER BY RANDOM()
+              LIMIT {0}
+        """.format(m))
+        liste_textes = [ x[0] for x in liste_textes ]
+        print( '\nListe de textes :\n' + join( liste_textes, '\n' ) + '\n' )
+    elif len( textes ) == 1 and os.path.exists( textes[0] ):
         f_textes = open( textes[0], 'r' )
         liste_textes = strip(f_textes.read().decode('utf-8')).split('\n')
         f_textes.close()

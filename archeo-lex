@@ -40,6 +40,9 @@ aide = ('''Usage: archeo-lex [--aide] [--debug] [--help] [--version] [--textes=<
                              - nom du code ("code-pénal"…),
                              - identifiant Légifrance (paramètre « cidTexte »)
                              - fichier comportant un texte par ligne
+                             - "tout"
+                             - "tout-obsolete"
+                             - "aleatoire-NOMBRE"
 -b --base=<BASE>           Base de données DILA ("LEGI"…)
 -l --livraison=<DATE>      Date et heure de la livraison souhaitée
                              - "AAAAMMJJ-HHMMSS ("20140718-113010"…)
