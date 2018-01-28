@@ -69,6 +69,14 @@ def creer_historique_texte(texte, format, dossier, cache, bdd):
         FROM textes_versions
         WHERE id = '{0}'
     """.format(id))
+    if entree_texte == None:
+        entree_texte = db.one("""
+            SELECT id, nature, titre, titrefull, etat, date_debut, date_fin, num, cid
+            FROM textes_versions
+            WHERE cid = '{0}'
+        """.format(id))
+    if entree_texte == None:
+        raise Exception('Pas de texte avec cet ID ou CID')
     cid = entree_texte[8]
     if entree_texte[1] in natures.keys():
         if not os.path.exists(os.path.join(dossier, natures[entree_texte[1]]+'s')):
