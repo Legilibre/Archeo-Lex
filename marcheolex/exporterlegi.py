@@ -19,10 +19,12 @@ import os
 import subprocess
 import datetime
 import time
+import re
 from path import Path
 from bs4 import BeautifulSoup
 import legi
 import legi.utils
+from pytz import timezone
 from marcheolex import logger
 from marcheolex import version_archeolex
 from marcheolex import natures
@@ -45,6 +47,9 @@ def creer_historique_legi(textes, format, dossier, cache, bdd):
 
 def creer_historique_texte(texte, format, dossier, cache, bdd):
 
+    # Constantes
+    paris = timezone( 'Europe/Paris' )
+
     # Connexion à la base de données
     db = legi.utils.connect_db(bdd)
 
@@ -53,6 +58,10 @@ def creer_historique_texte(texte, format, dossier, cache, bdd):
     id = texte
     nom = texte
 
+    # Flags: 1) s’il y a des versions en vigueur future, 2) si la première version est une vigueur future
+    futur = False
+    futur_debut = False
+
     # Obtenir la date de la base LEGI
     last_update = db.one("""
         SELECT value
@@ -60,40 +69,46 @@ def creer_historique_texte(texte, format, dossier, cache, bdd):
         WHERE key = 'last_update'
     """)
     last_update_jour = datetime.date(*(time.strptime(last_update, '%Y%m%d-%H%M%S')[0:3]))
-    last_update = datetime.datetime(*(time.strptime(last_update, '%Y%m%d-%H%M%S')[0:6]))
-    logger.info('Dernière mise à jour de la base LEGI : {}'.format(last_update.isoformat()+'+01:00'))
+    last_update = paris.localize( datetime.datetime(*(time.strptime(last_update, '%Y%m%d-%H%M%S')[0:6])) )
+    logger.info('Dernière mise à jour de la base LEGI : {}'.format(last_update.isoformat()))
 
     Path(dossier).mkdir_p()
     entree_texte = db.one("""
-        SELECT id, nature, titre, titrefull, etat, date_debut, date_fin, num, cid
+        SELECT id, nature, titre, titrefull, etat, date_debut, date_fin, num, cid, mtime
         FROM textes_versions
         WHERE id = '{0}'
     """.format(id))
     if entree_texte == None:
         entree_texte = db.one("""
-            SELECT id, nature, titre, titrefull, etat, date_debut, date_fin, num, cid
+            SELECT id, nature, titre, titrefull, etat, date_debut, date_fin, num, cid, mtime
             FROM textes_versions
             WHERE cid = '{0}'
         """.format(id))
     if entree_texte == None:
         raise Exception('Pas de texte avec cet ID ou CID')
     cid = entree_texte[8]
+    mtime = entree_texte[9]
     if entree_texte[1] in natures.keys():
         if not os.path.exists(os.path.join(dossier, natures[entree_texte[1]]+'s')):
             os.makedirs(os.path.join(dossier, natures[entree_texte[1]]+'s'))
         sousdossier = natures[entree_texte[1]]+'s'
 
+    mise_a_jour = True
     if entree_texte[1] and (entree_texte[1] in natures.keys()) and entree_texte[7]:
         identifiant = natures[entree_texte[1]]+' '+entree_texte[7]
         identifiant = identifiant.replace(' ','_')
         nom_fichier = identifiant
         sousdossier = os.path.join(natures[entree_texte[1]]+'s', identifiant)
+        if not os.path.exists(os.path.join(dossier, sousdossier)):
+            mise_a_jour = False
         Path(os.path.join(dossier, sousdossier)).mkdir_p()
         chemin_base = chemin_texte(id, entree_texte[1] == 'CODE')
     elif entree_texte[1] and (entree_texte[1] in natures.keys()) and entree_texte[2]:
         identifiant = entree_texte[2][0].lower()+entree_texte[2][1:].replace(' ','_')
         nom_fichier = identifiant
         sousdossier = os.path.join(natures[entree_texte[1]]+'s', identifiant)
+        if not os.path.exists(os.path.join(dossier, sousdossier)):
+            mise_a_jour = False
         Path(os.path.join(dossier, sousdossier)).mkdir_p()
         chemin_base = chemin_texte(id, entree_texte[1] == 'CODE')
     else:
@@ -116,8 +131,63 @@ def creer_historique_texte(texte, format, dossier, cache, bdd):
     else:
         subprocess.call(['git', 'checkout', '--', sousdossier], cwd=dossier)
     
-    if os.path.exists(fichier):
-        raise Exception('Fichier existant : la mise à jour de fichiers existants n’est pas encore prise en charge.')
+    date_reprise_git = None
+    reset_hash = ''
+    if mise_a_jour:
+        tags = subprocess.check_output(['git', 'tag', '-l'], cwd=dossier)
+        tags = tags.split('\n')
+        date_maj_git = False
+        if len(tags) > 1:
+            tag = tags[-2]
+            date_maj_git = paris.localize( datetime.datetime(*(time.strptime(tags[-2], '%Y%m%d-%H%M%S')[0:6])) )
+        if date_maj_git:
+            logger.info('Dernière mise à jour du dépôt : {}'.format(date_maj_git.isoformat()))
+        else:
+            raise Exception('Pas de tag de la dernière mise à jour')
+        if int(time.mktime(date_maj_git.timetuple())) >= mtime:
+            logger.info('Pas de mise à jour disponible')
+            return
+
+        # Obtention de la première date qu’il faudra mettre à jour
+        date_reprise_git = db.one("""
+            SELECT date_debut
+            FROM articles
+            WHERE cid = '{0}' AND mtime > {1}
+        """.format(cid,int(time.mktime(date_maj_git.timetuple()))))
+
+        # Lecture des versions en vigueur dans le dépôt Git
+        try:
+            if subprocess.check_output(['git', 'rev-parse', '--verify', 'futur-'+branche], cwd=dossier):
+                subprocess.call(['git', 'checkout', 'futur-'+branche], cwd=dossier)
+        except subprocess.CalledProcessError:
+            pass
+        versions_git = subprocess.check_output(['git', 'log', '--oneline'], cwd=dossier).decode('utf-8').split('\n')
+        versions_git = versions_git[0:-1]
+        for log_version in versions_git:
+            for m, k in MOIS.items():
+                log_version = log_version.replace( m, k )
+            m = re.match(r'^([0-9a-f]+) .* ([0-9]+)(?:er)? ([0-9]+) ([0-9]+)$', log_version.encode('utf-8'))
+            if not m:
+                raise Exception('Version non reconnue dans le dépôt Git')
+            date = '{0:04d}-{1:02d}-{2:02d}'.format(int(m.group(4)), int(m.group(3)), int(m.group(2)))
+            reset_hash = m.group(1)
+            if date < date_reprise_git:
+                break
+            reset_hash = ''
+
+        if reset_hash:
+            if date_reprise_git <= last_update_jour.strftime('%Y-%m-%d'):
+                subprocess.call(['git', 'checkout', branche], cwd=dossier)
+                try:
+                    if subprocess.check_output(['git', 'rev-parse', '--verify', 'futur-'+branche], cwd=dossier):
+                        subprocess.call(['git', 'branch', '-D', 'futur-'+branche], cwd=dossier)
+                except subprocess.CalledProcessError:
+                    pass
+            subprocess.call(['git', 'reset', '--hard', reset_hash], cwd=dossier) 
+        else:
+            subprocess.call(['git', 'branch', '-m', 'texte', 'junk'], cwd=dossier)
+            subprocess.call(['git', 'checkout', '--orphan', branche], cwd=dossier)
+            subprocess.call(['git', 'branch', '-D', 'junk'], cwd=dossier)
 
     # Vérifier que les articles ont été transformés en Markdown ou les créer le cas échéant
     creer_markdown_texte((None, cid, None, None), db, cache)
@@ -127,6 +197,7 @@ def creer_historique_texte(texte, format, dossier, cache, bdd):
           SELECT debut, fin
           FROM sommaires
           WHERE cid = '{0}'
+          ORDER BY debut
     """.format(cid))
     dates_texte = []
     dates_fin_texte = []
@@ -135,6 +206,8 @@ def creer_historique_texte(texte, format, dossier, cache, bdd):
         vt = vers[0]
         if isinstance(vt, basestring):
             vt = datetime.date(*(time.strptime(vt, '%Y-%m-%d')[0:3]))
+        if date_reprise_git and vt.strftime('%Y-%m-%d') < date_reprise_git:
+            continue
         dates_texte.append( vt )
         vt = vers[1]
         if isinstance(vt, basestring):
@@ -149,7 +222,6 @@ def creer_historique_texte(texte, format, dossier, cache, bdd):
     # - rechercher les sections et articles associés
     # - créer le fichier texte au format demandé
     # - commiter le fichier
-    futur = False
     for (i_version, version_texte) in enumerate(versions_texte):
         
         # Passer les versions 'nulles'
@@ -162,7 +234,12 @@ def creer_historique_texte(texte, format, dossier, cache, bdd):
         fin = versions_texte[i_version+1]
 
         if not futur and debut > last_update_jour:
-            subprocess.call(['git', 'checkout', '-b', 'futur-'+branche], cwd=dossier)
+            if i_version == 0:
+                subprocess.call(['git', 'symbolic-ref', 'HEAD', 'refs/heads/futur-'+branche], cwd=dossier)
+                if not reset_hash:
+                    futur_debut = True
+            else:
+                subprocess.call(['git', 'checkout', '-b', 'futur-'+branche], cwd=dossier)
             futur = True
 
         sql = sql_texte + " AND debut <= '{0}' AND ( fin >= '{1}' OR fin == '2999-01-01' OR etat == 'VIGUEUR' )".format(debut,fin)
@@ -206,10 +283,8 @@ def creer_historique_texte(texte, format, dossier, cache, bdd):
         else:
             logger.info('Version {} enregistrée (du {} au {})'.format(i_version+1, debut, fin))
     
-    if futur:
+    if futur and not futur_debut:
         subprocess.call(['git', 'checkout', branche], cwd=dossier)
-    else:
-        subprocess.call(['git', 'branch', 'futur-'+branche], cwd=dossier)
     
     # Optimisation du dossier git
     subprocess.call(['git', 'gc', '--aggressive'], cwd=dossier)

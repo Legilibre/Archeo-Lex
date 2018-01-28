@@ -6,3 +6,4 @@ BeautifulSoup
 docopt
 lxml
 html2text
+pytz
