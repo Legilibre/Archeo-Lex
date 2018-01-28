@@ -334,6 +334,9 @@ def creer_historique_texte(texte, format, dossier, cache, bdd):
     # Ajout du tag de date éditoriale
     subprocess.call(['git', 'tag', last_update.strftime('%Y%m%d-%H%M%S')], cwd=dossier)
 
+    # Suppression du cache
+    subprocess.call('rm -rf markdown/{0}'.format(cid), cwd=cache, shell=True)
+
 
 def creer_sections(texte, niveau, parent, version_texte, sql, arborescence, format, dossier, db, cache):
  
