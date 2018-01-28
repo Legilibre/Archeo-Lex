@@ -41,7 +41,7 @@ dictConfig(LOGGING)
 
 logger = logging.getLogger(__name__)
 
-version_archeolex = '0.2.0-alpha';
+version_archeolex = '0.3.0-alpha';
 
 
 #
@@ -80,6 +80,22 @@ fichiers_majo = {
     'CIRCULAIRES': 'circulaire_%d%m%Y%Hh%M.tar.gz'
 }
 
+natures = {
+    'CONSTITUTION': u'constitution',
+    'LOI_CONSTIT': u'loi constitutionnelle',
+    'LOI_ORGANIQUE': u'loi organique',
+    'LOI': u'loi',
+    'CODE': u'code',
+    'ORDONNANCE': u'ordonnance',
+    'DECRET_LOI': u'décret-loi',
+    'DECRET': u'décret',
+    'CONVENTION': u'convention',
+    'ARRETE': u'arrêté',
+    'CIRCULAIRE': u'circulaire',
+    'DECISION': u'décision',
+    'DECLARATION': u'déclaration'
+}
+
 
 #
 # Exceptions
@@ -102,3 +118,4 @@ class (Exception):
     pass
 '''
 
+# vim: set ts=4 sw=4 sts=4 et:

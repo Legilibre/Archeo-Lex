@@ -9,6 +9,7 @@ Ainsi, chaque texte législatif (loi, code, constitution, etc.) est :
 2. dans une syntaxe minimaliste permettant de structurer le texte, et pouvant être retransformée en page HTML si besoin,
 3. versionné sous Git, permettant d’utiliser toute sa puissance pour faire des comparaisons, pour rechercher dans l’historique et pour avoir une présentation lisible.
 
+**[Site de présentation](https://archeo-lex.fr)**
 
 Utilisation
 -----------
@@ -41,25 +42,33 @@ L’installation de Python et de ses modules peut se faire à l’intérieur d�
 
 La liste complète des modules utilisés est disponible au moyen de `scripts/liste-paquets.sh` (sauf lxml, optionnel mais recommandé).
 
+L’utilisation du programme [legi.py](https://pypi.python.org/pypi/legi) est désormais obligatoire.
+
 
 ### Lancement
 
-Les données nécessaires (textes de loi et métadonnées associées) sont disponibles sur <http://rip.journal-officiel.gouv.fr/index.php/pages/juridiques> (données LEGI), à télécharger via FTP. Il faut ensuite les décompresser (attention : environ 15 Gio) et les insérer dans le sous-dossier PURE-LEGIFRANCE/cache/xml.
+Les données nécessaires (textes de loi et métadonnées associées) sont disponibles sur <http://rip.journal-officiel.gouv.fr/index.php/pages/juridiques> (données LEGI), données qui seront téléchargées au cours du processus (attention : environ 5 Gio).
+
+La première étape est de télécharger la base LEGI et de créer la base de données avec legi.py:
+
+```Shell
+    python -m legi.download ./tarballs
+    python -m legi.tar2sqlite cache/sql/legi.sqlite ./tarballs
+```
 
 Le programme principal se lance en ligne de commande :
 
 ```Shell
-    ./archeo-lex --textes=code-de-la-propriété-intellectuelle
+    ./archeo-lex --textes=LEGITEXT000006069414
 ```
 
 La liste complète des paramètres s’affiche avec la commande `./archeo-lex --aide`.
 
 Chacune des étapes peut être appelée de façon indépendante :
 
-* `--initialisation` : initialise la base de données
-* `--ranger` : parcourt les fichiers XML insère les métadonnées dans la base de données
-* `--markdown` : convertit les articles en syntaxe Markdown
-* `--exporter` : assemble les textes et créer les versions
+* `--exporterlegi` : assemble les textes et créer les versions
+
+Noter que Archéo Lex avait auparavant plusieurs étapes, mais une grande partie a désormais été déléguée à legi.py.
 
 
 Développement
