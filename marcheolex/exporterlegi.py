@@ -396,15 +396,15 @@ def creer_sections(texte, niveau, parent, version_texte, sql, arborescence, form
             texte_article = f_article.read().decode('utf-8')
             f_article.close()
  
-            texte = texte                                                                 \
-                    + marque_niveau + ' Article ' + (num.strip() if num else '??') + '\n' \
-                    + '\n'                                                                \
-                    + texte_article + '\n'                                                \
-                    + '\n'                                                                \
+            texte = texte                                                                    \
+                    + marque_niveau + ' Article' + (' ' + num.strip() if num else '') + '\n' \
+                    + '\n'                                                                   \
+                    + texte_article + '\n'                                                   \
+                    + '\n'                                                                   \
                     + '\n'
 
             # Format « 1 dossier = 1 article »
-            fichier = os.path.join(dossier, 'Article_' + num.replace(' ', '_') + '.md')
+            fichier = os.path.join(dossier, 'Article_' + (num.replace(' ', '_') if num else relement) + '.md')
             if format['organisation'] == 'repertoires-simple':
                 texte_article = texte_article + '\n'
                 f_texte = open(fichier, 'w')
