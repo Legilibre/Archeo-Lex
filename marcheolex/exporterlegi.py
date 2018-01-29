@@ -395,11 +395,11 @@ def creer_sections(texte, niveau, parent, version_texte, sql, arborescence, form
             texte_article = f_article.read().decode('utf-8')
             f_article.close()
  
-            texte = texte                                                        \
-                    + marque_niveau + ' Article ' + num.strip() + '\n' \
-                    + '\n'                                                       \
-                    + texte_article + '\n'                                       \
-                    + '\n'                                                       \
+            texte = texte                                                                 \
+                    + marque_niveau + ' Article ' + (num.strip() if num else '??') + '\n' \
+                    + '\n'                                                                \
+                    + texte_article + '\n'                                                \
+                    + '\n'                                                                \
                     + '\n'
 
             # Format « 1 dossier = 1 article »
