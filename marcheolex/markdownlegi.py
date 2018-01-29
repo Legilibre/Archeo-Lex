@@ -50,6 +50,8 @@ def creer_markdown_texte(textecid, db, cache):
 
         # Transformation des <br/> en <p>
         texte = article[1]
+        if texte == None:
+            texte = ''
         texte = re.sub(r'<br ?\/>', '\n', texte)
         texte = re.sub(r'<p>(.*?)<\/p>', r'\1\n\n', texte, flags=re.DOTALL)
         texte = re.sub(r'\n\n+', '\n\n', texte)
