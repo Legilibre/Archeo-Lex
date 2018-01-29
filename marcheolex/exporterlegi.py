@@ -272,6 +272,7 @@ def creer_historique_texte(texte, format, dossier, cache, bdd):
 
         debut = versions_texte[i_version]
         fin = versions_texte[i_version+1]
+        debut_datetime = paris.localize( datetime.datetime( debut.year, debut.month, debut.day ) )
 
         if not futur and debut > last_update_jour:
             if i_version == 0:
@@ -315,8 +316,8 @@ def creer_historique_texte(texte, format, dossier, cache, bdd):
         
         # Exécuter Git
         subprocess.call(['git', 'add', '.'], cwd=dossier)
-        #subprocess.call(['git', 'commit', '--author="Législateur <>"', '--date="' + str(debut) + 'T00:00:00+01:00"', '-m', 'Version consolidée au {}\n\nVersions :\n- base LEGI : {}\n- programme Archéo Lex : {}'.format(date_fr, date_base_legi, version_archeolex), '-q', '--no-status'], cwd=dossier)
-        subprocess.call(['git', 'commit', '--author="Législateur <>"', '--date="' + str(debut) + 'T00:00:00+01:00"', '-m', 'Version consolidée au {}'.format(date_fr), '-q', '--no-status'], cwd=dossier, env={ 'GIT_COMMITTER_DATE': last_update.isoformat()+'+01:00', 'GIT_COMMITTER_NAME': 'Législateur'.encode('utf-8'), 'GIT_COMMITTER_EMAIL': '' })
+        #subprocess.call(['git', 'commit', '--author="Législateur <>"', '--date="' + str(debut_datetime) + '"', '-m', 'Version consolidée au {}\n\nVersions :\n- base LEGI : {}\n- programme Archéo Lex : {}'.format(date_fr, date_base_legi, version_archeolex), '-q', '--no-status'], cwd=dossier)
+        subprocess.call(['git', 'commit', '--author="Législateur <>"', '--date="' + str(debut_datetime) + '"', '-m', 'Version consolidée au {}'.format(date_fr), '-q', '--no-status'], cwd=dossier, env={ 'GIT_COMMITTER_DATE': last_update.isoformat(), 'GIT_COMMITTER_NAME': 'Législateur'.encode('utf-8'), 'GIT_COMMITTER_EMAIL': '' })
         
         if fin == None or str(fin) == '2999-01-01':
             logger.info('Version {} enregistrée (du {} à maintenant)'.format(i_version+1, debut))
