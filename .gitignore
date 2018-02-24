@@ -7,7 +7,7 @@
 README.htm
 
 # Fichiers de sauvegarde
-*.swp
+*.sw[p-z]
 *~
 
 # Fichiers Ansible
