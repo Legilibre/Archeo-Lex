@@ -28,11 +28,12 @@ from marcheolex import version_archeolex
 #from marcheolex.exporter import creer_historique
 #from marcheolex.exporter import creer_historique_texte
 from marcheolex.exporterlegi import creer_historique_legi
+from marcheolex.pousserlestextes import pousser_les_textes_sur_gitlab
 from marcheolex.utilitaires import nop
 from marcheolex.utilitaires import obtenir_tous_textes
 
 # Manuel d’aide
-aide = ('''Usage: archeo-lex [--aide] [--debug] [--help] [--version] [--textes=<TEXTES>] [--base=<BASE>] [--livraison=<DATE>] [--exporterlegi] [--mise-a-jour | --nouveau] [--dialecte=<DIALECTE>] [--historique=<HISTORIQUE>] [--metadonnees] [--organisation=<TYPE>] [--bddlegi=<fichier>] [--cache=<dossier>] [--dossier=<dossier>]
+aide = ('''Usage: archeo-lex [--aide] [--debug] [--help] [--version] [--textes=<TEXTES>] [--base=<BASE>] [--livraison=<DATE>] [--exporterlegi] [--mise-a-jour | --nouveau] [--dialecte=<DIALECTE>] [--historique=<HISTORIQUE>] [--metadonnees] [--organisation=<TYPE>] [--bddlegi=<fichier>] [--cache=<dossier>] [--dossier=<dossier>] [--gitlab-host=<GITHOST>] [--gitlab-token=<GITTOKEN>] [--gitlab-group=<GITGROUP>] [--gitlab-key=<GITKEY>]
 
 -t --textes=<TEXTES>       Types de textes à télécharger :
                              - "constitution-de-1958",
@@ -73,6 +74,11 @@ aide = ('''Usage: archeo-lex [--aide] [--debug] [--help] [--version] [--textes=<
    --cache=<dossier>       Dossier de cache, par défaut "cache"
    --dossier=<dossier>     Dossier de sortie, par défaut "textes"
 
+   --gitlab-host=GITHOST   Gitlab où doit être poussé les dépôts
+   --gitlab-token=GITTOKEN Token d’authentification Gitlab
+   --gitlab-group=GITGROUP Groupe Gitlab où pousser les textes
+   --gitlab-key=GITKEY     Fichier de la clé SSH pour pousser les textes
+
 
 -a --aide                  Afficher ce message d’aide
 -h --help                  Afficher ce message d’aide
@@ -100,6 +106,10 @@ def principal(arguments):
     
     # Actions à considérer
     action_exporterlegi = arguments.get('--exporterlegi') or True
+
+    action_gitlab = False
+    if arguments.get('--gitlab-host') and arguments.get('--gitlab-token') and arguments.get('--gitlab-group') and arguments.get('--gitlab-key'):
+        action_gitlab = True
     
     if not(action_exporterlegi):
         action_exporterlegi = True
@@ -121,6 +131,10 @@ def principal(arguments):
     data['dossier'] = (arguments.get('--dossier') or '').decode('utf-8') or 'textes'
     data['effacer'] = not arguments.get('--mise-a-jour') or arguments.get('--nouveau') or False
     #data['effacer'] = arguments.get('--nouveau') or not arguments.get('--mise-à-jour') or False
+    data['gitlab-host'] = arguments.get('--gitlab-host')
+    data['gitlab-token'] = arguments.get('--gitlab-token')
+    data['gitlab-group'] = arguments.get('--gitlab-group')
+    data['gitlab-key'] = arguments.get('--gitlab-key')
     
     # Création des dossiers de cache
     for dir in (data['cache'], data['cache']+'/bases-xml', data['cache']+'/divers', data['cache']+'/html', data['cache']+'/markdown', data['cache']+'/sql', data['dossier']):
@@ -140,9 +154,14 @@ def principal(arguments):
     #    for t in data['textes']:
     #        logger.info('* {} : {}'.format(t[1], t[0]))
     
+    textes = []
     if action_exporterlegi:
         logger.info('Création de l’historique (legi.py)')
-        creer_historique_legi(data['textes'], data['format'], data['dossier'], data['cache'], data['bddlegi'])
+        textes = creer_historique_legi(data['textes'], data['format'], data['dossier'], data['cache'], data['bddlegi'])
+    
+    if action_gitlab:
+        logger.info('Envoi sur Gitlab')
+        pousser_les_textes_sur_gitlab(textes, data['dossier'], data['gitlab-host'], data['gitlab-token'], data['gitlab-group'], data['gitlab-key'])
 
 if __name__ == "__main__":
     principal(docopt(aide, help=False))

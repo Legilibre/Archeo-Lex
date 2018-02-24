@@ -84,9 +84,13 @@ def creer_historique_legi(textes, format, dossier, cache, bdd):
     else:
         liste_textes = textes
 
+    textes_traites = []
     for texte in liste_textes:
         print( '> Texte {0}'.format( texte ) )
-        creer_historique_texte(texte, format, dossier, cache, bdd)
+        texte_traite = creer_historique_texte(texte, format, dossier, cache, bdd)
+        textes_traites.append( texte_traite )
+
+    return textes_traites
 
 
 def creer_historique_texte(texte, format, dossier, cache, bdd):
@@ -160,6 +164,8 @@ def creer_historique_texte(texte, format, dossier, cache, bdd):
         sousdossier = os.path.join(sousdossier, nom)
         nom_fichier = id
     dossier = os.path.join(dossier, sousdossier)
+    dossier_final = sousdossier
+    nom_final = identifiant
     sousdossier = '.'
     if not os.path.exists(dossier):
         os.makedirs(dossier)
@@ -337,6 +343,8 @@ def creer_historique_texte(texte, format, dossier, cache, bdd):
 
     # Suppression du cache
     subprocess.call('rm -rf markdown/{0}'.format(cid), cwd=cache, shell=True)
+
+    return dossier_final, nom_final, cid
 
 
 def creer_sections(texte, niveau, parent, version_texte, sql, arborescence, format, dossier, db, cache):
