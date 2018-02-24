@@ -234,6 +234,17 @@ def comp_infini_large(x, y):
     return x < y
 
 
+def min_date_infini( x, y ):
+
+    if x == None:
+        return y
+    elif y == None:
+        return x
+    elif x < y:
+        return x
+    return y
+
+
 def nop():
     
     return
@@ -262,3 +273,5 @@ def fusionner(root_src_dir, root_dst_dir):
                 os.remove(dst_file)
             shutil.move(src_file, dst_dir)
     shutil.rmtree(root_src_dir)
+
+# vim: set ts=4 sw=4 sts=4 et:
