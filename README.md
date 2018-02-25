@@ -93,6 +93,32 @@ Ce programme a été initialement (début août 2014) développé en 5 jours ave
 15. mise en production d’un service web qui mettrait à jour quotidiennement les dépôts Git
 16. création d’un site web permettant la visualisation des modifications, proposerait des liens RSS, etc. de façon similaire à [La Fabrique de la Loi](http://www.lafabriquedelaloi.fr), à [Légifrance](http://legifrance.gouv.fr), aux sites du [Sénat](http://www.senat.fr) ou de l’[Assemblée nationale](http://www.assemblee-nationale.fr) (cf point 11)
 
+### Nouvelle interface
+
+```
+from __future__ import unicode_literals
+import marcheolex.exports, legi.utils, datetime
+from marcheolex.FabriqueArticle import FabriqueArticle
+
+# Syntaxe utilisée
+md = marcheolex.exports.Markdown()
+
+# Organisation des fichiers utilisée
+fu = marcheolex.exports.FichierUnique()
+fu.syntaxe = md
+fu.fichier = 'truc'
+fu.extension = '.md'
+
+# Stockage des fichiers utilisé
+sf = marcheolex.exports.StockageFichiers()
+sf.organisation = fu
+
+db = legi.utils.connect_db('/home/seb35/2-projets/archéo-lex/archéo-lex-dev/cache/sql/legi.sqlite')
+fa = FabriqueArticle( db, sf, True )
+
+fa.obtenir_texte_article( 3, 'LEGIARTI000030127268', datetime.date(1970,1,1), datetime.date(2038,1,1), 'VIGUEUR')
+```
+
 
 Informations complémentaires
 ----------------------------

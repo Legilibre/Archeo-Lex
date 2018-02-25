@@ -39,30 +39,35 @@ from marcheolex.utilitaires import MOIS2
 from marcheolex.utilitaires import comp_infini
 from marcheolex.utilitaires import comp_infini_strict
 from marcheolex.utilitaires import comp_infini_large
+from marcheolex.exports.Syntaxes import Syntaxes
+from marcheolex.exports.Markdown import Markdown
 
 class FabriqueArticle:
 
-    db = None
-    cache = None
-    depr_cache = ''
-    articles = {}
+    def __init__( self, db, stockage, cache = None, depr_cache = '' ):
 
-    def __init__( self, db, cache = None, depr_cache = None ):
         """
         :param db:
             Base de donnée.
         :param cache:
             boolean Utilisation d’un cache mémoire
         """
-        self.db = db
+
+        FabriqueArticle.db = db
+        FabriqueArticle.stockage = stockage
+
         self.cache = cache
         self.depr_cache = depr_cache
         self.articles = {}
 
+
     def effacer_cache():
+
         self.articles = {}
 
+
     def obtenir_texte_article( self, niveau, id, debut_vigueur_texte, fin_vigueur_texte, etat_vigueur_section ):
+
         """
         Obtenir le texte d’un article donné par un id.
 
@@ -78,27 +83,28 @@ class FabriqueArticle:
             (string, datetime.date, datetime.date) - (texte, debut_vigueur, fin_vigueur) Texte de l’article, dates de début et fin de vigueur.
         """
 
-        # Rédaction du titre - TODO abstraire ceci
-        marque_niveau = ''
-        for i in range(niveau):
-            marque_niveau = marque_niveau + '#'
-
         if id not in self.articles:
 
-            article = self.db.one("""
+            article = FabriqueArticle.db.one("""
                 SELECT id, section, num, date_debut, date_fin, bloc_textuel, cid
                 FROM articles
                 WHERE id = '{0}'
             """.format(id))
             id, section, num, date_debut, date_fin, bloc_textuel, cid = article
+            date_debut = datetime.date(*(time.strptime(date_debut, '%Y-%m-%d')[0:3]))
+            if date_fin == '2999-01-01':
+                date_fin = None
+            else:
+                date_fin = datetime.date(*(time.strptime(date_fin, '%Y-%m-%d')[0:3]))
 
             chemin_markdown = os.path.join(self.depr_cache, 'markdown', cid, id + '.md')
-            if os.path.exists( chemin_markdown ):
+            if self.depr_cache and os.path.exists( chemin_markdown ):
                 f_article = open(chemin_markdown, 'r')
                 texte_article = f_article.read().decode('utf-8')
                 f_article.close()
             else:
-                raise Exception
+                md = Markdown()
+                texte_article = md.transformer_depuis_html( bloc_textuel )
 
             self.articles[id] = (texte_article, date_debut, date_fin)
 
@@ -115,14 +121,10 @@ class FabriqueArticle:
         if not self.cache:
             self.effacer_cache()
 
-        # TODO abstraire ceci selon le format de sortie
-        texte_article = ''                                                               \
-                + marque_niveau + ' Article' + (' ' + num.strip() if num else '') + '\n' \
-                + '\n'                                                                   \
-                + texte_article + '\n'                                                   \
-                + '\n'                                                                   \
-                + '\n'
+        # Enregistrement
+        niveaux = [ False ] * niveau
+        texte_retourne = self.stockage.ecrire_ressource( id, niveaux, num.strip() if num else '', '', texte_article )
 
-        return (texte_article, date_debut, date_fin)
+        return (texte_retourne, date_debut, date_fin)
 
 # vim: set ts=4 sw=4 sts=4 et:
