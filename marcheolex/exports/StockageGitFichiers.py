@@ -18,7 +18,7 @@ from . import UnArticleParFichierSansHierarchie
 from . import FichierUnique
 
 
-class StockageFichiers:
+class StockageGitFichiers:
 
     extension = ''
 
@@ -60,8 +60,9 @@ class StockageFichiers:
 
         if isinstance( self.organisation, FichierUnique ):
             nom_fichier = self.organisation.obtenir_nom_fichier( None, None, None, None )
+            texte = self.organisation.texte.strip() + '\n'
             f_texte = open( nom_fichier, 'w' )
-            f_texte.write( texte.encode('utf-8') )
+            f_texte.write( texte.encode( 'utf-8' ) )
             f_texte.close()
 
 

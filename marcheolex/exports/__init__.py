@@ -15,4 +15,4 @@ from .UnArticleParFichierSansHierarchie import UnArticleParFichierSansHierarchie
 from .Syntaxes import Syntaxes
 from .Markdown import Markdown
 from .Stockage import Stockage
-from .StockageFichiers import StockageFichiers
+from .StockageGitFichiers import StockageGitFichiers

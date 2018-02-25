@@ -77,12 +77,14 @@ class FichierUnique( Organisations ):
             else:
                 titre = 'Article (non-numéroté)'
             titre_formate = self.syntaxe.obtenir_titre( parents, titre )
-            texte = self.texte + titre_formate + texte + '\n\n'
+            texte = titre_formate + texte + '\n\n'
         elif id[4:8] == 'SCTA':
             titre_formate = self.syntaxe.obtenir_titre( parents, titre )
-            texte = self.texte + titre_formate + '\n\n'
+            texte = titre_formate + '\n\n'
         else:
             raise Exception()
+
+        self.texte += texte
 
         return texte
 

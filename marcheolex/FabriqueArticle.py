@@ -80,7 +80,7 @@ class FabriqueArticle:
         :param etat_vigueur_section:
             string - état de la section
         :returns:
-            (string, datetime.date, datetime.date) - (texte, debut_vigueur, fin_vigueur) Texte de l’article, dates de début et fin de vigueur.
+            (string, string, datetime.date, datetime.date) - (num, texte, debut_vigueur, fin_vigueur) Numéro et texte de l’article, dates de début et fin de vigueur.
         """
 
         if id not in self.articles:
@@ -106,9 +106,9 @@ class FabriqueArticle:
                 md = Markdown()
                 texte_article = md.transformer_depuis_html( bloc_textuel )
 
-            self.articles[id] = (texte_article, date_debut, date_fin)
+            self.articles[id] = (num, texte_article, date_debut, date_fin)
 
-        texte_article, date_debut, date_fin = self.articles[id]
+        num, texte_article, date_debut, date_fin = self.articles[id]
 
         # date_debut ≤ date_debut_vigueur
         if comp_infini_large(date_debut, debut_vigueur_texte):
@@ -125,6 +125,6 @@ class FabriqueArticle:
         niveaux = [ False ] * niveau
         texte_retourne = self.stockage.ecrire_ressource( id, niveaux, num.strip() if num else '', '', texte_article )
 
-        return (texte_retourne, date_debut, date_fin)
+        return (num, texte_retourne, date_debut, date_fin)
 
 # vim: set ts=4 sw=4 sts=4 et:
