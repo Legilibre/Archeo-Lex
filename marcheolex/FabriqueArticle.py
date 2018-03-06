@@ -91,7 +91,12 @@ class FabriqueArticle:
                 WHERE id = '{0}'
             """.format(id))
             id, section, num, date_debut, date_fin, bloc_textuel, cid = article
-            date_debut = datetime.date(*(time.strptime(date_debut, '%Y-%m-%d')[0:3]))
+
+            if date_debut == '2999-01-01':
+                date_debut = None
+            else:
+                date_debut = datetime.date(*(time.strptime(date_debut, '%Y-%m-%d')[0:3]))
+
             if date_fin == '2999-01-01':
                 date_fin = None
             else:
@@ -110,12 +115,12 @@ class FabriqueArticle:
 
         num, texte_article, date_debut, date_fin = self.articles[id]
 
-        # date_debut ≤ date_debut_vigueur
-        if comp_infini_large(date_debut, debut_vigueur_texte):
+        # date_fin < date_debut_vigueur
+        if date_fin and comp_infini_strict( date_fin, debut_vigueur_texte):
             return (None, date_debut, date_fin)
 
-        # date_fin_vigueur ≤ date_fin and retat != 'VIGUEUR'
-        if comp_infini_large(fin_vigueur_texte, date_fin) and etat_vigueur_section != 'VIGUEUR':
+        # fin_vigueur_texte < date_debut
+        if date_debut and fin_vigueur_texte and comp_infini_strict(fin_vigueur_texte, date_debut):
             return (None, date_debut, date_fin)
 
         if not self.cache:
@@ -123,7 +128,7 @@ class FabriqueArticle:
 
         # Enregistrement
         niveaux = [ False ] * niveau
-        texte_retourne = self.stockage.ecrire_ressource( id, niveaux, num.strip() if num else '', '', texte_article )
+        texte_retourne = FabriqueArticle.stockage.ecrire_ressource( id, niveaux, num.strip() if num else '', '', texte_article )
 
         return (num, texte_retourne, date_debut, date_fin)
 

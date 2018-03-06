@@ -38,6 +38,11 @@ from marcheolex.utilitaires import MOIS
 from marcheolex.utilitaires import MOIS2
 from marcheolex.utilitaires import comp_infini
 from marcheolex.utilitaires import comp_infini_strict
+from marcheolex.exports.Markdown import Markdown
+from marcheolex.exports.FichierUnique import FichierUnique
+from marcheolex.exports.StockageGitFichiers import StockageGitFichiers
+from marcheolex.FabriqueArticle import FabriqueArticle
+from marcheolex.FabriqueSection import FabriqueSection
 
 
 def creer_historique_legi(textes, format, dossier, cache, bdd):
@@ -192,6 +197,7 @@ def creer_historique_texte(texte, format, dossier, cache, bdd):
         date_maj_git = paris.localize( datetime.datetime(*(time.strptime(tags[-1], '%Y%m%d-%H%M%S')[0:6])) )
         logger.info('Dernière mise à jour du dépôt : {}'.format(date_maj_git.isoformat()))
         if int(time.mktime(date_maj_git.timetuple())) >= mtime:
+            logger.info( 'Dossier : {0}'.format(dossier) )
             logger.info('Pas de mise à jour disponible')
             return
 
@@ -264,6 +270,16 @@ def creer_historique_texte(texte, format, dossier, cache, bdd):
     sql_texte = "cid = '{0}'".format(cid)
     versions_texte = sorted(list(set(versions_texte)))
 
+    markdown = Markdown()
+    fichier_unique = FichierUnique()
+    fichier_unique.syntaxe = markdown
+    fichier_unique.fichier = 'truc'
+    fichier_unique.extension = '.md'
+    stockage = StockageGitFichiers()
+    stockage.organisation = fichier_unique
+    fa = FabriqueArticle( db, stockage, True )
+    fs = FabriqueSection( fa )
+
     # Pour chaque version
     # - rechercher les sections et articles associés
     # - créer le fichier texte au format demandé
@@ -312,7 +328,7 @@ def creer_historique_texte(texte, format, dossier, cache, bdd):
             subprocess.call('rm *.md', cwd=dossier, shell=True)
 
         # Créer les sections (donc tout le texte)
-        contenu = creer_sections(contenu, 1, None, (debut,fin), sql, [], format, dossier, db, cache)
+        contenu, fin_vigueur = fs.obtenir_texte_section( 0, None, cid, debut, fin )
         
         # Enregistrement du fichier
         if format['organisation'] == 'fichier-unique':

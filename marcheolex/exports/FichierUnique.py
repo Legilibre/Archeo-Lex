@@ -80,7 +80,7 @@ class FichierUnique( Organisations ):
             texte = titre_formate + texte + '\n\n'
         elif id[4:8] == 'SCTA':
             titre_formate = self.syntaxe.obtenir_titre( parents, titre )
-            texte = titre_formate + '\n\n'
+            texte = titre_formate
         else:
             raise Exception()
 

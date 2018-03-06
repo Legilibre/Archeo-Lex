@@ -77,6 +77,8 @@ class Markdown( Syntaxes ):
         for i in range( len(parents) ):
             marque_niveau = marque_niveau + '#'
 
+        texte = re.sub( r'&#13;\n*', '', texte )
+
         return marque_niveau + ' ' + texte + '\n\n'
 
 

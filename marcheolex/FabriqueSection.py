@@ -46,6 +46,7 @@ class FabriqueSection:
     db = None
     cache = None
     depr_cache = ''
+    stockage = None
 
     # sections = {
     #     'LEGISCTA012345678901': (2, 'Titre II', 'De la loi', 1791-01-01, None, 2015-01-01, 2018-01-01, 'Titre II - De la loi\n\nArticle 3\n\nLes assujettis sont tenus d’aprendre la loi par cœur.\n\nArticle 4\n\nTout contrevenant aux dispositions de l’article 3 se voit remettre un 0/42 à l’examen de citoyenneté.')
@@ -65,20 +66,27 @@ class FabriqueSection:
     sections = {}
 
     def __init__( self, fabrique_article ):
+
         """
         :param fabrique_article:
             FabriqueArticle
         """
+
         self.fabrique_article = fabrique_article
         self.db = self.fabrique_article.db
         self.cache = self.fabrique_article.cache
         self.depr_cache = self.fabrique_article.depr_cache
+        self.stockage = fabrique_article.stockage
         self.sections = {}
+
 
     def effacer_cache():
+
         self.sections = {}
 
-    def obtenir_texte_section( self, niveau, id, debut_vigueur_texte, fin_vigueur_texte, etat_vigueur_section ):
+
+    def obtenir_texte_section( self, niveau, id, cid, debut_vigueur_texte, fin_vigueur_texte ):
+
         """
         Obtenir le texte d’une section donnée par un id.
 
@@ -86,14 +94,14 @@ class FabriqueSection:
             int - niveau (profondeur) de la section, commençant à 1 (i.e. l’ensemble du texte).
         :param id:
             string - ID de la section.
+        :param cid:
+            string - CID du texte.
         :param debut_vigueur_texte:
             datetime.date - date de début de vigueur demandée.
         :param fin_vigueur_texte:
             datetime.date - date de fin de vigueur autorisée par la requête.
-        :param etat_vigueur_section:
-            string - état de la section
         :returns:
-            (string, datetime.date, datetime.date, datetime.date) - (texte, debut_vigueur, fin_vigueur, fin_vigueur_interne) Texte de l’article, dates de début et fin de vigueur, fin de vigueur interne (plus proche future modification de la section).
+            (string, datetime.date) - (texte, fin_vigueur) Texte de l’article, date de fin de vigueur interne (plus proche future modification de la section).
         """
 
         texte = ''
@@ -102,11 +110,6 @@ class FabriqueSection:
         #debut_vigueur_interne = set()
         fins_vigueur = set()
 
-        # Rédaction du titre - TODO abstraire ceci
-        marque_niveau = ''
-        for i in range(niveau):
-            marque_niveau = marque_niveau + '#'
-
         # Obtenir les sections enfants
         sql_section_parente = "parent = '{0}'".format(id)
         if id == None:
@@ -114,56 +117,93 @@ class FabriqueSection:
         sections = self.db.all("""
             SELECT *
             FROM sommaires
-            WHERE ({0})
-              AND ({1})
+            WHERE cid = '{0}'
+              AND ( debut <= '{1}' OR debut == '2999-01-01' )
+              {2}
+              AND ({3})
             ORDER BY position
-        """.format(sql_section_parente, sql))
+        """.format( cid, debut_vigueur_texte, "AND ( fin >= '{0}' OR fin == '2999-01-01' OR etat == 'VIGUEUR' )".format( fin_vigueur_texte ) if fin_vigueur_texte else '', sql_section_parente))
 
         # Itérer sur les sections de cette section
         for section in sections:
 
             rcid, rparent, relement, rdebut, rfin, retat, rnum, rposition, r_source = section
 
-            # date_debut ≤ date_debut_vigueur
-            #if comp_infini_strict(debut_vigueur_texte, rdebut) or (comp_infini_strict(rfin, fin_vigueur_texte) and retat != 'VIGUEUR'):
-            #    raise Exception(u'section non valide (version texte de {} a {}, version section de {} à {})'.format(debut_vigueur_texte, fin_vigueur_texte, rdebut, rfin))
-            #    return texte
+            # L’élément est un titre de sommaire, rechercher son texte et l’ajouter à la liste
+            if relement[4:8] == 'SCTA':
 
-        # L’élément est un titre de sommaire, rechercher son texte et l’ajouter à la liste
-        if relement[4:8] == 'SCTA':
+                #if rfin < debut_vigueur_texte:
+                if comp_infini_strict( rfin, debut_vigueur_texte ):
+                    continue
 
-            tsection = self.db.one("""
-                SELECT titre_ta, commentaire
-                FROM sections
-                WHERE id='{0}'
-            """.format(id))
-            rarborescence = arborescence
-            rarborescence.append( tsection[0].strip() )
-            texte = self.obtenir_reer_sections(texte, niveau+1, relement, version_texte, sql, rarborescence, format, dossier, db, cache)
+                #if rdebut > fin_vigueur_texte:
+                if comp_infini_strict( fin_vigueur_texte, rdebut ):
+                    continue
 
-            texte = self.obtenir_texte_section( niveau+1, relement, debut_vigueur_texte, fin_vigueur_texte, retat )
+                # if debut_vigueur_texte < debut_vigueur_section
+                if comp_infini_strict( debut_vigueur_texte, rdebut ):
+                    if rdebut:
+                        fins_vigueur.add( rdebut )
+                    continue
 
-            texte = texte                                  \
-                    + marque_niveau + ' ' + tsection[0].strip() + '\n' \
-                    + '\n'
+                if relement not in self.sections:
 
-        # L’élément est un article, l’ajouter à la liste
-        elif relement[4:8] == 'ARTI':
+                    tsection = self.db.one("""
+                        SELECT titre_ta, commentaire
+                        FROM sections
+                        WHERE id='{0}'
+                    """.format(relement))
+                    titre_ta, commentaire = tsection
 
-            valeur_article = self.fabrique_article.obtenir_texte_article( niveau+1, relement, debut_vigueur_texte, fin_vigueur_texte, retat )
+                    if rdebut == '2999-01-01':
+                        rdebut = None
+                    else:
+                        rdebut = datetime.date(*(time.strptime(rdebut, '%Y-%m-%d')[0:3]))
 
-            texte_article, debut_vigueur_article, fin_vigueur_article = valeur_article
+                    if rfin == '2999-01-01':
+                        rfin = None
+                    else:
+                        rfin = datetime.date(*(time.strptime(rfin, '%Y-%m-%d')[0:3]))
 
-            if texte_article != None:
-                texte = texte + texte_article
-                # if debut_vigueur_texte < fin_vigueur_article
-                if comp_infini_strict( debut_vigueur_texte, fin_vigueur_article ):
+                    self.sections[relement] = (rnum, rnum, titre_ta, rdebut, rfin, None, None, None)
+
+                #if debut_vigueur_texte >= self.section[id][5] and fin_vigueur_texte < self.section[id][6]
+                if comp_infini_large( self.sections[relement][6], debut_vigueur_texte ) and comp_infini_strict( fin_vigueur_texte, self.sections[relement][7] ):
+                    texte = texte + self.sections[relement][5]
+                    if self.sections[relement][7]:
+                        fins_vigueur.add( self.sections[relement][7] )
+
+                else:
+                    niveaux = [ False ] * (niveau+1)
+                    texte_titre_ta = self.stockage.ecrire_ressource( relement, niveaux, rnum.strip() if rnum else '', self.sections[relement][2], '' )
+                    valeur_section = self.obtenir_texte_section( niveau+1, relement, cid, debut_vigueur_texte, fin_vigueur_texte )
+                    texte_section, fin_vigueur_section = valeur_section
+                    texte_section = texte_titre_ta + texte_section
+
+                    rnum, rnum, titre_ta, rdebut, rfin, _, _, _ = self.sections[relement]
+                    self.sections[relement] = (rnum, rnum, titre_ta, rdebut, rfin, texte_section, debut_vigueur_texte, fin_vigueur_section)
+                    texte = texte + texte_section
+                    if fin_vigueur_section:
+                        fins_vigueur.add( fin_vigueur_section )
+
+            # L’élément est un article, l’ajouter à la liste
+            elif relement[4:8] == 'ARTI':
+
+                valeur_article = self.fabrique_article.obtenir_texte_article( niveau+1, relement, debut_vigueur_texte, fin_vigueur_texte, retat )
+
+                num, texte_article, debut_vigueur_article, fin_vigueur_article = valeur_article
+
+                if texte_article != None:
+                    texte = texte + texte_article
                     if fin_vigueur_article:
                         fins_vigueur.add( fin_vigueur_article )
-            if comp_infini_strict( debut_vigueur_texte, debut_vigueur_article ):
-                fins_vigueur.add( debut_vigueur_article )
+                # if debut_vigueur_texte < debut_vigueur_article
+                if comp_infini_strict( debut_vigueur_texte, debut_vigueur_article ) and debut_vigueur_article:
+                    fins_vigueur.add( debut_vigueur_article )
 
-        fin_vigueur = min( fins_vigueur )
+        fin_vigueur = None
+        if len( fins_vigueur ):
+            fin_vigueur = min( fins_vigueur )
 
         return texte, fin_vigueur
 
