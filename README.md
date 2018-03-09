@@ -25,20 +25,26 @@ Sur une page affichant les différences entre versions ([exemple](https://github
 
 ### Installation
 
-* Installer les paquets Debian (adapter pour les autres distributions) :
-  * python2.7-dev
-  * libxml2-dev
-  * libxslt1-dev
-  * libz
-  * git
-* Installer les paquets Python :
-  * [beautifulsoup4](https://pypi.python.org/pypi/beautifulsoup4)
-  * [docopt](https://pypi.python.org/pypi/docopt)
-  * [peewee](https://pypi.python.org/pypi/peewee)
-  * [lxml](https://pypi.python.org/pypi/lxml)
-  * [path.py](https://pypi.python.org/pypi/path.py)
+* Installer les paquets Debian suivants :
+  ```
+  apt-get install -y libarchive13 python-pip git htop sqlite3
+  apt-get install -y python2.7-dev libxml2-dev libxslt1-dev zlib1g-dev python-setuptools python-wheel
+  ```
+* Télécharger Archéo Lex :
+  ```
+  git clone https://github.com/Legilibre/Archeo-Lex.git
+  ```
+* Installer les paquets Python avec 
+  ```
+  sudo pip install -r requirements.txt
+  ```
 
-L’installation de Python et de ses modules peut se faire à l’intérieur d’un environnement virtuel [`virtualenv`](https://virtualenv.readthedocs.org) afin d’imposer des versions spécifiques sans interférer avec le système par défaut. Ces paquets sont installables au moyen de [`pip`](http://pip.readthedocs.org).
+Pour information, les paquets suivants sont disponibles sur Debian stretch :
+* python-path
+* python-tqdm
+* python-docopt
+* python-html2text
+* python-gitlab
 
 La liste complète des modules utilisés est disponible au moyen de `scripts/liste-paquets.sh` (sauf lxml, optionnel mais recommandé).
 
