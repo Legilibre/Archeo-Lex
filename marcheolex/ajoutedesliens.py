@@ -40,9 +40,14 @@ def ajoute_liens( texte ):
         liens = []
 
         # Constitution (en vigueur à la date du texte)
-        results = re.findall( r'(articles? ?([0-9.\-a-z]+)) (de la )(constitution)', texte, re.IGNORECASE )
+        results = re.findall( r'(articles? *([0-9.\-a-z]+)) de la constitution', texte, re.IGNORECASE )
         for result in results:
-            liens.append( ( result[0], 'constitution', result[1] ) )
+            liens.append( ( result[0], 'constitution', 'article '+result[2] ) )
+
+        # Présente loi
+        results = re.findall( r'(article *([0-9]+ ?[a-z]* ?[A-Z]*)) de la( présente)? loi', texte )
+        for result in results:
+            liens.append( ( result[0], 'présente loi', 'article '+result[2] ) )
 
         return liens
 
