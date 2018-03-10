@@ -61,6 +61,33 @@ class Markdown( Syntaxes ):
 
         return texte
 
+
+    def ajouter_liens( self, texte, liens_internes, liens_externes ):
+
+        """
+        Ajouter des liens dans un texte.
+
+        :param texte:
+            (string) Texte où ajouter les liens.
+        :param liens_internes:
+            (dictionnaire string: string) Liste des liens internes à ajouter dans le texte.
+        :param liens_externes:
+            (dictionnaire string: string) Liste des liens externes à ajouter dans le texte.
+        :returns:
+            (string) Texte avec liens.
+        """
+
+        for lien in liens_internes:
+
+            texte = re.sub( lien, '[' + lien + '](#' + liens_internes[lien] + ')', texte )
+
+        for lien in liens_externes:
+
+            texte = re.sub( lien, '[' + lien + '](' + liens_externes[lien] + ')', texte )
+
+        return texte
+
+
     def obtenir_titre( self, parents, texte ):
 
         """

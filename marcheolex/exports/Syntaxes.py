@@ -30,6 +30,23 @@ class Syntaxes:
 
         raise NotImplementedError
 
+    def ajouter_liens( self, texte, liens_internes, liens_externes ):
+
+        """
+        Ajouter des liens dans un texte.
+
+        :param texte:
+            (string) Texte où ajouter les liens.
+        :param liens_internes:
+            (dictionnaire string: string) Liste des liens internes à ajouter dans le texte.
+        :param liens_externes:
+            (dictionnaire string: string) Liste des liens externes à ajouter dans le texte.
+        :returns:
+            (string) Texte avec liens.
+        """
+
+        raise NotImplementedError
+
     def obtenir_titre( self, parents, texte ):
 
         """
