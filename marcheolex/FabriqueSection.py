@@ -49,16 +49,17 @@ class FabriqueSection:
     stockage = None
 
     # sections = {
-    #     'LEGISCTA012345678901': (2, 'Titre II', 'De la loi', 1791-01-01, None, 2015-01-01, 2018-01-01, 'Titre II - De la loi\n\nArticle 3\n\nLes assujettis sont tenus d’aprendre la loi par cœur.\n\nArticle 4\n\nTout contrevenant aux dispositions de l’article 3 se voit remettre un 0/42 à l’examen de citoyenneté.')
+    #     'LEGISCTA012345678901': ('LEGISCTA123456789012', 2, 'Titre II', 'De la loi', 1791-01-01, None, 2015-01-01, 2018-01-01, 'Titre II - De la loi\n\nArticle 3\n\nLes assujettis sont tenus d’aprendre la loi par cœur.\n\nArticle 4\n\nTout contrevenant aux dispositions de l’article 3 se voit remettre un 0/42 à l’examen de citoyenneté.')
     #     (string)(id): (
+    #         (string)(id de la section parente),
     #         (int >= 1)(numéro d’ordre dans la section parente),
     #         (string)(phrase correspondant au numéro d’ordre dans la section parente),
     #         (string)(titre de la section),
-    #         (datetime.date)(date de début de vigueur de la section),
+    #         (datetime.date|None)(date de début de vigueur de la section),
     #         (datetime.date|None)(date de fin de vigueur de la section),
-    #         (datetime.date)(date de début de vigueur interne du cache de la section),
+    #         (datetime.date|None)(date de début de vigueur interne du cache de la section),
     #         (datetime.date|None)(date de fin de vigueur interne du cache de la section),
-    #         (string)(cache de la section)
+    #         (string|None)(cache de la section)
     #     )
     # }
     #
@@ -105,99 +106,126 @@ class FabriqueSection:
         """
 
         texte = ''
-        #debut_vigueur = None
-        #fin_vigueur = None
-        #debut_vigueur_interne = set()
         fins_vigueur = set()
 
-        # Obtenir les sections enfants
-        sql_section_parente = "parent = '{0}'".format(id)
-        if id == None:
-            sql_section_parente = "parent IS NULL OR parent = ''"
-        sections = self.db.all("""
-            SELECT *
-            FROM sommaires
-            WHERE cid = '{0}'
-              AND ( debut <= '{1}' OR debut == '2999-01-01' )
-              {2}
-              AND ({3})
-            ORDER BY position
-        """.format( cid, debut_vigueur_texte, "AND ( fin >= '{0}' OR fin == '2999-01-01' OR etat == 'VIGUEUR' )".format( fin_vigueur_texte ) if fin_vigueur_texte else '', sql_section_parente))
+        if 'texte' not in self.sections or self.sections['texte'] != cid:
 
-        # Itérer sur les sections de cette section
-        for section in sections:
+            self.sections = {}
 
-            rcid, rparent, relement, rdebut, rfin, retat, rnum, rposition, r_source = section
+            sections = self.db.all("""
+                SELECT sommaires.parent,
+                       sommaires.element,
+                       sommaires.debut,
+                       sommaires.fin,
+                       sommaires.num,
+                       sommaires.position,
+                       sections.titre_ta,
+                       sections.commentaire,
+                       sections.mtime
+                FROM sommaires
+                LEFT JOIN sections
+                       ON sommaires.element = sections.id
+                WHERE sommaires.cid = '{0}'
+            """.format( cid ) )
+
+            for section in sections:
+
+                sparent, selement, sdebut, sfin, snum, sposition, stitre_ta, scommentaire, smtime = section
+
+                sparent = sparent if sparent else None
+                sdebut = datetime.date(*(time.strptime(sdebut, '%Y-%m-%d')[0:3])) if sdebut != '2999-01-01' else None
+                sfin = datetime.date(*(time.strptime(sfin, '%Y-%m-%d')[0:3])) if sfin != '2999-01-01' else None
+
+                self.sections[selement] = (sparent, sposition, snum, stitre_ta, sdebut, sfin, None, None, None)
+
+            # Marquage de ce cache comme complet : il n’y a plus à le re-calculer
+            self.sections['texte'] = cid
+
+        sections = {}
+
+        # Itérer sur les sections de cette section, le dictionnaire final servira ensuite à itérer dans l’ordre d’affichage des sections
+        for section in self.sections:
+
+            sparent = self.sections[section][0]
+            if id != sparent:
+                continue
+
+            sfin = self.sections[section][5]
+            sposition = self.sections[section][1]
+
+            # La période de vigueur de cette section est expirée ou expire : ne pas l’ajouter au texte (sfin <= debut_vigueur_texte)
+            # Le cas quasi-erroné où le texte n’a pas de début de vigueur est écarté ici, mais devrait probablement renvoyer une erreur ailleurs
+            # TODO gérer le cas où debut_vigueur_texte == None (2 dans la base LEGI, à voir si AL trouve quand même des intervalles de vigueur)
+            if debut_vigueur_texte and comp_infini_large( sfin, debut_vigueur_texte ):
+                continue
+
+            sections[sposition] = section
+
+        # Itérer sur les sections non-expirées dans l’ordre d’affichage
+        for i in sorted( sections.keys() ):
+
+            section = sections[i]
+            sparent, sposition, snum, stitre_ta, sdebut, sfin, cdebut, cfin, ctexte = self.sections[section]
+
+            # Enregistrer la date de fin de vigueur de la section
+            if sdebut != None and comp_infini_strict( debut_vigueur_texte, sdebut ):
+                fins_vigueur.add( sdebut )
+            if sfin != None and comp_infini_strict( debut_vigueur_texte, sfin ):
+                fins_vigueur.add( sfin )
+
+            # La période de vigueur de cette section n’est pas encore commencée (fin_vigueur_texte <= sdebut) 
+            # Les sections intemporelles (= sans date de début de vigueur (et normalement sans date de fin de vigueur)) sont considérées comme toujours en vigueur
+            if sdebut and comp_infini_large( fin_vigueur_texte, sdebut ):
+                continue
+
+            # Une des bornes de la période de vigueur de la section est strictement comprise dans l’intervalle courant de vigueur du texte : ce n’est pas censé arriver, les dates de changement de vigueur du texte sont censées être minimales
+            if ( sdebut and comp_infini_strict( debut_vigueur_texte, sdebut ) ) or comp_infini_strict( sfin, fin_vigueur_texte ):
+                raise Exception( 'Erreur interne : les intervalles de vigueur du texte sont être minimaux et il ne devrait donc pas exister une section avec une des bornes de vigueur strictement comprise dans l’intervalle courant de vigueur du texte' )
 
             # L’élément est un titre de sommaire, rechercher son texte et l’ajouter à la liste
-            if relement[4:8] == 'SCTA':
+            if section[4:8] == 'SCTA':
 
-                #if rfin < debut_vigueur_texte:
-                if comp_infini_strict( rfin, debut_vigueur_texte ):
-                    continue
+                # Le cache de section est valide et peut être utilisé pour ajouter le texte de la section
+                # L’intervalle de vigueur du cache de sections comprend l’intervalle courant de vigueur du texte (cdebut <= debut_vigueur_texte and fin_vigueur_texte < cfin)
+                if comp_infini_large( cdebut, debut_vigueur_texte ) and comp_infini_large( fin_vigueur_texte, cfin ):
+                    texte = texte + ctexte
 
-                #if rdebut > fin_vigueur_texte:
-                if comp_infini_strict( fin_vigueur_texte, rdebut ):
-                    continue
-
-                # if debut_vigueur_texte < debut_vigueur_section
-                if comp_infini_strict( debut_vigueur_texte, rdebut ):
-                    if rdebut:
-                        fins_vigueur.add( rdebut )
-                    continue
-
-                if relement not in self.sections:
-
-                    tsection = self.db.one("""
-                        SELECT titre_ta, commentaire
-                        FROM sections
-                        WHERE id='{0}'
-                    """.format(relement))
-                    titre_ta, commentaire = tsection
-
-                    if rdebut == '2999-01-01':
-                        rdebut = None
-                    else:
-                        rdebut = datetime.date(*(time.strptime(rdebut, '%Y-%m-%d')[0:3]))
-
-                    if rfin == '2999-01-01':
-                        rfin = None
-                    else:
-                        rfin = datetime.date(*(time.strptime(rfin, '%Y-%m-%d')[0:3]))
-
-                    self.sections[relement] = (rnum, rnum, titre_ta, rdebut, rfin, None, None, None)
-
-                #if debut_vigueur_texte >= self.section[id][5] and fin_vigueur_texte < self.section[id][6]
-                if comp_infini_large( self.sections[relement][6], debut_vigueur_texte ) and comp_infini_strict( fin_vigueur_texte, self.sections[relement][7] ):
-                    texte = texte + self.sections[relement][5]
-                    if self.sections[relement][7]:
-                        fins_vigueur.add( self.sections[relement][7] )
+                    # Si la section a une fin de vigueur, celle-ci devient une borne maximale de fin de vigueur des sections parentes
+                    if cfin:
+                        fins_vigueur.add( cfin )
 
                 else:
                     niveaux = [ False ] * (niveau+1)
-                    texte_titre_ta = self.stockage.ecrire_ressource( relement, niveaux, rnum.strip() if rnum else '', self.sections[relement][2], '' )
-                    valeur_section = self.obtenir_texte_section( niveau+1, relement, cid, debut_vigueur_texte, fin_vigueur_texte )
+                    texte_titre_ta = self.stockage.ecrire_ressource( section, niveaux, snum.strip() if snum else '', stitre_ta, '' )
+                    valeur_section = self.obtenir_texte_section( niveau+1, section, cid, debut_vigueur_texte, fin_vigueur_texte )
                     texte_section, fin_vigueur_section = valeur_section
                     texte_section = texte_titre_ta + texte_section
 
-                    rnum, rnum, titre_ta, rdebut, rfin, _, _, _ = self.sections[relement]
-                    self.sections[relement] = (rnum, rnum, titre_ta, rdebut, rfin, texte_section, debut_vigueur_texte, fin_vigueur_section)
+                    self.sections[section] = (sparent, sposition, snum, stitre_ta, sdebut, sfin, debut_vigueur_texte, fin_vigueur_section, texte_section)
                     texte = texte + texte_section
+
+                    # Si la section a une fin de vigueur, celle-ci devient une borne maximale de fin de vigueur des sections parentes
                     if fin_vigueur_section:
                         fins_vigueur.add( fin_vigueur_section )
 
             # L’élément est un article, l’ajouter à la liste
-            elif relement[4:8] == 'ARTI':
+            elif section[4:8] == 'ARTI':
 
-                valeur_article = self.fabrique_article.obtenir_texte_article( niveau+1, relement, debut_vigueur_texte, fin_vigueur_texte, retat )
+                valeur_article = self.fabrique_article.obtenir_texte_article( niveau+1, section, debut_vigueur_texte, fin_vigueur_texte, None )
 
                 num, texte_article, debut_vigueur_article, fin_vigueur_article = valeur_article
 
+                # L’article a une période de vigueur comprise dans l’intervalle courant de vigueur du texte : ajouter le texte
                 if texte_article != None:
+                    
                     texte = texte + texte_article
+
+                    # Si l’article a une fin de vigueur, celle-ci devient une borne maximale de fin de vigueur des sections parentes
                     if fin_vigueur_article:
                         fins_vigueur.add( fin_vigueur_article )
-                # if debut_vigueur_texte < debut_vigueur_article
+
+                # Si l’article a un début de vigueur après l’intervalle courant de vigueur du texte,
+                #   celle-ci devient une borne maximale de vigueur des sections parentes (debut_vigueur_texte < debut_vigueur_article)
                 if comp_infini_strict( debut_vigueur_texte, debut_vigueur_article ) and debut_vigueur_article:
                     fins_vigueur.add( debut_vigueur_article )
 

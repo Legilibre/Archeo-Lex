@@ -92,15 +92,8 @@ class FabriqueArticle:
             """.format(id))
             id, section, num, date_debut, date_fin, bloc_textuel, cid = article
 
-            if date_debut == '2999-01-01':
-                date_debut = None
-            else:
-                date_debut = datetime.date(*(time.strptime(date_debut, '%Y-%m-%d')[0:3]))
-
-            if date_fin == '2999-01-01':
-                date_fin = None
-            else:
-                date_fin = datetime.date(*(time.strptime(date_fin, '%Y-%m-%d')[0:3]))
+            date_debut = datetime.date(*(time.strptime(date_debut, '%Y-%m-%d')[0:3])) if date_debut != '2999-01-01' else None
+            date_fin = datetime.date(*(time.strptime(date_fin, '%Y-%m-%d')[0:3])) if date_fin != '2999-01-01' else None
 
             chemin_markdown = os.path.join(self.depr_cache, 'markdown', cid, id + '.md')
             if self.depr_cache and os.path.exists( chemin_markdown ):
@@ -115,12 +108,14 @@ class FabriqueArticle:
 
         num, texte_article, date_debut, date_fin = self.articles[id]
 
-        # date_fin < date_debut_vigueur
-        if date_fin and comp_infini_strict( date_fin, debut_vigueur_texte):
+        # La période de vigueur de cet article est expiré ou expire : ne pas l’ajouter au texte (date_fin <= debut_vigueur_texte)
+        # Le cas quasi-erroné où le texte n’a pas de début de vigueur est écarté ici, mais devrait probablement renvoyer une erreur ailleurs
+        if debut_vigueur_texte and comp_infini_large( date_fin, debut_vigueur_texte ):
             return (None, date_debut, date_fin)
 
-        # fin_vigueur_texte < date_debut
-        if date_debut and fin_vigueur_texte and comp_infini_strict(fin_vigueur_texte, date_debut):
+        # La période de vigueur de cet article n’est pas encore commencé (fin_vigueur_texte <= date_debut) 
+        # Les articles intemporels (= sans date de début de vigueur (et normalement sans date de fin de vigueur)) sont considérés comme toujours en vigueur
+        if date_debut and comp_infini_large( fin_vigueur_texte, date_debut ):
             return (None, date_debut, date_fin)
 
         if not self.cache:
