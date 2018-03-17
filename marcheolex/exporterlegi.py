@@ -242,7 +242,7 @@ def creer_historique_texte(texte, format, dossier, cache, bdd):
             subprocess.call(['git', 'branch', '-D', 'junk'], cwd=dossier)
 
     # Vérifier que les articles ont été transformés en Markdown ou les créer le cas échéant
-    creer_markdown_texte((None, cid, None, None), db, cache)
+    #creer_markdown_texte((None, cid, None, None), db, cache)
     
     # Sélection des versions du texte
     versions_texte_db = db.all("""
