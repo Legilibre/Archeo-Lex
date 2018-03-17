@@ -82,22 +82,20 @@ Développement
 
 Ce programme a été initialement (début août 2014) développé en 5 jours avec l’ambition d’être un prototype opérationnel et de qualité correcte. Toutefois, pour rendre ce programme et son résultat plus agréable à utiliser, les points suivants devraient être travaillés (par ordre d’importance approximatif) :
 
-1. mise à jour des nouvelles versions des textes sans recalcul de l’entièreté de la base
-2. téléchargement automatique des bases LEGI (et autres) et de leurs mises à jour incrémentales
-3. intégration des modifications d’historique (orthographe, typographie, coquilles, etc.) quand les mises à jour le demandent (à étudier)
-4. vérifier plus en profondeur la qualité des résultats (par exemple dans le code des assurances il y a actuellement une différence vide vers le début)
-5. faire expérimenter la syntaxe Markdown et autres éléments de syntaxe à des publics non-informaticiens et réfléchir à l’améliorer (cf points 7 et 12)
-6. écrire la grammaire exacte du sous-ensemble Markdown utilisé et des autres éléments de syntaxe utilisés (cf points 6 et 12)
-7. documenter plus et mieux
-8. ajouter des tests unitaires
-9. réfléchir à une façon d’intégrer à Git les textes pré-1970 (inféfieurs à l’epoch, refusés par Git, par ex LEGITEXT000006070666)
-10. travail sur les autres textes législatifs que les codes (les seuls testés actuellement), comme les Constitutions, les lois, les décrets, etc.
-11. création ou adaptation d’interfaces de visualisation (cf point 16)
-12. ajout de branches (orphelines) Git avec liens vers les autres textes (liens soit juste mentionnés en-dessous de l’article comme sur Légifrance, soit au sens Markdown+Git similairement à Légifrance)
-13. travail sur les autres bases (KALI pour les conventions collectives, JORF pour le journal officiel -- ce dernier n’a pas de versions à ma connaissance mais demanderait juste à être transformé en Markdown)
-14. mettre les dates de commit à la date d’écriture ou de publication du texte modificateur (à réfléchir) (attention : cette 2e date peut être avant, après ou identique à la date d’entrée en vigueur) pour créer des visualisations intégrant ces différences de dates
-15. mise en production d’un service web qui mettrait à jour quotidiennement les dépôts Git
-16. création d’un site web permettant la visualisation des modifications, proposerait des liens RSS, etc. de façon similaire à [La Fabrique de la Loi](http://www.lafabriquedelaloi.fr), à [Légifrance](http://legifrance.gouv.fr), aux sites du [Sénat](http://www.senat.fr) ou de l’[Assemblée nationale](http://www.assemblee-nationale.fr) (cf point 11)
+1. téléchargement automatique des bases LEGI (et autres) et de leurs mises à jour incrémentales
+2. intégration des modifications d’historique (orthographe, typographie, coquilles, etc.) quand les mises à jour le demandent (à étudier)
+3. vérifier plus en profondeur la qualité des résultats (par exemple dans le code des assurances il y a actuellement une différence vide vers le début)
+4. faire expérimenter la syntaxe Markdown et autres éléments de syntaxe à des publics non-informaticiens et réfléchir à l’améliorer (cf point 6)
+5. écrire la grammaire exacte du sous-ensemble Markdown utilisé et des autres éléments de syntaxe utilisés (cf point 4)
+6. documenter plus et mieux
+7. ajouter des tests unitaires
+8. réfléchir à une façon d’intégrer à Git les textes pré-1970 (inféfieurs à l’epoch, refusés par Git, par ex LEGITEXT000006070666)
+9. création ou adaptation d’interfaces de visualisation (cf point 14)
+10. ajout de branches (orphelines) Git avec liens vers les autres textes (liens soit juste mentionnés en-dessous de l’article comme sur Légifrance, soit au sens Markdown+Git similairement à Légifrance)
+11. travail sur les autres bases (KALI pour les conventions collectives, JORF pour le journal officiel -- ce dernier n’a pas de versions à ma connaissance mais demanderait juste à être transformé en Markdown)
+12. mettre les dates de commit à la date d’écriture ou de publication du texte modificateur (à réfléchir) (attention : cette 2e date peut être avant, après ou identique à la date d’entrée en vigueur) pour créer des visualisations intégrant ces différences de dates
+13. mise en production d’un service web qui mettrait à jour quotidiennement les dépôts Git
+14. création d’un site web permettant la visualisation des modifications, proposerait des liens RSS, etc. de façon similaire à [La Fabrique de la Loi](http://www.lafabriquedelaloi.fr), à [Légifrance](http://legifrance.gouv.fr), aux sites du [Sénat](http://www.senat.fr) ou de l’[Assemblée nationale](http://www.assemblee-nationale.fr) (cf point 9)
 
 ### Nouvelle interface
 
@@ -105,6 +103,7 @@ Ce programme a été initialement (début août 2014) développé en 5 jours ave
 from __future__ import unicode_literals
 import marcheolex.exports, legi.utils, datetime
 from marcheolex.FabriqueArticle import FabriqueArticle
+from marcheolex.FabriqueSection import FabriqueSection;
 
 # Syntaxe utilisée
 md = marcheolex.exports.Markdown()
@@ -116,13 +115,16 @@ fu.fichier = 'truc'
 fu.extension = '.md'
 
 # Stockage des fichiers utilisé
-sf = marcheolex.exports.StockageFichiers()
+sf = marcheolex.exports.StockageGitFichiers()
 sf.organisation = fu
 
-db = legi.utils.connect_db('/home/seb35/2-projets/archéo-lex/archéo-lex-dev/cache/sql/legi.sqlite')
+db = legi.utils.connect_db('cache/sql/legi.sqlite')
 fa = FabriqueArticle( db, sf, True )
+fs = FabriqueSection( fa ); 
 
 fa.obtenir_texte_article( 3, 'LEGIARTI000030127268', datetime.date(1970,1,1), datetime.date(2038,1,1), 'VIGUEUR')
+
+fs.obtenir_texte_section( 3, 'LEGISCTA000018048141', 'LEGITEXT000006069565', datetime.date( 1997, 7, 27 ), None )
 ```
 
 
