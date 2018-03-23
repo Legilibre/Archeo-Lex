@@ -54,7 +54,7 @@ def pousser_les_textes_sur_gitlab( textes, dossier, gitlab_host, gitlab_token, g
         print(texte)
         if texte == None: # TODO vérifier pourquoi certains valent None
             continue
-        nom_gitlab = texte[1].replace('é', 'e').replace('è', 'e').replace('ê', 'e')
+        nom_gitlab = texte[1].replace('é', 'e').replace('è', 'e').replace('ê', 'e').replace('û', 'u')
         gl.projects.create( {'name': texte[1], 'namespace_id': groupe.id, 'visibility': 'public'} )
         subprocess.call(['git', 'remote', 'add', 'origin', git_server+git_port+gitlab_group+'/'+nom_gitlab], cwd=dossier+'/'+texte[0])
         subprocess.call(['git', 'push', '--all'], cwd=dossier+'/'+texte[0], env={'GIT_SSH_COMMAND': 'ssh -i '+git_key})
