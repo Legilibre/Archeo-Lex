@@ -78,6 +78,7 @@ aide = ('''Usage: archeo-lex [--aide] [--debug] [--help] [--version] [--textes=<
    --gitlab-token=GITTOKEN Token d’authentification Gitlab
    --gitlab-group=GITGROUP Groupe Gitlab où pousser les textes
    --git-server=GITSERVER  Serveur et utilisateur pouvant pousser en SSH
+   --git-port=GITSERVER    Port du SSH, si différent de 22
    --git-key=GITKEY        Fichier de la clé SSH pour pousser les textes
 
 
@@ -136,6 +137,7 @@ def principal(arguments):
     data['gitlab-token'] = arguments.get('--gitlab-token')
     data['gitlab-group'] = arguments.get('--gitlab-group')
     data['git-server'] = arguments.get('--git-server')
+    data['git-port'] = arguments.get('--git-port')
     data['git-key'] = arguments.get('--git-key')
     
     # Création des dossiers de cache
@@ -163,7 +165,7 @@ def principal(arguments):
     
     if action_gitlab:
         logger.info('Envoi sur Gitlab')
-        pousser_les_textes_sur_gitlab(textes, data['dossier'], data['gitlab-host'], data['gitlab-token'], data['gitlab-group'], data['git-server'], data['git-key'])
+        pousser_les_textes_sur_gitlab(textes, data['dossier'], data['gitlab-host'], data['gitlab-token'], data['gitlab-group'], data['git-server'], data['git-port'], data['git-key'])
 
 if __name__ == "__main__":
     principal(docopt(aide, help=False))
