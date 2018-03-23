@@ -33,7 +33,7 @@ from marcheolex.utilitaires import nop
 from marcheolex.utilitaires import obtenir_tous_textes
 
 # Manuel d’aide
-aide = ('''Usage: archeo-lex [--aide] [--debug] [--help] [--version] [--textes=<TEXTES>] [--base=<BASE>] [--livraison=<DATE>] [--exporterlegi] [--mise-a-jour | --nouveau] [--dialecte=<DIALECTE>] [--historique=<HISTORIQUE>] [--metadonnees] [--organisation=<TYPE>] [--bddlegi=<fichier>] [--cache=<dossier>] [--dossier=<dossier>] [--gitlab-host=<GITHOST>] [--gitlab-token=<GITTOKEN>] [--gitlab-group=<GITGROUP>] [--git-server=<GITSERVER>] [--git-key=<GITKEY>]
+aide = ('''Usage: archeo-lex [--aide] [--debug] [--help] [--version] [--textes=<TEXTES>] [--base=<BASE>] [--livraison=<DATE>] [--exporterlegi] [--mise-a-jour | --nouveau] [--dialecte=<DIALECTE>] [--historique=<HISTORIQUE>] [--metadonnees] [--organisation=<TYPE>] [--bddlegi=<fichier>] [--cache=<dossier>] [--dossier=<dossier>] [--gitlab-host=<GITHOST>] [--gitlab-token=<GITTOKEN>] [--gitlab-group=<GITGROUP>] [--git-server=<GITSERVER>] [--git-port=<GITPORT>] [--git-key=<GITKEY>]
 
 -t --textes=<TEXTES>       Types de textes à télécharger :
                              - "constitution-de-1958",
