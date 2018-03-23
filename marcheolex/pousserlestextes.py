@@ -46,7 +46,9 @@ def pousser_les_textes_sur_gitlab( textes, dossier, gitlab_host, gitlab_token, g
 
     groupe = gl.groups.get( gitlab_group )
     if git_port:
-        git_port = ':' + git_port
+        git_port = ':' + git_port + '/'
+    else:
+        git_port = ':'
 
     for texte in textes:
         print(texte)
@@ -54,7 +56,7 @@ def pousser_les_textes_sur_gitlab( textes, dossier, gitlab_host, gitlab_token, g
             continue
         nom_gitlab = texte[1].replace('é', 'e').replace('è', 'e').replace('ê', 'e')
         gl.projects.create( {'name': texte[1], 'namespace_id': groupe.id, 'visibility': 'public'} )
-        subprocess.call(['git', 'remote', 'add', 'origin', git_server+':'+gitlab_group+git_port+'/'+nom_gitlab], cwd=dossier+'/'+texte[0])
+        subprocess.call(['git', 'remote', 'add', 'origin', git_server+git_port+gitlab_group+'/'+nom_gitlab], cwd=dossier+'/'+texte[0])
         subprocess.call(['git', 'push', '--all'], cwd=dossier+'/'+texte[0], env={'GIT_SSH_COMMAND': 'ssh -i '+git_key})
 
 # vim: set ts=4 sw=4 sts=4 et:
