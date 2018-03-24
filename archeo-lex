@@ -118,7 +118,7 @@ def principal(arguments):
     
     # Lecture des données de format
     data = {}
-    data['textes'] = ((arguments.get('--textes') or '').decode('utf-8') or 'LEGITEXT000006069414').split(',')
+    data['textes'] = ((arguments.get('--textes') or '').decode('utf-8') or 'LEGITEXT000006069414')
     data['base'] = arguments.get('--base') or 'LEGI'
     data['livraison'] = arguments.get('--livraison') or 'tout'
     data['format'] = {}
