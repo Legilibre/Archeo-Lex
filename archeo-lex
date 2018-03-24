@@ -33,7 +33,7 @@ from marcheolex.utilitaires import nop
 from marcheolex.utilitaires import obtenir_tous_textes
 
 # Manuel d’aide
-aide = ('''Usage: archeo-lex [--aide] [--debug] [--help] [--version] [--textes=<TEXTES>] [--base=<BASE>] [--livraison=<DATE>] [--exporterlegi] [--mise-a-jour | --nouveau] [--dialecte=<DIALECTE>] [--historique=<HISTORIQUE>] [--metadonnees] [--organisation=<TYPE>] [--bddlegi=<fichier>] [--cache=<dossier>] [--dossier=<dossier>] [--gitlab-host=<GITHOST>] [--gitlab-token=<GITTOKEN>] [--gitlab-group=<GITGROUP>] [--git-server=<GITSERVER>] [--git-port=<GITPORT>] [--git-key=<GITKEY>]
+aide = ('''Usage: archeo-lex [--aide] [--debug] [--help] [--version] [--textes=<TEXTES>] [--base=<BASE>] [--livraison=<DATE>] [--exporterlegi] [--mise-a-jour | --nouveau] [--dialecte=<DIALECTE>] [--historique=<HISTORIQUE>] [--metadonnees] [--organisation=<TYPE>] [--bddlegi=<fichier>] [--cache=<dossier>] [--dossier=<dossier>] [--gitlab-host=<GITHOST>] [--gitlab-token=<GITTOKEN>] [--gitlab-group=<GITGROUP>] [--git-server=<GITSERVER>] [--git-key=<GITKEY>]
 
 -t --textes=<TEXTES>       Types de textes à télécharger :
                              - "constitution-de-1958",
@@ -77,8 +77,7 @@ aide = ('''Usage: archeo-lex [--aide] [--debug] [--help] [--version] [--textes=<
    --gitlab-host=GITHOST   Gitlab où doit être poussé les dépôts
    --gitlab-token=GITTOKEN Token d’authentification Gitlab
    --gitlab-group=GITGROUP Groupe Gitlab où pousser les textes
-   --git-server=GITSERVER  Serveur et utilisateur pouvant pousser en SSH
-   --git-port=GITSERVER    Port du SSH, si différent de 22
+   --git-server=GITSERVER  Serveur et utilisateur pouvant pousser en SSH (ssh://user@example.org:2222 or user@example.org)
    --git-key=GITKEY        Fichier de la clé SSH pour pousser les textes
 
 
