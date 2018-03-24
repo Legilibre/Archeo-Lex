@@ -33,7 +33,7 @@ from marcheolex.utilitaires import nop
 from marcheolex.utilitaires import obtenir_tous_textes
 
 # Manuel d’aide
-aide = ('''Usage: archeo-lex [--aide] [--debug] [--help] [--version] [--textes=<TEXTES>] [--base=<BASE>] [--livraison=<DATE>] [--exporterlegi] [--mise-a-jour | --nouveau] [--dialecte=<DIALECTE>] [--historique=<HISTORIQUE>] [--metadonnees] [--organisation=<TYPE>] [--bddlegi=<fichier>] [--cache=<dossier>] [--dossier=<dossier>] [--gitlab-host=<GITHOST>] [--gitlab-token=<GITTOKEN>] [--gitlab-group=<GITGROUP>] [--git-server=<GITSERVER>] [--git-key=<GITKEY>]
+aide = ('''Usage: archeo-lex [--aide] [--debug] [--help] [--version] [--textes=<TEXTES>] [--base=<BASE>] [--livraison=<DATE>] [--exporterlegi] [--mise-a-jour | --nouveau] [--dialecte=<DIALECTE>] [--historique=<HISTORIQUE>] [--metadonnees] [--organisation=<TYPE>] [--bddlegi=<fichier>] [--cache=<dossier>] [--dossier=<dossier>] [--gitlab-host=<GITHOST>] [--gitlab-token=<GITTOKEN>] [--gitlab-group=<GITGROUP>] [--git-server=<GITSERVER>] [--git-key=<GITKEY>] [--calcules=<FICHIER>]
 
 -t --textes=<TEXTES>       Types de textes à télécharger :
                              - "constitution-de-1958",
@@ -79,6 +79,8 @@ aide = ('''Usage: archeo-lex [--aide] [--debug] [--help] [--version] [--textes=<
    --gitlab-group=GITGROUP Groupe Gitlab où pousser les textes
    --git-server=GITSERVER  Serveur et utilisateur pouvant pousser en SSH (ssh://user@example.org:2222 or user@example.org)
    --git-key=GITKEY        Fichier de la clé SSH pour pousser les textes
+
+   --calcules=<FICHIER>    Fichier contenant la liste des textes calculés
 
 
 -a --aide                  Afficher ce message d’aide
@@ -132,12 +134,12 @@ def principal(arguments):
     data['dossier'] = (arguments.get('--dossier') or '').decode('utf-8') or 'textes'
     data['effacer'] = not arguments.get('--mise-a-jour') or arguments.get('--nouveau') or False
     #data['effacer'] = arguments.get('--nouveau') or not arguments.get('--mise-à-jour') or False
-    data['gitlab-host'] = arguments.get('--gitlab-host')
-    data['gitlab-token'] = arguments.get('--gitlab-token')
-    data['gitlab-group'] = arguments.get('--gitlab-group')
-    data['git-server'] = arguments.get('--git-server')
-    data['git-port'] = arguments.get('--git-port')
-    data['git-key'] = arguments.get('--git-key')
+    data['gitlab-host'] = arguments.get('--gitlab-host') or ''
+    data['gitlab-token'] = arguments.get('--gitlab-token') or ''
+    data['gitlab-group'] = arguments.get('--gitlab-group') or ''
+    data['git-server'] = arguments.get('--git-server') or ''
+    data['git-key'] = arguments.get('--git-key') or ''
+    data['calcules'] = arguments.get('--calcules') or ''
     
     # Création des dossiers de cache
     for dir in (data['cache'], data['cache']+'/bases-xml', data['cache']+'/divers', data['cache']+'/html', data['cache']+'/markdown', data['cache']+'/sql', data['dossier']):
@@ -164,7 +166,7 @@ def principal(arguments):
     
     if action_gitlab:
         logger.info('Envoi sur Gitlab')
-        pousser_les_textes_sur_gitlab(textes, data['dossier'], data['gitlab-host'], data['gitlab-token'], data['gitlab-group'], data['git-server'], data['git-port'], data['git-key'])
+        pousser_les_textes_sur_gitlab(textes, data['dossier'], data['gitlab-host'], data['gitlab-token'], data['gitlab-group'], data['git-server'], data['git-key'], data['calcules'])
 
 if __name__ == "__main__":
     principal(docopt(aide, help=False))
