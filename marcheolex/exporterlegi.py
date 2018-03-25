@@ -166,31 +166,36 @@ def creer_historique_texte(texte, format, dossier, cache, bdd):
         """.format(id))
     if entree_texte == None:
         raise Exception('Pas de texte avec cet ID ou CID')
+    nature = entree_texte[1]
     cid = entree_texte[8]
     mtime = entree_texte[9]
-    if entree_texte[1] in natures.keys():
-        if not os.path.exists(os.path.join(dossier, natures[entree_texte[1]]+'s')):
-            os.makedirs(os.path.join(dossier, natures[entree_texte[1]]+'s'))
-        sousdossier = natures[entree_texte[1]]+'s'
+    nature_min = nature.lower()
+    nature_min_pluriel = re.sub( r'([- ])', r's\1', nature_min ) + 's'
+    if nature in natures.keys():
+        nature_min = natures[nature]
+        nature_min_pluriel = re.sub( r'([- ])', r's\1', nature_min ) + 's'
+        if not os.path.exists(os.path.join(dossier, nature_min_pluriel)):
+            os.makedirs(os.path.join(dossier, nature_min_pluriel))
+        sousdossier = nature_min_pluriel
 
     mise_a_jour = True
-    if entree_texte[1] and (entree_texte[1] in natures.keys()) and entree_texte[7]:
-        identifiant = natures[entree_texte[1]]+' '+entree_texte[7]
+    if nature and (nature in natures.keys()) and entree_texte[7]:
+        identifiant = nature_min+' '+entree_texte[7]
         identifiant = identifiant.replace(' ','_')
         nom_fichier = identifiant
-        sousdossier = os.path.join(natures[entree_texte[1]]+'s', identifiant)
+        sousdossier = os.path.join(nature_min_pluriel, identifiant)
         if not os.path.exists(os.path.join(dossier, sousdossier)):
             mise_a_jour = False
         Path(os.path.join(dossier, sousdossier)).mkdir_p()
-        chemin_base = chemin_texte(id, entree_texte[1] == 'CODE')
-    elif entree_texte[1] and (entree_texte[1] in natures.keys()) and entree_texte[2]:
+        chemin_base = chemin_texte(id, nature == 'CODE')
+    elif nature and (nature in natures.keys()) and entree_texte[2]:
         identifiant = entree_texte[2][0].lower()+entree_texte[2][1:].replace(' ','_')
         nom_fichier = identifiant
-        sousdossier = os.path.join(natures[entree_texte[1]]+'s', identifiant)
+        sousdossier = os.path.join(nature_min_pluriel, identifiant)
         if not os.path.exists(os.path.join(dossier, sousdossier)):
             mise_a_jour = False
         Path(os.path.join(dossier, sousdossier)).mkdir_p()
-        chemin_base = chemin_texte(id, entree_texte[1] == 'CODE')
+        chemin_base = chemin_texte(id, nature == 'CODE')
     else:
         raise Exception('Type bizarre ou inexistant')
         sousdossier = os.path.join(sousdossier, nom)

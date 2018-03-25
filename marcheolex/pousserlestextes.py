@@ -56,15 +56,26 @@ def pousser_les_textes_sur_gitlab( textes, dossier, gitlab_host, gitlab_token, g
         print(texte)
         if texte == None: # TODO vérifier pourquoi certains valent None
             continue
-        nom_gitlab = texte[1].replace('é', 'e').replace('è', 'e').replace('ê', 'e').replace('û', 'u')
-        id_gitlab = gl.projects.create( {'name': texte[1], 'namespace_id': groupe.id, 'visibility': 'public'} )
-        subprocess.call(['git', 'remote', 'add', 'origin', git_server+separateur+gitlab_group+'/'+nom_gitlab], cwd=dossier+'/'+texte[0])
+        nom_gitlab = texte[1]
+        adresse_gitlab = nom_gitlab.replace('é', 'e').replace('è', 'e').replace('ê', 'e').replace('û', 'u')
+        projet_gitlab = gl.projects.create( {'name': nom_gitlab, 'namespace_id': groupe.id, 'visibility': 'public'} )
+        projet_gitlab.jobs_enabled = False
+        projet_gitlab.wiki_enabled = False
+        projet_gitlab.issues_enabled = False
+        projet_gitlab.snippets_enabled = False
+        projet_gitlab.merge_requests_enabled = False
+        projet_gitlab.shared_runners_enabled = False
+        projet_gitlab.issues_requests_enabled = False
+        projet_gitlab.name = nom_gitlab[0].upper() + nom_gitlab[1:].replace('_', ' ')
+        projet_gitlab.tag_list = [ re.sub( r's([ -])', r'\1', texte[0].split('/')[0][0:-1] ) ]
+        projet_gitlab.save()
+        subprocess.call(['git', 'remote', 'add', 'origin', git_server+separateur+gitlab_group+'/'+adresse_gitlab], cwd=dossier+'/'+texte[0])
         r = subprocess.call(['git', 'push', '--all'], cwd=dossier+'/'+texte[0], env={'GIT_SSH_COMMAND': 'ssh -i '+git_key})
         if r != 0:
-            gl.projects.delete( id_gitlab.id )
+            gl.projects.delete( projet_gitlab.id )
             continue
         if f_calcules:
-            f_calcules.write( texte[2] + ' ' + nom_gitlab + '\n' )
+            f_calcules.write( texte[2] + ' ' + adresse_gitlab + '\n' )
 
     if f_calcules:
         f_calcules.close()
