@@ -70,7 +70,7 @@ def pousser_les_textes_sur_gitlab( textes, dossier, gitlab_host, gitlab_token, g
         projet_gitlab.tag_list = [ re.sub( r's([ -])', r'\1', texte[0].split('/')[0][0:-1] ) ]
         projet_gitlab.save()
         subprocess.call(['git', 'remote', 'add', 'origin', git_server+separateur+gitlab_group+'/'+adresse_gitlab], cwd=dossier+'/'+texte[0])
-        r = subprocess.call(['git', 'push', '--all'], cwd=dossier+'/'+texte[0], env={'GIT_SSH_COMMAND': 'ssh -i '+git_key})
+        r = subprocess.call(['git', 'push', '--all'], cwd=dossier+'/'+texte[0], env={'GIT_SSH_COMMAND': 'ssh -o "StrictHostKeyChecking no" -i '+git_key})
         if r != 0:
             gl.projects.delete( projet_gitlab.id )
             continue
