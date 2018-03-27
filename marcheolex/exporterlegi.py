@@ -382,7 +382,7 @@ def creer_historique_texte(texte, format, dossier, cache, bdd):
         subprocess.call(['git', 'checkout', branche], cwd=dossier)
     
     # Optimisation du dossier git
-    subprocess.call(['git', 'gc', '--aggressive'], cwd=dossier)
+    subprocess.call(['git', 'gc'], cwd=dossier)
     subprocess.call('rm -rf .git/hooks .git/refs/heads .git/refs/tags .git/logs .git/COMMIT_EDITMSG .git/branches', cwd=dossier, shell=True)
     subprocess.call('chmod -x .git/config', cwd=dossier, shell=True)
 
