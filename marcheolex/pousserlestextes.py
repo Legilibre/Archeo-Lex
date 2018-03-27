@@ -57,7 +57,7 @@ def pousser_les_textes_sur_gitlab( textes, dossier, gitlab_host, gitlab_token, g
         if texte == None: # TODO vérifier pourquoi certains valent None
             continue
         nom_gitlab = texte[1]
-        adresse_gitlab = nom_gitlab.replace('é', 'e').replace('è', 'e').replace('ê', 'e').replace('û', 'u')
+        adresse_gitlab = nom_gitlab.replace('é', 'e').replace('è', 'e').replace('ê', 'e').replace('û', 'u').replace('ô', 'o')
         projet_gitlab = gl.projects.create( {'name': nom_gitlab, 'namespace_id': groupe.id, 'visibility': 'public'} )
         projet_gitlab.jobs_enabled = False
         projet_gitlab.wiki_enabled = False
