@@ -71,7 +71,9 @@ class FichierUnique( Organisations ):
         if not self.syntaxe:
             raise Exception()
 
-        if id[4:8] == 'ARTI':
+        if id == None:
+            texte = texte + '\n\n'
+        elif id[4:8] == 'ARTI':
             if num:
                 titre = 'Article ' + num
             else:

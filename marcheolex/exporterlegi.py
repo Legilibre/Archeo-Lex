@@ -154,21 +154,36 @@ def creer_historique_texte(texte, format, dossier, cache, bdd):
 
     Path(dossier).mkdir_p()
     entree_texte = db.one("""
-        SELECT id, nature, titre, titrefull, etat, date_debut, date_fin, num, cid, mtime
+        SELECT id, nature, titre, titrefull, etat, date_debut, date_fin, num, visas, signataires, tp, nota, abro, rect, cid, mtime
         FROM textes_versions
         WHERE id = '{0}'
     """.format(id))
     if entree_texte == None:
         entree_texte = db.one("""
-            SELECT id, nature, titre, titrefull, etat, date_debut, date_fin, num, cid, mtime
+            SELECT id, nature, titre, titrefull, etat, date_debut, date_fin, num, visas, signataires, tp, nota, abro, rect, cid, mtime
             FROM textes_versions
             WHERE cid = '{0}'
         """.format(id))
     if entree_texte == None:
         raise Exception('Pas de texte avec cet ID ou CID')
+
     nature = entree_texte[1]
-    cid = entree_texte[8]
-    mtime = entree_texte[9]
+    visas = entree_texte[8] or ''
+    signataires = entree_texte[9] or ''
+    tp = entree_texte[10] or ''
+    nota = entree_texte[11] or ''
+    abro = entree_texte[12] or ''
+    rect = entree_texte[13] or ''
+    cid = entree_texte[14]
+    mtime = entree_texte[15]
+
+    visas = visas.strip()
+    signataires = signataires.strip()
+    tp = tp.strip()
+    nota = nota.strip()
+    abro = abro.strip()
+    rect = rect.strip()
+
     nature_min = nature.lower()
     nature_min_pluriel = re.sub( r'([- ])', r's\1', nature_min ) + 's'
     if nature in natures.keys():
@@ -362,6 +377,24 @@ def creer_historique_texte(texte, format, dossier, cache, bdd):
         # Créer les sections (donc tout le texte)
         contenu, fin_vigueur = fs.obtenir_texte_section( 0, None, cid, debut, fin )
         
+        # Ajout des en-têtes et pied-de-texte
+        if visas:
+            visas = fs.stockage.organisation.syntaxe.transformer_depuis_html( visas )
+            visas = fs.stockage.ecrire_ressource( None, [], '', '', visas )
+            contenu = visas + contenu
+        if signataires:
+            signataires = fs.stockage.organisation.syntaxe.transformer_depuis_html( signataires )
+            signataires = fs.stockage.ecrire_ressource( None, [], '', '', signataires )
+            contenu = contenu + signataires
+        if tp:
+            tp = fs.stockage.organisation.syntaxe.transformer_depuis_html( tp )
+            tp = fs.stockage.ecrire_ressource( None, [], '', '', tp )
+            contenu = contenu + tp
+        if nota:
+            nota = fs.stockage.organisation.syntaxe.transformer_depuis_html( nota )
+            nota = fs.stockage.ecrire_ressource( None, [], '', '', nota )
+            contenu = contenu + nota
+
         # Enregistrement du fichier
         if format['organisation'] == 'fichier-unique':
             f_texte = open(fichier, 'w')
