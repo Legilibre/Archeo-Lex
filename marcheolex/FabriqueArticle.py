@@ -90,6 +90,8 @@ class FabriqueArticle:
                 FROM articles
                 WHERE id = '{0}'
             """.format(id))
+            if not article:
+                self.articles[id] = ('INCONNU', '', None, None )
             id, section, num, date_debut, date_fin, bloc_textuel, cid = article
 
             date_debut = datetime.date(*(time.strptime(date_debut, '%Y-%m-%d')[0:3])) if date_debut != '2999-01-01' else None
