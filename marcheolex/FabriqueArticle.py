@@ -92,19 +92,20 @@ class FabriqueArticle:
             """.format(id))
             if not article:
                 self.articles[id] = ('INCONNU', '', None, None )
-            id, section, num, date_debut, date_fin, bloc_textuel, cid = article
-
-            date_debut = datetime.date(*(time.strptime(date_debut, '%Y-%m-%d')[0:3])) if date_debut != '2999-01-01' else None
-            date_fin = datetime.date(*(time.strptime(date_fin, '%Y-%m-%d')[0:3])) if date_fin != '2999-01-01' else None
-
-            chemin_markdown = os.path.join(self.depr_cache, 'markdown', cid, id + '.md')
-            if self.depr_cache and os.path.exists( chemin_markdown ):
-                f_article = open(chemin_markdown, 'r')
-                texte_article = f_article.read().decode('utf-8')
-                f_article.close()
             else:
-                md = Markdown()
-                texte_article = md.transformer_depuis_html( bloc_textuel )
+                id, section, num, date_debut, date_fin, bloc_textuel, cid = article
+
+                date_debut = datetime.date(*(time.strptime(date_debut, '%Y-%m-%d')[0:3])) if date_debut != '2999-01-01' else None
+                date_fin = datetime.date(*(time.strptime(date_fin, '%Y-%m-%d')[0:3])) if date_fin != '2999-01-01' else None
+
+                chemin_markdown = os.path.join(self.depr_cache, 'markdown', cid, id + '.md')
+                if self.depr_cache and os.path.exists( chemin_markdown ):
+                    f_article = open(chemin_markdown, 'r')
+                    texte_article = f_article.read().decode('utf-8')
+                    f_article.close()
+                else:
+                    md = Markdown()
+                    texte_article = md.transformer_depuis_html( bloc_textuel )
 
             self.articles[id] = (num, texte_article, date_debut, date_fin)
 
