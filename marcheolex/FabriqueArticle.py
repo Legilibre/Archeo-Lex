@@ -107,7 +107,7 @@ class FabriqueArticle:
                     md = Markdown()
                     texte_article = md.transformer_depuis_html( bloc_textuel )
 
-            self.articles[id] = (num, texte_article, date_debut, date_fin)
+                self.articles[id] = (num, texte_article, date_debut, date_fin)
 
         num, texte_article, date_debut, date_fin = self.articles[id]
 
