@@ -16,28 +16,8 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 import os
-import subprocess
 import datetime
 import time
-import re
-from pytz import timezone
-from string import strip, join
-from path import Path
-from bs4 import BeautifulSoup
-import legi
-import legi.utils
-from marcheolex import logger
-from marcheolex import version_archeolex
-from marcheolex import natures
-from marcheolex.markdownlegi import creer_markdown
-from marcheolex.markdownlegi import creer_markdown_texte
-from marcheolex.utilitaires import normalisation_code
-from marcheolex.utilitaires import chemin_texte
-from marcheolex.utilitaires import nop
-from marcheolex.utilitaires import MOIS
-from marcheolex.utilitaires import MOIS2
-from marcheolex.utilitaires import comp_infini
-from marcheolex.utilitaires import comp_infini_strict
 from marcheolex.utilitaires import comp_infini_large
 from marcheolex.exports.Syntaxes import Syntaxes
 from marcheolex.exports.Markdown import Markdown

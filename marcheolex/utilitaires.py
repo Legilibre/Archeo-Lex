@@ -21,7 +21,6 @@ import subprocess
 import datetime
 import time
 import shutil
-from path import Path
 
 MOIS = {
     'janvier': '01',

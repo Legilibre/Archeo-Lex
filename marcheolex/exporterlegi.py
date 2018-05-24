@@ -21,22 +21,16 @@ import datetime
 import time
 import re
 from pytz import timezone
-from string import strip, join
 from path import Path
-from bs4 import BeautifulSoup
-import legi
 import legi.utils
 from marcheolex import logger
 from marcheolex import version_archeolex
 from marcheolex import natures
 from marcheolex.markdownlegi import creer_markdown
 from marcheolex.markdownlegi import creer_markdown_texte
-from marcheolex.utilitaires import normalisation_code
 from marcheolex.utilitaires import chemin_texte
-from marcheolex.utilitaires import nop
 from marcheolex.utilitaires import MOIS
 from marcheolex.utilitaires import MOIS2
-from marcheolex.utilitaires import comp_infini
 from marcheolex.utilitaires import comp_infini_strict
 from marcheolex.exports.Markdown import Markdown
 from marcheolex.exports.FichierUnique import FichierUnique
@@ -52,7 +46,7 @@ def creer_historique_legi(textes, format, dossier, cache, bdd):
         textes = f_textes.read().decode('utf-8')
         f_textes.close()
 
-    textes = strip(textes)
+    textes = textes.strip()
     textes = re.split( r'[\n,]+', textes )
 
     liste_textes = []
@@ -114,7 +108,7 @@ def creer_historique_legi(textes, format, dossier, cache, bdd):
 
     liste_textes.sort()
     if len( liste_textes ) < 100:
-        print( '\nListe de textes :\n' + join( liste_textes, '\n' ) + '\n' )
+        print( '\nListe de textes :\n' + '\n'.join( liste_textes ) + '\n' )
 
     textes_traites = []
     for texte in liste_textes:
@@ -237,7 +231,7 @@ def creer_historique_texte(texte, format, dossier, cache, bdd):
     reset_hash = ''
     if mise_a_jour:
         tags = subprocess.check_output(['git', 'tag', '-l'], cwd=dossier)
-        tags = strip(tags).split('\n')
+        tags = tags.strip().split('\n')
         date_maj_git = False
         if len(tags) == 0:
             raise Exception('Pas de tag de la dernière mise à jour')
@@ -261,7 +255,7 @@ def creer_historique_texte(texte, format, dossier, cache, bdd):
                 subprocess.call(['git', 'checkout', 'futur-'+branche], cwd=dossier)
         except subprocess.CalledProcessError:
             pass
-        versions_git = strip(subprocess.check_output(['git', 'log', '--oneline'], cwd=dossier).decode('utf-8')).split('\n')
+        versions_git = subprocess.check_output(['git', 'log', '--oneline'], cwd=dossier).decode('utf-8').strip().split('\n')
         for log_version in versions_git:
             for m, k in MOIS.items():
                 log_version = log_version.replace( m, k )

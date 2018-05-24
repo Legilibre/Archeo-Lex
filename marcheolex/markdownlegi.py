@@ -18,7 +18,6 @@ from __future__ import print_function
 import os
 import re
 from path import Path
-import html2text
 
 
 def creer_markdown(textes, db, cache):

@@ -13,17 +13,7 @@ from __future__ import unicode_literals
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
-import os
-import subprocess
-import datetime
-import time
 import re
-from pytz import timezone
-from string import strip, join
-from path import Path
-from bs4 import BeautifulSoup
-import legi
-import legi.utils
 
 
 def ajoute_liens( texte ):
