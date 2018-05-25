@@ -27,8 +27,8 @@ Sur une page affichant les différences entre versions ([exemple](https://github
 
 * Installer les paquets Debian suivants :
   ```
-  apt-get install -y libarchive13 python-pip git htop sqlite3
-  apt-get install -y python2.7-dev libxml2-dev libxslt1-dev zlib1g-dev python-setuptools python-wheel
+  apt-get install -y libarchive13 python3-pip git htop sqlite3
+  apt-get install -y python3-dev libxml2-dev libxslt1-dev zlib1g-dev python3-setuptools python3-wheel
   ```
 * Télécharger Archéo Lex :
   ```
@@ -36,15 +36,15 @@ Sur une page affichant les différences entre versions ([exemple](https://github
   ```
 * Installer les paquets Python avec 
   ```
-  sudo pip install -r requirements.txt
+  sudo pip3 install -r requirements.txt
   ```
 
 Pour information, les paquets suivants sont disponibles sur Debian stretch :
-* python-path
-* python-tqdm
-* python-docopt
-* python-html2text
-* python-gitlab
+* python3-path
+* python3-tqdm
+* python3-docopt
+* python3-html2text
+* python3-gitlab
 
 La liste complète des modules utilisés est disponible au moyen de `scripts/liste-paquets.sh` (sauf lxml, optionnel mais recommandé).
 
@@ -58,8 +58,8 @@ Les données nécessaires (textes de loi et métadonnées associées) sont dispo
 La première étape est de télécharger la base LEGI et de créer la base de données avec legi.py:
 
 ```Shell
-    python -m legi.download ./tarballs
-    python -m legi.tar2sqlite cache/sql/legi.sqlite ./tarballs
+    python3 -m legi.download ./tarballs
+    python3 -m legi.tar2sqlite cache/sql/legi.sqlite ./tarballs
 ```
 
 Le programme principal se lance en ligne de commande :

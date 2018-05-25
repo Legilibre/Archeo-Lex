@@ -11,10 +11,6 @@
 # the LICENSE file for more details.
 
 # Imports
-from __future__ import unicode_literals
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
 import os
 import subprocess
 import datetime
@@ -43,7 +39,7 @@ def creer_historique_legi(textes, format, dossier, cache, bdd):
 
     if os.path.exists( textes ):
         f_textes = open( textes, 'r' )
-        textes = f_textes.read().decode('utf-8')
+        textes = f_textes.read()
         f_textes.close()
 
     textes = textes.strip()
@@ -255,11 +251,11 @@ def creer_historique_texte(texte, format, dossier, cache, bdd):
                 subprocess.call(['git', 'checkout', 'futur-'+branche], cwd=dossier)
         except subprocess.CalledProcessError:
             pass
-        versions_git = subprocess.check_output(['git', 'log', '--oneline'], cwd=dossier).decode('utf-8').strip().split('\n')
+        versions_git = subprocess.check_output(['git', 'log', '--oneline'], cwd=dossier).strip().split('\n')
         for log_version in versions_git:
             for m, k in MOIS.items():
                 log_version = log_version.replace( m, k )
-            m = re.match(r'^([0-9a-f]+) .* ([0-9]+)(?:er)? ([0-9]+) ([0-9]+)$', log_version.encode('utf-8'))
+            m = re.match(r'^([0-9a-f]+) .* ([0-9]+)(?:er)? ([0-9]+) ([0-9]+)$', log_version)
             if not m:
                 raise Exception('Version non reconnue dans le dépôt Git')
             date = '{0:04d}-{1:02d}-{2:02d}'.format(int(m.group(4)), int(m.group(3)), int(m.group(2)))
@@ -297,13 +293,13 @@ def creer_historique_texte(texte, format, dossier, cache, bdd):
     versions_texte = []
     for vers in versions_texte_db:
         vt = vers[0]
-        if isinstance(vt, basestring):
+        if isinstance(vt, str):
             vt = datetime.date(*(time.strptime(vt, '%Y-%m-%d')[0:3]))
         if date_reprise_git and vt.strftime('%Y-%m-%d') < date_reprise_git:
             continue
         dates_texte.append( vt )
         vt = vers[1]
-        if isinstance(vt, basestring):
+        if isinstance(vt, str):
             vt = datetime.date(*(time.strptime(vt, '%Y-%m-%d')[0:3]))
         dates_fin_texte.append( vt )
     versions_texte = sorted(set(dates_texte).union(set(dates_fin_texte)))
@@ -362,7 +358,7 @@ def creer_historique_texte(texte, format, dossier, cache, bdd):
         # Enregistrement du fichier
         if format['organisation'] != 'fichier-unique':
             f_texte = open('README.md', 'w')
-            f_texte.write(contenu.encode('utf-8'))
+            f_texte.write(contenu)
             f_texte.close()
 
             # Retrait des fichiers des anciennes versions
@@ -392,13 +388,13 @@ def creer_historique_texte(texte, format, dossier, cache, bdd):
         # Enregistrement du fichier
         if format['organisation'] == 'fichier-unique':
             f_texte = open(fichier, 'w')
-            f_texte.write(contenu.encode('utf-8'))
+            f_texte.write(contenu)
             f_texte.close()
         
         # Exécuter Git
         subprocess.call(['git', 'add', '.'], cwd=dossier)
         #subprocess.call(['git', 'commit', '--author="Législateur <>"', '--date="' + str(debut_datetime) + '"', '-m', 'Version consolidée au {}\n\nVersions :\n- base LEGI : {}\n- programme Archéo Lex : {}'.format(date_fr, date_base_legi, version_archeolex), '-q', '--no-status'], cwd=dossier)
-        subprocess.call(['git', 'commit', '--author="Législateur <>"', '--date="' + str(debut_datetime) + '"', '-m', 'Version consolidée au {}'.format(date_fr), '-q', '--no-status'], cwd=dossier, env={ 'GIT_COMMITTER_DATE': last_update.isoformat(), 'GIT_COMMITTER_NAME': 'Législateur'.encode('utf-8'), 'GIT_COMMITTER_EMAIL': '' })
+        subprocess.call(['git', 'commit', '--author="Législateur <>"', '--date="' + str(debut_datetime) + '"', '-m', 'Version consolidée au {}'.format(date_fr), '-q', '--no-status'], cwd=dossier, env={ 'GIT_COMMITTER_DATE': last_update.isoformat(), 'GIT_COMMITTER_NAME': 'Législateur', 'GIT_COMMITTER_EMAIL': '' })
         
         if fin == None or str(fin) == '2999-01-01':
             logger.info('Version {} enregistrée (du {} à maintenant)'.format(i_version+1, debut))
@@ -476,7 +472,7 @@ def creer_sections(texte, niveau, parent, version_texte, sql, arborescence, form
                 continue
             chemin_markdown = os.path.join(cache, 'markdown', cid, id + '.md')
             f_article = open(chemin_markdown, 'r')
-            texte_article = f_article.read().decode('utf-8')
+            texte_article = f_article.read()
             f_article.close()
  
             texte = texte                                                                    \
@@ -491,7 +487,7 @@ def creer_sections(texte, niveau, parent, version_texte, sql, arborescence, form
             if format['organisation'] == 'repertoires-simple':
                 texte_article = texte_article + '\n'
                 f_texte = open(fichier, 'w')
-                f_texte.write(texte_article.encode('utf-8'))
+                f_texte.write(texte_article)
                 f_texte.close()
 
     return texte

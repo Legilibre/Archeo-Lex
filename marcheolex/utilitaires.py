@@ -11,10 +11,6 @@
 # the LICENSE file for more details.
 
 # Imports
-from __future__ import unicode_literals
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
 import os
 import re
 import subprocess
@@ -171,9 +167,9 @@ def comp_infini(x, y):
     
     dateinf = datetime.date(2999, 1, 1)
 
-    if isinstance(x, basestring):
+    if isinstance(x, str):
         x = datetime.date(*(time.strptime(x, '%Y-%m-%d')[0:3]))
-    if isinstance(y, basestring):
+    if isinstance(y, str):
         y = datetime.date(*(time.strptime(y, '%Y-%m-%d')[0:3]))
     if x == dateinf:
         x = None
@@ -193,9 +189,9 @@ def comp_infini_strict(x, y):
     
     dateinf = datetime.date(2999, 1, 1)
 
-    if isinstance(x, basestring):
+    if isinstance(x, str):
         x = datetime.date(*(time.strptime(x, '%Y-%m-%d')[0:3]))
-    if isinstance(y, basestring):
+    if isinstance(y, str):
         y = datetime.date(*(time.strptime(y, '%Y-%m-%d')[0:3]))
     if x == dateinf:
         x = None
@@ -215,9 +211,9 @@ def comp_infini_large(x, y):
     
     dateinf = datetime.date(2999, 1, 1)
 
-    if isinstance(x, basestring):
+    if isinstance(x, str):
         x = datetime.date(*(time.strptime(x, '%Y-%m-%d')[0:3]))
-    if isinstance(y, basestring):
+    if isinstance(y, str):
         y = datetime.date(*(time.strptime(y, '%Y-%m-%d')[0:3]))
     if x == dateinf:
         x = None

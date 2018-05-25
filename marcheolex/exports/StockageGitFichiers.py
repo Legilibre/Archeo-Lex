@@ -9,10 +9,6 @@
 # the LICENSE file for more details.
 
 # Imports
-from __future__ import unicode_literals
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
 from . import Stockage
 from . import UnArticleParFichierSansHierarchie
 from . import FichierUnique
@@ -46,7 +42,7 @@ class StockageGitFichiers:
         if isinstance( self.organisation, UnArticleParFichierSansHierarchie ):
             nom_fichier = self.organisation.obtenir_nom_fichier( id, parents, num, titre )
             f_texte = open( nom_fichier, 'w' )
-            f_texte.write( texte.encode('utf-8') )
+            f_texte.write( texte )
             f_texte.close()
 
         return texte_retourne
@@ -62,7 +58,7 @@ class StockageGitFichiers:
             nom_fichier = self.organisation.obtenir_nom_fichier( None, None, None, None )
             texte = self.organisation.texte.strip() + '\n'
             f_texte = open( nom_fichier, 'w' )
-            f_texte.write( texte.encode( 'utf-8' ) )
+            f_texte.write( texte )
             f_texte.close()
 
 

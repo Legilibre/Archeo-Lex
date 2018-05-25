@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # 
 # Archéo Lex – Pure Histoire de la Loi française
@@ -11,10 +11,6 @@
 # the LICENSE file for more details.
 
 # Imports
-from __future__ import unicode_literals
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
 from docopt import docopt
 import os
 import os.path
@@ -119,7 +115,7 @@ def principal(arguments):
     
     # Lecture des données de format
     data = {}
-    data['textes'] = ((arguments.get('--textes') or '').decode('utf-8') or 'LEGITEXT000006069414')
+    data['textes'] = ((arguments.get('--textes') or '') or 'LEGITEXT000006069414')
     data['base'] = arguments.get('--base') or 'LEGI'
     data['livraison'] = arguments.get('--livraison') or 'tout'
     data['format'] = {}
@@ -129,9 +125,9 @@ def principal(arguments):
     data['format']['organisation'] = arguments.get('--organisation') or 'fichier-unique'
     
     # Lecture des autres paramètres
-    data['bddlegi'] = (arguments.get('--bddlegi') or '').decode('utf-8') or 'cache/sql/legi.sqlite'
-    data['cache'] = (arguments.get('--cache') or '').decode('utf-8') or 'cache'
-    data['dossier'] = (arguments.get('--dossier') or '').decode('utf-8') or 'textes'
+    data['bddlegi'] = (arguments.get('--bddlegi') or '') or 'cache/sql/legi.sqlite'
+    data['cache'] = (arguments.get('--cache') or '') or 'cache'
+    data['dossier'] = (arguments.get('--dossier') or '') or 'textes'
     data['effacer'] = not arguments.get('--mise-a-jour') or arguments.get('--nouveau') or False
     #data['effacer'] = arguments.get('--nouveau') or not arguments.get('--mise-à-jour') or False
     data['gitlab-host'] = arguments.get('--gitlab-host') or ''

@@ -11,10 +11,6 @@
 # the LICENSE file for more details.
 
 # Imports
-from __future__ import unicode_literals
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
 import os
 import re
 from path import Path
@@ -78,7 +74,7 @@ def creer_markdown_texte(textecid, db, cache):
 
         # Enregistrement
         f_markdown = open(chemin_markdown, 'w')
-        f_markdown.write(texte.encode('utf-8'))
+        f_markdown.write(texte)
         f_markdown.close()
 
 # vim: set ts=4 sw=4 sts=4 et:
