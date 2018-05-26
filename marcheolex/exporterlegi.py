@@ -42,6 +42,9 @@ def creer_historique_legi(textes, format, dossier, cache, bdd):
         textes = f_textes.read()
         f_textes.close()
 
+    if not os.path.exists( bdd ):
+        raise Exception( 'Base de données legi.py manquante.' )
+
     textes = textes.strip()
     textes = re.split( r'[\n,]+', textes )
 
