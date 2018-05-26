@@ -320,6 +320,19 @@ def creer_historique_texte(texte, format, dossier, cache, bdd):
     fa = FabriqueArticle( db, stockage, True )
     fs = FabriqueSection( fa )
 
+    if visas:
+        visas = fs.stockage.organisation.syntaxe.transformer_depuis_html( visas )
+        visas = fs.stockage.ecrire_ressource( None, [0], '', 'Visas', visas )
+    if signataires:
+        signataires = fs.stockage.organisation.syntaxe.transformer_depuis_html( signataires )
+        signataires = fs.stockage.ecrire_ressource( None, [0], '', 'Signataires', signataires )
+    if tp:
+        tp = fs.stockage.organisation.syntaxe.transformer_depuis_html( tp )
+        tp = fs.stockage.ecrire_ressource( None, [0], '', 'Travaux préparatoires', tp )
+    if nota:
+        nota = fs.stockage.organisation.syntaxe.transformer_depuis_html( nota )
+        nota = fs.stockage.ecrire_ressource( None, [0], '', 'Nota', nota )
+
     # Pour chaque version
     # - rechercher les sections et articles associés
     # - créer le fichier texte au format demandé
@@ -372,21 +385,15 @@ def creer_historique_texte(texte, format, dossier, cache, bdd):
         
         # Ajout des en-têtes et pied-de-texte
         if visas:
-            visas = fs.stockage.organisation.syntaxe.transformer_depuis_html( visas )
-            visas = fs.stockage.ecrire_ressource( None, [], '', '', visas )
             contenu = visas + contenu
         if signataires:
-            signataires = fs.stockage.organisation.syntaxe.transformer_depuis_html( signataires )
-            signataires = fs.stockage.ecrire_ressource( None, [], '', '', signataires )
             contenu = contenu + signataires
         if tp:
-            tp = fs.stockage.organisation.syntaxe.transformer_depuis_html( tp )
-            tp = fs.stockage.ecrire_ressource( None, [], '', '', tp )
             contenu = contenu + tp
         if nota:
-            nota = fs.stockage.organisation.syntaxe.transformer_depuis_html( nota )
-            nota = fs.stockage.ecrire_ressource( None, [], '', '', nota )
             contenu = contenu + nota
+
+        contenu = contenu.strip()
 
         # Enregistrement du fichier
         if format['organisation'] == 'fichier-unique':

@@ -68,6 +68,9 @@ class FichierUnique( Organisations ):
             raise Exception()
 
         if id == None:
+            if titre:
+                titre_formate = self.syntaxe.obtenir_titre( parents, titre )
+                texte = titre_formate + texte
             texte = texte + '\n\n'
         elif id[4:8] == 'ARTI':
             if num:
