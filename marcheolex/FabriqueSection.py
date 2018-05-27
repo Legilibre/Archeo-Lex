@@ -113,7 +113,9 @@ class FabriqueSection:
                 sdebut = datetime.date(*(time.strptime(sdebut, '%Y-%m-%d')[0:3])) if sdebut != '2999-01-01' else None
                 sfin = datetime.date(*(time.strptime(sfin, '%Y-%m-%d')[0:3])) if sfin != '2999-01-01' else None
 
-                self.sections[selement] = (sparent, sposition, snum, stitre_ta, sdebut, sfin, None, None, None)
+                if selement not in self.sections:
+                    self.sections[selement] = {}
+                self.sections[selement][sparent] = (sposition, snum, stitre_ta, sdebut, sfin, None, None, None)
 
             # Marquage de ce cache comme complet : il n’y a plus à le re-calculer
             self.sections['texte'] = cid
@@ -123,12 +125,11 @@ class FabriqueSection:
         # Itérer sur les sections de cette section, le dictionnaire final servira ensuite à itérer dans l’ordre d’affichage des sections
         for section in self.sections:
 
-            sparent = self.sections[section][0]
-            if id != sparent:
+            if section == 'texte' or id not in self.sections[section]:
                 continue
 
-            sfin = self.sections[section][5]
-            sposition = self.sections[section][1]
+            sfin = self.sections[section][id][4]
+            sposition = self.sections[section][id][0]
 
             # La période de vigueur de cette section est expirée ou expire : ne pas l’ajouter au texte (sfin <= debut_vigueur_texte)
             # Le cas quasi-erroné où le texte n’a pas de début de vigueur est écarté ici, mais devrait probablement renvoyer une erreur ailleurs
@@ -142,7 +143,7 @@ class FabriqueSection:
         for i in sorted( sections.keys() ):
 
             section = sections[i]
-            sparent, sposition, snum, stitre_ta, sdebut, sfin, cdebut, cfin, ctexte = self.sections[section]
+            sposition, snum, stitre_ta, sdebut, sfin, cdebut, cfin, ctexte = self.sections[section][id]
 
             # Enregistrer la date de fin de vigueur de la section
             if sdebut != None and comp_infini_strict( debut_vigueur_texte, sdebut ):
@@ -178,7 +179,7 @@ class FabriqueSection:
                     texte_section, fin_vigueur_section = valeur_section
                     texte_section = texte_titre_ta + texte_section
 
-                    self.sections[section] = (sparent, sposition, snum, stitre_ta, sdebut, sfin, debut_vigueur_texte, fin_vigueur_section, texte_section)
+                    self.sections[section][id] = (sposition, snum, stitre_ta, sdebut, sfin, debut_vigueur_texte, fin_vigueur_section, texte_section)
                     texte = texte + texte_section
 
                     # Si la section a une fin de vigueur, celle-ci devient une borne maximale de fin de vigueur des sections parentes
