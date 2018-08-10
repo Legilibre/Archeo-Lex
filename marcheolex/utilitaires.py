@@ -37,25 +37,6 @@ MOIS = {
 MOIS2 = ['', 'janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre']
 
 
-def telecharger(url, fichier):
-    
-    subprocess.call(['wget', '--output-document=' + fichier, url])
-
-
-def telecharger_cache(url, fichier, force=False):
-    
-    if os.path.exists(fichier):
-        touch = datetime.datetime.fromtimestamp(os.stat(fichier).st_mtime)
-        delta = datetime.datetime.today() - touch
-        
-        if not force or not isinstance(force, bool) and isinstance(force, (int, long, float)) and delta.total_seconds() < force:
-            print('* Téléchargement de ' + url + ' (cache)')
-            return True
-    
-    print('* Téléchargement de ' + url)
-    return telecharger(url, fichier)
-
-
 def normalisation_code(code):
     
     nom = ''
@@ -93,75 +74,6 @@ def normalise_datetime(texte):
         return None
     return datetime.datetime(int(fm.group(1)), int(fm.group(2)), int(fm.group(3)), int(fm.group(4)), int(fm.group(5)), int(fm.group(6)))
 
-
-def chemin_texte(cidTexte, code=True, vigueur=True):
-    
-    if cidTexte[0:4] == 'LEGI':
-
-        if vigueur:
-            vigueur = 'en'
-        else:
-            vigueur = 'non'
-    
-        if code:
-            code = 'code'
-        else:
-            code = 'TNC'
-    
-        return os.path.join('legi', 'global', 'code_et_TNC_' + vigueur + '_vigueur', code + '_' + vigueur + '_vigueur', decompose_cid(cidTexte))
-
-    else:
-
-        return os.path.join(cidTexte[0:4].lower(), 'global', decompose_cid(cidTexte))
-
-
-def decompose_cid(cidTexte):
-    
-    FFFF = cidTexte[0:4]
-    TTTT = cidTexte[4:8]
-    xx1 = cidTexte[8:10]
-    xx2 = cidTexte[10:12]
-    xx3 = cidTexte[12:14]
-    xx4 = cidTexte[14:16]
-    xx5 = cidTexte[16:18]
-    
-    return os.path.join(FFFF, TTTT, xx1, xx2, xx3, xx4, xx5, cidTexte)
-
-
-def obtenir_tous_textes(base, cache, code=True, vigueur=True):
-
-    dir_base = os.path.join(cache, 'bases-xml', base.lower(), 'global')
-    if base == 'LEGI':
-        if vigueur:
-            vigueur = 'en'
-        else:
-            vigueur = 'non'
-
-        if code:
-            code = 'code'
-        else:
-            code = 'TNC'
-
-        dir_base = os.path.join(dir_base, 'code_et_TNC_' + vigueur + '_vigueur', code + '_' + vigueur + '_vigueur')
-
-    result = explorer_textes(dir_base)
-
-    result2 = []
-    for d in result:
-        result2.append((None,d,None,None))
-
-    return result2
-
-def explorer_textes(dir_base):
-
-    list_dir = os.listdir(dir_base)
-    result = []
-    for d in list_dir:
-        if re.match('[a-zA-Z]{4}TEXT[0-9]{12}\\.xml', d):
-            result.append(d[0:20])
-        else:
-            result = result + explorer_textes(os.path.join(dir_base, d))
-    return result
 
 def comp_infini(x, y):
     
@@ -243,30 +155,5 @@ def min_date_infini( x, y ):
 def nop():
     
     return
-
-
-def verif_taille(taille, destination):
-    
-    s = os.statvfs(destination)
-    
-    if 1.05 * taille >= s.f_bavail * s.f_frsize:  # en octets
-        return False
-    else:
-        return True
-
-
-def fusionner(root_src_dir, root_dst_dir):
-
-    for src_dir, dirs, files in os.walk(root_src_dir):
-        dst_dir = src_dir.replace(root_src_dir, root_dst_dir, 1)
-        if not os.path.exists(dst_dir):
-            os.makedirs(dst_dir)
-        for file_ in files:
-            src_file = os.path.join(src_dir, file_)
-            dst_file = os.path.join(dst_dir, file_)
-            if os.path.exists(dst_file):
-                os.remove(dst_file)
-            shutil.move(src_file, dst_dir)
-    shutil.rmtree(root_src_dir)
 
 # vim: set ts=4 sw=4 sts=4 et:

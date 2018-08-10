@@ -23,7 +23,6 @@ class FabriqueSection:
     fabrique_article = None
     db = None
     cache = None
-    depr_cache = ''
     stockage = None
 
     # sections = {
@@ -54,7 +53,6 @@ class FabriqueSection:
         self.fabrique_article = fabrique_article
         self.db = self.fabrique_article.db
         self.cache = self.fabrique_article.cache
-        self.depr_cache = self.fabrique_article.depr_cache
         self.stockage = fabrique_article.stockage
         self.sections = {}
 

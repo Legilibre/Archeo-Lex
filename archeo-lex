@@ -17,19 +17,12 @@ import os.path
 
 from marcheolex import logging, logger
 from marcheolex import version_archeolex
-#from marcheolex.basededonnees import initialisation_bdd
-#from marcheolex.telecharger import obtenir_identifiants
-#from marcheolex.telecharger import telecharger_fichiers_base
-#from marcheolex.ranger import ranger
-#from marcheolex.exporter import creer_historique
-#from marcheolex.exporter import creer_historique_texte
 from marcheolex.exporterlegi import creer_historique_legi
 from marcheolex.pousserlestextes import pousser_les_textes_sur_gitlab
 from marcheolex.utilitaires import nop
-from marcheolex.utilitaires import obtenir_tous_textes
 
 # Manuel d’aide
-aide = ('''Usage: archeo-lex [--aide] [--debug] [--help] [--version] [--textes=<TEXTES>] [--base=<BASE>] [--livraison=<DATE>] [--exporterlegi] [--mise-a-jour | --nouveau] [--dialecte=<DIALECTE>] [--historique=<HISTORIQUE>] [--metadonnees] [--organisation=<TYPE>] [--bddlegi=<fichier>] [--cache=<dossier>] [--dossier=<dossier>] [--gitlab-host=<GITHOST>] [--gitlab-token=<GITTOKEN>] [--gitlab-group=<GITGROUP>] [--git-server=<GITSERVER>] [--git-key=<GITKEY>] [--calcules=<FICHIER>]
+aide = ('''Usage: archeo-lex [--aide] [--debug] [--help] [--version] [--textes=<TEXTES>] [--base=<BASE>] [--livraison=<DATE>] [--exporterlegi] [--mise-a-jour | --nouveau] [--dialecte=<DIALECTE>] [--historique=<HISTORIQUE>] [--metadonnees] [--organisation=<TYPE>] [--bddlegi=<fichier>] [--dossier=<dossier>] [--gitlab-host=<GITHOST>] [--gitlab-token=<GITTOKEN>] [--gitlab-group=<GITGROUP>] [--git-server=<GITSERVER>] [--git-key=<GITKEY>] [--calcules=<FICHIER>]
 
 -t --textes=<TEXTES>       Types de textes à télécharger :
                              - "constitution-de-1958",
@@ -67,7 +60,6 @@ aide = ('''Usage: archeo-lex [--aide] [--debug] [--help] [--version] [--textes=<
 
 
    --bddlegi=<fichier>     Nom de la base de données de legi.py, par défaut "legi.sqlite"
-   --cache=<dossier>       Dossier de cache, par défaut "cache"
    --dossier=<dossier>     Dossier de sortie, par défaut "textes"
 
    --gitlab-host=GITHOST   Gitlab où doit être poussé les dépôts
@@ -126,7 +118,6 @@ def principal(arguments):
     
     # Lecture des autres paramètres
     data['bddlegi'] = (arguments.get('--bddlegi') or '') or 'cache/sql/legi.sqlite'
-    data['cache'] = (arguments.get('--cache') or '') or 'cache'
     data['dossier'] = (arguments.get('--dossier') or '') or 'textes'
     data['effacer'] = not arguments.get('--mise-a-jour') or arguments.get('--nouveau') or False
     #data['effacer'] = arguments.get('--nouveau') or not arguments.get('--mise-à-jour') or False
@@ -137,28 +128,14 @@ def principal(arguments):
     data['git-key'] = arguments.get('--git-key') or ''
     data['calcules'] = arguments.get('--calcules') or ''
     
-    # Création des dossiers de cache
-    for dir in (data['cache'], data['cache']+'/bases-xml', data['cache']+'/divers', data['cache']+'/html', data['cache']+'/markdown', data['cache']+'/sql', data['dossier']):
-        if not os.path.exists(dir):
-           os.makedirs(dir)
+    # Création du dossiers des textes
+    if not os.path.exists(data['dossier']):
+       os.makedirs(data['dossier'])
 
-    # Recherche des identifiants
-    #if data['textes'] == ['tous']:
-    #    data['textes'] = obtenir_tous_textes(data['base'], data['cache'])
-    #else:
-    #    logger.info('Recherche des identifiants')
-    #    data['textes'] = obtenir_identifiants(data['textes'], data['cache'])
-    #logger.info('Textes demandés')
-    #if len(data['textes']) > 10:
-    #    logger.info('  ({} textes)'.format(len(data['textes'])))
-    #else:
-    #    for t in data['textes']:
-    #        logger.info('* {} : {}'.format(t[1], t[0]))
-    
     textes = []
     if action_exporterlegi:
         logger.info('Création de l’historique (legi.py)')
-        textes = creer_historique_legi(data['textes'], data['format'], data['dossier'], data['cache'], data['bddlegi'])
+        textes = creer_historique_legi(data['textes'], data['format'], data['dossier'], data['bddlegi'])
     
     if action_gitlab:
         logger.info('Envoi sur Gitlab')

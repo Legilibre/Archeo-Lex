@@ -22,7 +22,6 @@ import legi.utils
 from marcheolex import logger
 from marcheolex import version_archeolex
 from marcheolex import natures
-from marcheolex.utilitaires import chemin_texte
 from marcheolex.utilitaires import MOIS
 from marcheolex.utilitaires import MOIS2
 from marcheolex.utilitaires import comp_infini_strict
@@ -31,7 +30,7 @@ from marcheolex.FabriqueArticle import FabriqueArticle
 from marcheolex.FabriqueSection import FabriqueSection
 
 
-def creer_historique_legi(textes, format, dossier, cache, bdd):
+def creer_historique_legi(textes, format, dossier, bdd):
 
     if os.path.exists( textes ):
         f_textes = open( textes, 'r' )
@@ -108,13 +107,13 @@ def creer_historique_legi(textes, format, dossier, cache, bdd):
     textes_traites = []
     for texte in liste_textes:
         print( '> Texte {0}'.format( texte ) )
-        texte_traite = creer_historique_texte(texte, format, dossier, cache, bdd)
+        texte_traite = creer_historique_texte(texte, format, dossier, bdd)
         textes_traites.append( texte_traite )
 
     return textes_traites
 
 
-def creer_historique_texte(texte, format, dossier, cache, bdd):
+def creer_historique_texte(texte, format, dossier, bdd):
 
     # Constantes
     paris = timezone( 'Europe/Paris' )
@@ -191,7 +190,6 @@ def creer_historique_texte(texte, format, dossier, cache, bdd):
         if not os.path.exists(os.path.join(dossier, sousdossier)):
             mise_a_jour = False
         Path(os.path.join(dossier, sousdossier)).mkdir_p()
-        chemin_base = chemin_texte(id, nature == 'CODE')
     elif nature and (nature in natures.keys()) and entree_texte[2]:
         identifiant = entree_texte[2][0].lower()+entree_texte[2][1:].replace(' ','_')
         nom_fichier = identifiant
@@ -199,7 +197,6 @@ def creer_historique_texte(texte, format, dossier, cache, bdd):
         if not os.path.exists(os.path.join(dossier, sousdossier)):
             mise_a_jour = False
         Path(os.path.join(dossier, sousdossier)).mkdir_p()
-        chemin_base = chemin_texte(id, nature == 'CODE')
     else:
         raise Exception('Type bizarre ou inexistant')
         sousdossier = os.path.join(sousdossier, nom)
@@ -414,9 +411,6 @@ def creer_historique_texte(texte, format, dossier, cache, bdd):
 
     # Ajout du tag de date éditoriale
     subprocess.call(['git', 'tag', last_update.strftime('%Y%m%d-%H%M%S')], cwd=dossier)
-
-    # Suppression du cache
-    subprocess.call('rm -rf markdown/{0}'.format(cid), cwd=cache, shell=True)
 
     return dossier_final, nom_final, cid
 

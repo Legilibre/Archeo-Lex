@@ -19,7 +19,7 @@ from marcheolex.exports import *
 
 class FabriqueArticle:
 
-    def __init__( self, db, stockage, cache = None, depr_cache = '' ):
+    def __init__( self, db, stockage, cache = None ):
 
         """
         :param db:
@@ -32,7 +32,6 @@ class FabriqueArticle:
         FabriqueArticle.stockage = stockage
 
         self.cache = cache
-        self.depr_cache = depr_cache
         self.articles = {}
 
 
@@ -83,14 +82,8 @@ class FabriqueArticle:
                     date_debut = datetime.date(*(time.strptime(date_debut, '%Y-%m-%d')[0:3])) if date_debut != '2999-01-01' else None
                     date_fin = datetime.date(*(time.strptime(date_fin, '%Y-%m-%d')[0:3])) if date_fin != '2999-01-01' else None
 
-                    chemin_markdown = os.path.join(self.depr_cache, 'markdown', cid, id + '.md')
-                    if self.depr_cache and os.path.exists( chemin_markdown ):
-                        f_article = open(chemin_markdown, 'r')
-                        texte_article = f_article.read()
-                        f_article.close()
-                    else:
-                        md = Markdown()
-                        texte_article = md.transformer_depuis_html( bloc_textuel )
+                    md = Markdown()
+                    texte_article = md.transformer_depuis_html( bloc_textuel )
 
                     self.articles[aid] = (num, texte_article, date_debut, date_fin)
 
