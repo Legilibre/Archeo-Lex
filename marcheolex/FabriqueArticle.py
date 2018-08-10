@@ -33,6 +33,7 @@ class FabriqueArticle:
 
         self.cache = cache
         self.articles = {}
+        self.erreurs = []
 
 
     def effacer_cache():
@@ -60,32 +61,38 @@ class FabriqueArticle:
         if id not in self.articles:
 
             article = FabriqueArticle.db.one("""
-                SELECT id, section, num, date_debut, date_fin, bloc_textuel, cid
+                SELECT num, date_debut, date_fin, bloc_textuel, cid
                 FROM articles
                 WHERE id = '{0}'
             """.format(id))
             if not article:
-                self.articles[id] = ('INCONNU', '', None, None )
+                article = FabriqueArticle.db.one("""
+                    SELECT num, debut, fin
+                    FROM sommaires
+                    WHERE element = '{0}'
+                """.format(id))
+                if not article:
+                    self._cache_article( id, 'INCONNU', None, None, '(article manquant)' )
+                    self.erreurs.append( 'Article {0} inconnu (métadonnées inconnues)'.format(id) )
+                else:
+                    num, date_debut, date_fin = article
+                    self._cache_article( id, num, date_debut, date_fin, '(article manquant)' )
+                    self.articles[id] = (num, '(article manquant)', None, None )
+                    self.erreurs.append( 'Article {0} inconnu (métadonnées connues : numéro={1}, date_debut={2}, date_fin={3})'.format(id, num, date_debut, date_fin) )
             else:
-                id, section, num, date_debut, date_fin, bloc_textuel, cid = article
+                num, date_debut, date_fin, bloc_textuel, cid = article
 
                 articles = FabriqueArticle.db.all("""
-                    SELECT id, section, num, date_debut, date_fin, bloc_textuel, cid
+                    SELECT id, num, date_debut, date_fin, bloc_textuel
                     FROM articles
                     WHERE cid = '{0}'
                 """.format(cid))
 
                 for article in articles:
 
-                    aid, section, num, date_debut, date_fin, bloc_textuel, cid = article
+                    aid, num, date_debut, date_fin, bloc_textuel = article
 
-                    date_debut = datetime.date(*(time.strptime(date_debut, '%Y-%m-%d')[0:3])) if date_debut != '2999-01-01' else None
-                    date_fin = datetime.date(*(time.strptime(date_fin, '%Y-%m-%d')[0:3])) if date_fin != '2999-01-01' else None
-
-                    md = Markdown()
-                    texte_article = md.transformer_depuis_html( bloc_textuel )
-
-                    self.articles[aid] = (num, texte_article, date_debut, date_fin)
+                    self._cache_article( aid, num, date_debut, date_fin, bloc_textuel )
 
         num, texte_article, date_debut, date_fin = self.articles[id]
 
@@ -107,5 +114,34 @@ class FabriqueArticle:
         texte_retourne = FabriqueArticle.stockage.ecrire_ressource( id, niveaux, num.strip() if num else '', '', texte_article )
 
         return (num, texte_retourne, date_debut, date_fin)
+
+    def _cache_article( self, id, num, date_debut, date_fin, bloc_textuel ):
+
+        """
+        Fonction interne d’enregistrement dans le cache d’un article issu de la base de données.
+
+        :param id:
+            (str) ID de l’article.
+        :param num:
+            (str) Numéro de l’article.
+        :param date_debut:
+            (str) Date de début de vigueur demandée.
+        :param date_fin:
+            (str) Date de fin de vigueur autorisée par la requête.
+        :param bloc_textuel:
+            (str) Corps de l’article (en HTML).
+        :returns:
+            (None)
+        """
+
+        num = num.strip() if isinstance( num, str ) else ''
+
+        date_debut = datetime.date(*(time.strptime(date_debut, '%Y-%m-%d')[0:3])) if date_debut != '2999-01-01' else None
+        date_fin = datetime.date(*(time.strptime(date_fin, '%Y-%m-%d')[0:3])) if date_fin != '2999-01-01' else None
+
+        md = FabriqueArticle.stockage.organisation.syntaxe
+        texte_article = md.transformer_depuis_html( bloc_textuel )
+
+        self.articles[id] = (num, texte_article, date_debut, date_fin)
 
 # vim: set ts=4 sw=4 sts=4 et:

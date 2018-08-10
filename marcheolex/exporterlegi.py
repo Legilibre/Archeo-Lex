@@ -403,7 +403,7 @@ def creer_historique_texte(texte, format, dossier, bdd):
     
     if futur and not futur_debut:
         subprocess.call(['git', 'checkout', branche], cwd=dossier)
-    
+
     # Optimisation du dossier git
     subprocess.call(['git', 'gc'], cwd=dossier)
     subprocess.call('rm -rf .git/hooks .git/refs/heads .git/refs/tags .git/logs .git/COMMIT_EDITMSG .git/branches', cwd=dossier, shell=True)
@@ -411,6 +411,11 @@ def creer_historique_texte(texte, format, dossier, bdd):
 
     # Ajout du tag de date éditoriale
     subprocess.call(['git', 'tag', last_update.strftime('%Y%m%d-%H%M%S')], cwd=dossier)
+
+    if fs.fabrique_article.erreurs:
+        logger.info( 'Erreurs - voir le fichier doc/limitations.md :' )
+        for erreur in fs.fabrique_article.erreurs:
+            logger.info( '* ' + erreur )
 
     return dossier_final, nom_final, cid
 
