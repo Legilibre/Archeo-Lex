@@ -22,8 +22,6 @@ import legi.utils
 from marcheolex import logger
 from marcheolex import version_archeolex
 from marcheolex import natures
-from marcheolex.markdownlegi import creer_markdown
-from marcheolex.markdownlegi import creer_markdown_texte
 from marcheolex.utilitaires import chemin_texte
 from marcheolex.utilitaires import MOIS
 from marcheolex.utilitaires import MOIS2
@@ -279,9 +277,6 @@ def creer_historique_texte(texte, format, dossier, cache, bdd):
             subprocess.call(['git', 'checkout', '--orphan', branche], cwd=dossier)
             subprocess.call(['git', 'branch', '-D', 'junk'], cwd=dossier)
 
-    # Vérifier que les articles ont été transformés en Markdown ou les créer le cas échéant
-    #creer_markdown_texte((None, cid, None, None), db, cache)
-    
     # Sélection des versions du texte
     versions_texte_db = db.all("""
           SELECT debut, fin
