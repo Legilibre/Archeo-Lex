@@ -9,10 +9,19 @@
 # the LICENSE file for more details.
 
 # Imports
+
+# Abstractions
+from .Syntaxes import Syntaxes
 from .Organisations import Organisations
+from .Stockage import Stockage
+
+
+# Syntaxes
+from .Markdown import Markdown
+
+# Organisations
 from .FichierUnique import FichierUnique
 from .UnArticleParFichierSansHierarchie import UnArticleParFichierSansHierarchie
-from .Syntaxes import Syntaxes
-from .Markdown import Markdown
-from .Stockage import Stockage
+
+# Stockages
 from .StockageGitFichiers import StockageGitFichiers

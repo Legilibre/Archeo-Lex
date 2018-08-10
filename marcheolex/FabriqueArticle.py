@@ -15,8 +15,7 @@ import os
 import datetime
 import time
 from marcheolex.utilitaires import comp_infini_large
-from marcheolex.exports.Syntaxes import Syntaxes
-from marcheolex.exports.Markdown import Markdown
+from marcheolex.exports import *
 
 class FabriqueArticle:
 

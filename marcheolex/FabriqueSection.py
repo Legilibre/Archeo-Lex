@@ -16,6 +16,7 @@ import time
 import re
 from marcheolex.utilitaires import comp_infini_strict
 from marcheolex.utilitaires import comp_infini_large
+from marcheolex.exports import *
 
 class FabriqueSection:
 

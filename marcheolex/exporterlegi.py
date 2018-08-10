@@ -28,9 +28,7 @@ from marcheolex.utilitaires import chemin_texte
 from marcheolex.utilitaires import MOIS
 from marcheolex.utilitaires import MOIS2
 from marcheolex.utilitaires import comp_infini_strict
-from marcheolex.exports.Markdown import Markdown
-from marcheolex.exports.FichierUnique import FichierUnique
-from marcheolex.exports.StockageGitFichiers import StockageGitFichiers
+from marcheolex.exports import *
 from marcheolex.FabriqueArticle import FabriqueArticle
 from marcheolex.FabriqueSection import FabriqueSection
 
