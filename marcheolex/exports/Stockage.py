@@ -13,7 +13,18 @@
 
 class Stockage:
 
-    organisation = None
+    def __init__( self, organisation ):
+
+        """
+        Initialisation.
+
+        :param organisation:
+            (Organisations) Classe implémentant une certaine organisation des fichiers, par exemple un fichier unique ou un article par fichier.
+        :returns:
+            (None)
+        """
+
+        self.organisation = organisation
 
     def ecrire_ressource( self, id, parents, num, titre, texte ):
 

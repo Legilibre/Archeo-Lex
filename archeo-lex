@@ -19,7 +19,6 @@ from marcheolex import logging, logger
 from marcheolex import version_archeolex
 from marcheolex.exporterlegi import creer_historique_legi
 from marcheolex.pousserlestextes import pousser_les_textes_sur_gitlab
-from marcheolex.utilitaires import nop
 
 # Manuel d’aide
 aide = ('''Usage: archeo-lex [--aide] [--debug] [--help] [--version] [--textes=<TEXTES>] [--base=<BASE>] [--livraison=<DATE>] [--exporterlegi] [--mise-a-jour | --nouveau] [--dialecte=<DIALECTE>] [--historique=<HISTORIQUE>] [--metadonnees] [--organisation=<TYPE>] [--bddlegi=<fichier>] [--dossier=<dossier>] [--gitlab-host=<GITHOST>] [--gitlab-token=<GITTOKEN>] [--gitlab-group=<GITGROUP>] [--git-server=<GITSERVER>] [--git-key=<GITKEY>] [--calcules=<FICHIER>]

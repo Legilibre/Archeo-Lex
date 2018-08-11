@@ -21,9 +21,25 @@ class FichierUnique( Organisations ):
     Ce fichier doit être inscrit dans la propriété 'fichier' de la classe.
     """
 
-    fichier = ''
-    extension = ''
-    texte = ''
+    def __init__( self, syntaxe, fichier, extension ):
+
+        """
+        Initialisation.
+
+        :param syntaxe:
+            (Syntaxes) Classe implémentant une certaine syntaxe légère de texte brut, comme Markdown.
+        :param fichier:
+            (str) Nom de fichier.
+        :param extension:
+            (str) Extension du fichier.
+        :returns:
+            (None)
+        """
+
+        super(FichierUnique, self).__init__( syntaxe )
+        self.fichier = fichier
+        self.extension = '.' + extension if extension else ''
+        self.texte = ''
 
     def obtenir_nom_fichier( self, id, parents, num, titre ):
 

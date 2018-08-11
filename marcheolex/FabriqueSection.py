@@ -164,6 +164,7 @@ class FabriqueSection:
 
                 # Le cache de section est valide et peut être utilisé pour ajouter le texte de la section
                 # L’intervalle de vigueur du cache de sections comprend l’intervalle courant de vigueur du texte (cdebut <= debut_vigueur_texte and fin_vigueur_texte < cfin)
+                # FIXME: pour le format "repertoires-simple", il faut désactiver ce "if" sinon certains fichier manquent, ajouter un paramètre ou autre mécanisme
                 if comp_infini_large( cdebut, debut_vigueur_texte ) and comp_infini_large( fin_vigueur_texte, cfin ):
                     texte = texte + ctexte
 

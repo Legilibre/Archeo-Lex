@@ -14,9 +14,7 @@ from . import UnArticleParFichierSansHierarchie
 from . import FichierUnique
 
 
-class StockageGitFichiers:
-
-    extension = ''
+class StockageGitFichiers( Stockage ):
 
     def ecrire_ressource( self, id, parents, num, titre, texte ):
 
@@ -41,9 +39,10 @@ class StockageGitFichiers:
 
         if isinstance( self.organisation, UnArticleParFichierSansHierarchie ):
             nom_fichier = self.organisation.obtenir_nom_fichier( id, parents, num, titre )
-            f_texte = open( nom_fichier, 'w' )
-            f_texte.write( texte )
-            f_texte.close()
+            if nom_fichier:
+                f_texte = open( nom_fichier, 'w' )
+                f_texte.write( texte + '\n' )
+                f_texte.close()
 
         return texte_retourne
 

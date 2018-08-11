@@ -297,16 +297,15 @@ def creer_historique_texte(texte, format, dossier, bdd):
         dates_fin_texte.append( vt )
     versions_texte = sorted(set(dates_texte).union(set(dates_fin_texte)))
     
-    sql_texte = "cid = '{0}'".format(cid)
     versions_texte = sorted(list(set(versions_texte)))
 
     markdown = Markdown()
-    fichier_unique = FichierUnique()
-    fichier_unique.syntaxe = markdown
-    fichier_unique.fichier = 'truc'
-    fichier_unique.extension = '.md'
-    stockage = StockageGitFichiers()
-    stockage.organisation = fichier_unique
+    if format['organisation'] == 'repertoires-simple':
+        un_article_par_fichier_sans_hierarchie = UnArticleParFichierSansHierarchie(markdown, dossier, 'md')
+        stockage = StockageGitFichiers(un_article_par_fichier_sans_hierarchie)
+    else:
+        fichier_unique = FichierUnique(markdown, nom_fichier, 'md')
+        stockage = StockageGitFichiers(fichier_unique)
     fa = FabriqueArticle( db, stockage, True )
     fs = FabriqueSection( fa )
 
@@ -348,8 +347,6 @@ def creer_historique_texte(texte, format, dossier, bdd):
                 subprocess.call(['git', 'checkout', '-b', 'futur-'+branche], cwd=dossier)
             futur = True
 
-        sql = sql_texte + " AND debut <= '{0}' AND ( fin >= '{1}' OR fin == '2999-01-01' OR etat == 'VIGUEUR' )".format(debut,fin)
-
         # Créer l’en-tête
         date_fr = '{} {} {}'.format(debut.day, MOIS2[int(debut.month)], debut.year)
         if debut.day == 1:
@@ -361,14 +358,9 @@ def creer_historique_texte(texte, format, dossier, bdd):
                   + '\n' \
                   + '\n'
 
-        # Enregistrement du fichier
+        # Retrait des fichiers des anciennes versions
         if format['organisation'] != 'fichier-unique':
-            f_texte = open('README.md', 'w')
-            f_texte.write(contenu)
-            f_texte.close()
-
-            # Retrait des fichiers des anciennes versions
-            subprocess.call('rm *.md', cwd=dossier, shell=True)
+            subprocess.call('rm -f *.md', cwd=dossier, shell=True)
 
         # Créer les sections (donc tout le texte)
         contenu, fin_vigueur = fs.obtenir_texte_section( 0, None, cid, debut, fin )
@@ -418,80 +410,5 @@ def creer_historique_texte(texte, format, dossier, bdd):
             logger.info( '* ' + erreur )
 
     return dossier_final, nom_final, cid
-
-
-def creer_sections(texte, niveau, parent, version_texte, sql, arborescence, format, dossier, db, cache):
- 
-    marque_niveau = ''
-    for i in range(niveau):
-        marque_niveau = marque_niveau + '#'
-
-    sql_section_parente = "parent = '{0}'".format(parent)
-    if parent == None:
-        sql_section_parente = "parent IS NULL OR parent = ''"
-
-    sections = db.all("""
-        SELECT *
-        FROM sommaires
-        WHERE ({0})
-          AND ({1})
-        ORDER BY position
-    """.format(sql_section_parente, sql))
-
-    # Itérer sur les sections de cette section
-    for section in sections:
-
-        rcid, rparent, relement, rdebut, rfin, retat, rnum, rposition, r_source = section
-
-        if comp_infini_strict(version_texte[0], rdebut) or (comp_infini_strict(rfin, version_texte[1]) and retat != 'VIGUEUR'):
-            raise Exception(u'section non valide (version texte de {} a {}, version section de {} à {})'.format(version_texte[0], version_texte[1], rdebut, rfin))
-            return texte
-
-        # L’élément est un titre de sommaire, rechercher son texte et l’ajouter à la liste
-        if relement[4:8] == 'SCTA':
-            tsection = db.one("""
-                SELECT titre_ta, commentaire
-                FROM sections
-                WHERE id='{0}'
-            """.format(relement))
-            rarborescence = arborescence
-            rarborescence.append( tsection[0].strip() )
-            texte = texte                                  \
-                    + marque_niveau + ' ' + tsection[0].strip() + '\n' \
-                    + '\n'
-            texte = creer_sections(texte, niveau+1, relement, version_texte, sql, rarborescence, format, dossier, db, cache)
-
-        # L’élément est un article, l’ajouter à la liste
-        elif relement[4:8] == 'ARTI':
-
-            article = db.one("""
-                SELECT id, section, num, date_debut, date_fin, bloc_textuel, cid
-                FROM articles
-                WHERE id = '{0}'
-            """.format(relement))
-            id, section, num, date_debut, date_fin, bloc_textuel, cid = article
-            if comp_infini_strict(version_texte[0], date_debut) or (comp_infini_strict(date_fin, version_texte[1]) and retat != 'VIGUEUR'):
-                continue
-            chemin_markdown = os.path.join(cache, 'markdown', cid, id + '.md')
-            f_article = open(chemin_markdown, 'r')
-            texte_article = f_article.read()
-            f_article.close()
- 
-            texte = texte                                                                    \
-                    + marque_niveau + ' Article' + (' ' + num.strip() if num else '') + '\n' \
-                    + '\n'                                                                   \
-                    + texte_article + '\n'                                                   \
-                    + '\n'                                                                   \
-                    + '\n'
-
-            # Format « 1 dossier = 1 article »
-            fichier = os.path.join(dossier, 'Article_' + (num.replace(' ', '_') if num else relement) + '.md')
-            if format['organisation'] == 'repertoires-simple':
-                texte_article = texte_article + '\n'
-                f_texte = open(fichier, 'w')
-                f_texte.write(texte_article)
-                f_texte.close()
-
-    return texte
 
 # vim: set ts=4 sw=4 sts=4 et:

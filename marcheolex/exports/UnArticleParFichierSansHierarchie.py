@@ -9,6 +9,7 @@
 # the LICENSE file for more details.
 
 # Imports
+import os
 from . import Organisations
 from . import Syntaxes
 
@@ -19,7 +20,24 @@ class UnArticleParFichierSansHierarchie( Organisations ):
     Les articles sont écrits à raison d’un fichier par article sous le nom 'Article_%numéro%'.
     """
 
-    extension = ''
+    def __init__( self, syntaxe, dossier, extension ):
+
+        """
+        Initialisation.
+
+        :param syntaxe:
+            (Syntaxes) Classe implémentant une certaine syntaxe légère de texte brut, comme Markdown.
+        :param dossier:
+            (str) Dossier contenant les fichiers du texte de loi.
+        :param extension:
+            (str) Extension du fichier.
+        :returns:
+            (None)
+        """
+
+        super(UnArticleParFichierSansHierarchie, self).__init__( syntaxe )
+        self.dossier = dossier
+        self.extension = '.' + extension if extension else ''
 
     def obtenir_nom_fichier( self, id, parents, num, titre ):
 
@@ -38,11 +56,14 @@ class UnArticleParFichierSansHierarchie( Organisations ):
             (string|None) Emplacement du fichier ou None pour ne pas écrire la ressource.
         """
 
+        if not self.dossier:
+            raise Exception()
+
         if id[4:8] == 'ARTI':
             if num:
-                return 'Article_' + num + self.extension
+                return os.path.join( self.dossier, 'Article_' + num + self.extension )
             else:
-                return 'Article_' + id + self.extension
+                return os.path.join( self.dossier, 'Article_' + id + self.extension )
 
         return None
 

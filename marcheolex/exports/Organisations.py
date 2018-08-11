@@ -13,7 +13,18 @@
 
 class Organisations:
 
-    syntaxe = None
+    def __init__( self, syntaxe ):
+
+        """
+        Initialisation.
+
+        :param syntaxe:
+            (Syntaxes) Classe implémentant une certaine syntaxe légère de texte brut, comme Markdown.
+        :returns:
+            (None)
+        """
+
+        self.syntaxe = syntaxe
 
     def obtenir_nom_fichier( self, id, parents, num, titre ):
 

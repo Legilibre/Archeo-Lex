@@ -111,7 +111,7 @@ class FabriqueArticle:
 
         # Enregistrement
         niveaux = [ False ] * niveau
-        texte_retourne = FabriqueArticle.stockage.ecrire_ressource( id, niveaux, num.strip() if num else '', '', texte_article )
+        texte_retourne = FabriqueArticle.stockage.ecrire_ressource( id, niveaux, num.strip() if num else '', '', texte_article.strip() )
 
         return (num, texte_retourne, date_debut, date_fin)
 
