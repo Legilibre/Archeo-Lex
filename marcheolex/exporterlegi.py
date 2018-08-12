@@ -183,8 +183,10 @@ def creer_historique_texte(arg):
     if nature in natures.keys():
         nature_min = natures[nature]
         nature_min_pluriel = re.sub( r'([- ])', r's\1', nature_min ) + 's'
-        if not os.path.exists(os.path.join(dossier, nature_min_pluriel)):
+        try:
             os.makedirs(os.path.join(dossier, nature_min_pluriel))
+        except FileExistsError:
+            pass
         sousdossier = nature_min_pluriel
 
     mise_a_jour = True
