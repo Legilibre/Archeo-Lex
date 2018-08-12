@@ -40,7 +40,6 @@ Sur une page affichant les différences entre versions ([exemple](https://github
   ```
 
 Pour information, les paquets suivants sont disponibles sur Debian stretch :
-* python3-path
 * python3-tqdm
 * python3-docopt
 * python3-html2text

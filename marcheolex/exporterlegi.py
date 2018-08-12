@@ -18,7 +18,6 @@ import time
 import re
 from multiprocessing import Pool
 from pytz import timezone
-from path import Path
 import legi.utils
 from marcheolex import logger
 from marcheolex import version_archeolex
@@ -146,7 +145,7 @@ def creer_historique_texte(arg):
     last_update = paris.localize( datetime.datetime(*(time.strptime(last_update, '%Y%m%d-%H%M%S')[0:6])) )
     logger.info('Dernière mise à jour de la base LEGI : {}'.format(last_update.isoformat()))
 
-    Path(dossier).mkdir_p()
+    os.makedirs(dossier, exist_ok=True)
     entree_texte = db.one("""
         SELECT id, nature, titre, titrefull, etat, date_debut, date_fin, num, visas, signataires, tp, nota, abro, rect, cid, mtime
         FROM textes_versions
@@ -183,10 +182,7 @@ def creer_historique_texte(arg):
     if nature in natures.keys():
         nature_min = natures[nature]
         nature_min_pluriel = re.sub( r'([- ])', r's\1', nature_min ) + 's'
-        try:
-            os.makedirs(os.path.join(dossier, nature_min_pluriel))
-        except FileExistsError:
-            pass
+        os.makedirs(os.path.join(dossier, nature_min_pluriel), exist_ok=True)
         sousdossier = nature_min_pluriel
 
     mise_a_jour = True
@@ -197,14 +193,14 @@ def creer_historique_texte(arg):
         sousdossier = os.path.join(nature_min_pluriel, identifiant)
         if not os.path.exists(os.path.join(dossier, sousdossier)):
             mise_a_jour = False
-        Path(os.path.join(dossier, sousdossier)).mkdir_p()
+        os.makedirs(os.path.join(dossier, sousdossier), exist_ok=True)
     elif nature and (nature in natures.keys()) and entree_texte[2]:
         identifiant = entree_texte[2][0].lower()+entree_texte[2][1:].replace(' ','_')
         nom_fichier = identifiant
         sousdossier = os.path.join(nature_min_pluriel, identifiant)
         if not os.path.exists(os.path.join(dossier, sousdossier)):
             mise_a_jour = False
-        Path(os.path.join(dossier, sousdossier)).mkdir_p()
+        os.makedirs(os.path.join(dossier, sousdossier), exist_ok=True)
     else:
         raise Exception('Type bizarre ou inexistant')
         sousdossier = os.path.join(sousdossier, nom)
@@ -213,8 +209,7 @@ def creer_historique_texte(arg):
     dossier_final = sousdossier
     nom_final = identifiant
     sousdossier = '.'
-    if not os.path.exists(dossier):
-        os.makedirs(dossier)
+    os.makedirs(dossier, exist_ok=True)
     fichier = os.path.join(dossier, nom_fichier + '.md')
 
     # Créer le dépôt Git avec comme branche maîtresse 'texte' ou 'articles'

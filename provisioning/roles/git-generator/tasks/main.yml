@@ -15,4 +15,3 @@
     - docopt
     - peewee
     - lxml
-    - path.py

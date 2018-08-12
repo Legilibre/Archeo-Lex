@@ -2,7 +2,6 @@ docopt==0.6.2
 legi==0.2
 libarchive-c==2.7
 lxml==4.1.1
-path.py==10.5
 peewee==2.10.2
 pytz==2017.3
 tqdm
