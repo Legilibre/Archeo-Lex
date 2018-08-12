@@ -390,7 +390,7 @@ def creer_historique_texte(texte, format, dossier, bdd):
         # Enregistrement du fichier
         if format['organisation'] == 'fichier-unique':
             f_texte = open(fichier, 'w')
-            f_texte.write(contenu)
+            f_texte.write(contenu+'\n')
             f_texte.close()
         
         # Ajouter les fichiers dans Git
