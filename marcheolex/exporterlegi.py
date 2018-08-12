@@ -16,6 +16,7 @@ import subprocess
 import datetime
 import time
 import re
+from multiprocessing import Pool
 from pytz import timezone
 from path import Path
 import legi.utils
@@ -30,7 +31,7 @@ from marcheolex.FabriqueArticle import FabriqueArticle
 from marcheolex.FabriqueSection import FabriqueSection
 
 
-def creer_historique_legi(textes, format, dossier, bdd):
+def creer_historique_legi(textes, format, dossier, bdd, production):
 
     if os.path.exists( textes ):
         f_textes = open( textes, 'r' )
@@ -104,16 +105,21 @@ def creer_historique_legi(textes, format, dossier, bdd):
     if len( liste_textes ) < 100:
         print( '\nListe de textes :\n' + '\n'.join( liste_textes ) + '\n' )
 
-    textes_traites = []
-    for texte in liste_textes:
-        print( '> Texte {0}'.format( texte ) )
-        texte_traite = creer_historique_texte(texte, format, dossier, bdd)
-        textes_traites.append( texte_traite )
+    args = [(texte, format, dossier, bdd) for texte in liste_textes]
+    if len(liste_textes) == 1 or os.cpu_count() == 1 or not production:
+        textes_traites = list(map(creer_historique_texte, args))
+    else:
+        nb_procs = min( len(liste_textes), os.cpu_count() )
+        textes_traites = list(Pool(nb_procs).map(creer_historique_texte, args))
 
     return textes_traites
 
 
-def creer_historique_texte(texte, format, dossier, bdd):
+def creer_historique_texte(arg):
+
+    texte, format, dossier, bdd = arg
+
+    logger.info( '> Texte {0}'.format( texte ) )
 
     # Constantes
     paris = timezone( 'Europe/Paris' )
