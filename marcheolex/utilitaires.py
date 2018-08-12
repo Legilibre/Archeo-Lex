@@ -151,9 +151,4 @@ def min_date_infini( x, y ):
         return x
     return y
 
-
-def nop():
-    
-    return
-
 # vim: set ts=4 sw=4 sts=4 et:
