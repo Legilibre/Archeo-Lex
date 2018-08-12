@@ -412,7 +412,6 @@ def creer_historique_texte(arg):
         subprocess.call(['git', 'commit', '--author="Législateur <>"', '--date="' + str(debut_datetime) + '"', '-m', 'Version consolidée au {}'.format(date_fr), '-q', '--no-status'], cwd=dossier, env={ 'GIT_COMMITTER_DATE': last_update.isoformat(), 'GIT_COMMITTER_NAME': 'Législateur', 'GIT_COMMITTER_EMAIL': '' })
         
         if fin == None or str(fin) == '2999-01-01':
-            print(fin)
             logger.info(('Version {:'+wnbver+'} (du {} à  maintenant) enregistrée').format(i_version+1, debut))
         else:
             logger.info(('Version {:'+wnbver+'} (du {} au {}) enregistrée').format(i_version+1, debut, fin))
