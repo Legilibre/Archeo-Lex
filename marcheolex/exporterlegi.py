@@ -326,6 +326,8 @@ def creer_historique_texte(texte, format, dossier, bdd):
     # - rechercher les sections et articles associés
     # - créer le fichier texte au format demandé
     # - commiter le fichier
+    wnbver = str(len(str(len(versions_texte))))
+    erreur_version = False
     for (i_version, version_texte) in enumerate(versions_texte):
         
         # Passer les versions 'nulles'
@@ -377,21 +379,40 @@ def creer_historique_texte(texte, format, dossier, bdd):
 
         contenu = contenu.strip()
 
+        if not contenu:
+            if fin == None or str(fin) == '2999-01-01':
+                logger.info(('Version {:'+wnbver+'} (du {} à  maintenant) non-enregistrée car vide').format(i_version+1, debut))
+            else:
+                logger.info(('Version {:'+wnbver+'} (du {} au {}) non-enregistrée car vide').format(i_version+1, debut, fin))
+            erreur_version = True
+            continue
+
         # Enregistrement du fichier
         if format['organisation'] == 'fichier-unique':
             f_texte = open(fichier, 'w')
             f_texte.write(contenu)
             f_texte.close()
         
-        # Exécuter Git
+        # Ajouter les fichiers dans Git
         subprocess.call(['git', 'add', '.'], cwd=dossier)
+
+        if not subprocess.check_output(['git', 'status', '--ignored', '-s'], cwd=dossier):
+            if fin == None or str(fin) == '2999-01-01':
+                logger.info(('Version {:'+wnbver+'} (du {} à  maintenant) non-enregistrée car identique à la précédente').format(i_version+1, debut))
+            else:
+                logger.info(('Version {:'+wnbver+'} (du {} au {}) non-enregistrée car identique à la précédente').format(i_version+1, debut, fin))
+            erreur_version = True
+            continue
+
+        # Enregistrer les fichiers dans Git
         #subprocess.call(['git', 'commit', '--author="Législateur <>"', '--date="' + str(debut_datetime) + '"', '-m', 'Version consolidée au {}\n\nVersions :\n- base LEGI : {}\n- programme Archéo Lex : {}'.format(date_fr, date_base_legi, version_archeolex), '-q', '--no-status'], cwd=dossier)
         subprocess.call(['git', 'commit', '--author="Législateur <>"', '--date="' + str(debut_datetime) + '"', '-m', 'Version consolidée au {}'.format(date_fr), '-q', '--no-status'], cwd=dossier, env={ 'GIT_COMMITTER_DATE': last_update.isoformat(), 'GIT_COMMITTER_NAME': 'Législateur', 'GIT_COMMITTER_EMAIL': '' })
         
         if fin == None or str(fin) == '2999-01-01':
-            logger.info('Version {} enregistrée (du {} à maintenant)'.format(i_version+1, debut))
+            print(fin)
+            logger.info(('Version {:'+wnbver+'} (du {} à  maintenant) enregistrée').format(i_version+1, debut))
         else:
-            logger.info('Version {} enregistrée (du {} au {})'.format(i_version+1, debut, fin))
+            logger.info(('Version {:'+wnbver+'} (du {} au {}) enregistrée').format(i_version+1, debut, fin))
     
     if futur and not futur_debut:
         subprocess.call(['git', 'checkout', branche], cwd=dossier)
@@ -403,6 +424,9 @@ def creer_historique_texte(texte, format, dossier, bdd):
 
     # Ajout du tag de date éditoriale
     subprocess.call(['git', 'tag', last_update.strftime('%Y%m%d-%H%M%S')], cwd=dossier)
+
+    if erreur_version:
+        logger.info( 'Erreurs détectées avec des versions vides ou identiques aux précédentes : erreurs dans la base LEGI (en général) ou dans Archéo Lex, voir le fichier doc/limitations.md.' )
 
     if fs.fabrique_article.erreurs:
         logger.info( 'Erreurs - voir le fichier doc/limitations.md :' )
