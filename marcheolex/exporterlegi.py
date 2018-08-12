@@ -279,9 +279,10 @@ def creer_historique_texte(arg):
 
     # Sélection des versions du texte
     versions_texte_db = db.all("""
-          SELECT debut, fin
+          SELECT DISTINCT debut, fin
           FROM sommaires
           WHERE cid = '{0}'
+            AND debut < fin
           ORDER BY debut
     """.format(cid))
     dates_texte = []
