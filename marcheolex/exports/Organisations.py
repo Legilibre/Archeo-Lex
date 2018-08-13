@@ -51,23 +51,10 @@ class Organisations:
             (list((str|None,str))) Liste de fichiers et texte de la ressource.
         """
 
-        return []
+        nom_fichier = self.obtenir_nom_fichier( id, parents, num, titre )
 
-    def ecrire_texte( self, id, titre, texte ):
-
-        """
-        Écrire le fichier la version du texte.
-
-        :param id:
-            (string) ID de la ressource.
-        :param titre:
-            (string) Titre de la ressource.
-        :param texte:
-            (string|None) Texte de la ressource.
-        :returns:
-            (list((str|None,str))) Liste de fichiers et texte de la ressource.
-        """
-
+        if nom_fichier:
+            return [(nom_fichier, texte)]
         return []
 
 

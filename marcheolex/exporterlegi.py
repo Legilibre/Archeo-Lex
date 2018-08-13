@@ -391,7 +391,7 @@ def creer_historique_texte(arg):
             nota = fs.stockage.ecrire_ressource( 'POST', [False], '', 'Nota', nota )
 
         # Enregistrement du fichier global
-        fs.stockage.ecrire_texte( cid, nom_fichier, contenu )
+        fs.stockage.ecrire_ressource( cid, [], '', nom_fichier, contenu )
 
         if not subprocess.check_output(['git', 'status', '--ignored', '-s'], cwd=dossier):
             if fin == None or str(fin) == '2999-01-01':

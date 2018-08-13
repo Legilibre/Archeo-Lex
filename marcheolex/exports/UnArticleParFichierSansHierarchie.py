@@ -10,7 +10,6 @@
 
 # Imports
 from . import Organisations
-from . import Syntaxes
 
 
 class UnArticleParFichierSansHierarchie( Organisations ):
@@ -56,29 +55,6 @@ class UnArticleParFichierSansHierarchie( Organisations ):
                 return 'Article_' + id + self.extension
 
         return None
-
-    def ecrire_ressource( self, id, parents, num, titre, texte ):
-
-        """
-        :param id:
-            (string) ID de la ressource.
-        :param parents:
-            (liste de strings) Niveaux parents de la ressource.
-        :param num:
-            (string) Numéro de la ressource par rapport aux autres de même niveau.
-        :param titre:
-            (string) Titre de la ressource.
-        :param texte:
-            (string|None) Texte de la ressource.
-        :returns:
-            (list((str|None,str))) Liste de fichiers et texte de la ressource.
-        """
-
-        nom_fichier = self.obtenir_nom_fichier( id, parents, num, titre )
-
-        if nom_fichier:
-            return [(nom_fichier, texte)]
-        return []
 
 
 # vim: set ts=4 sw=4 sts=4 et:

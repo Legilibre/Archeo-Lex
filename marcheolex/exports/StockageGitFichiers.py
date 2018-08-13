@@ -12,8 +12,6 @@
 import os
 import subprocess
 from . import Stockage
-from . import UnArticleParFichierSansHierarchie
-from . import FichierUnique
 
 
 class StockageGitFichiers( Stockage ):
@@ -48,35 +46,10 @@ class StockageGitFichiers( Stockage ):
                 else:
                     f.write( '' )
 
-
-    def ecrire_texte( self, id, titre, texte ):
-
-        """
-        Écrire le fichier la version du texte.
-
-        :param id:
-            (string) ID de la ressource.
-        :param titre:
-            (string) Titre de la ressource.
-        :param texte:
-            (string|None) Texte de la ressource.
-        :returns:
-            (None)
-        """
-
-        fichiers = self.organisation.ecrire_texte( id, titre, texte )
-
-        # Enregistrer les fichiers
-        for fichier in fichiers:
-            with open( os.path.join( self.dossier, fichier[0] ), 'w' ) as f:
-                contenu = fichier[1].strip()
-                if contenu:
-                    f.write( fichier[1].strip() + '\n' )
-                else:
-                    f.write( '' )
-
-        # Ajouter les fichiers dans Git
-        subprocess.call(['git', 'add', '.'], cwd=self.dossier)
+        # Texte entier
+        if len(parents) == 0:
+            # Ajouter les fichiers dans Git
+            subprocess.call(['git', 'add', '.'], cwd=self.dossier)
 
 
 # vim: set ts=4 sw=4 sts=4 et:

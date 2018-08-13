@@ -50,22 +50,5 @@ class Stockage:
 
         pass
 
-    def ecrire_texte( self, id, titre, texte ):
-
-        """
-        Écrire le fichier la version du texte.
-
-        :param id:
-            (string) ID de la ressource.
-        :param titre:
-            (string) Titre de la ressource.
-        :param texte:
-            (string|None) Texte de la ressource.
-        :returns:
-            (None)
-        """
-
-        pass
-
 
 # vim: set ts=4 sw=4 sts=4 et:
