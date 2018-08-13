@@ -24,6 +24,7 @@ class FabriqueSection:
     db = None
     cache = None
     stockage = None
+    syntaxe = None
 
     # sections = {
     #     'LEGISCTA012345678901': ('LEGISCTA123456789012', 2, 'Titre II', 'De la loi', 1791-01-01, None, 2015-01-01, 2018-01-01, 'Titre II - De la loi\n\nArticle 3\n\nLes assujettis sont tenus d’aprendre la loi par cœur.\n\nArticle 4\n\nTout contrevenant aux dispositions de l’article 3 se voit remettre un 0/42 à l’examen de citoyenneté.')
@@ -54,7 +55,10 @@ class FabriqueSection:
         self.db = self.fabrique_article.db
         self.cache = self.fabrique_article.cache
         self.stockage = fabrique_article.stockage
+        self.syntaxe = fabrique_article.syntaxe
+
         self.sections = {}
+        self.desactiver_cache = isinstance( self.stockage.organisation, UnArticleParFichierSansHierarchie )
 
 
     def effacer_cache():
@@ -165,7 +169,9 @@ class FabriqueSection:
                 # Le cache de section est valide et peut être utilisé pour ajouter le texte de la section
                 # L’intervalle de vigueur du cache de sections comprend l’intervalle courant de vigueur du texte (cdebut <= debut_vigueur_texte and fin_vigueur_texte < cfin)
                 # FIXME: pour le format "repertoires-simple", il faut désactiver ce "if" sinon certains fichier manquent, ajouter un paramètre ou autre mécanisme
-                if comp_infini_large( cdebut, debut_vigueur_texte ) and comp_infini_large( fin_vigueur_texte, cfin ):
+                if not self.desactiver_cache and comp_infini_large( cdebut, debut_vigueur_texte ) and comp_infini_large( fin_vigueur_texte, cfin ):
+                    niveaux = [ False ] * (niveau+1)
+                    self.stockage.ecrire_ressource( section, niveaux, snum, stitre_ta, ctexte )
                     texte = texte + ctexte
 
                     # Si la section a une fin de vigueur, celle-ci devient une borne maximale de fin de vigueur des sections parentes
@@ -174,13 +180,14 @@ class FabriqueSection:
 
                 else:
                     niveaux = [ False ] * (niveau+1)
-                    texte_titre_ta = self.stockage.ecrire_ressource( section, niveaux, snum.strip() if snum else '', stitre_ta, '' )
-                    valeur_section = self.obtenir_texte_section( niveau+1, section, cid, debut_vigueur_texte, fin_vigueur_texte )
-                    texte_section, fin_vigueur_section = valeur_section
-                    texte_section = texte_titre_ta + texte_section
+                    snum = snum.strip() if snum else ''
+                    titre_formate = self.syntaxe.obtenir_titre( niveaux, stitre_ta )
+                    texte_section, fin_vigueur_section = self.obtenir_texte_section( niveau+1, section, cid, debut_vigueur_texte, fin_vigueur_texte )
+                    texte_section = titre_formate + texte_section
+                    texte = texte + texte_section
+                    self.stockage.ecrire_ressource( section, niveaux, snum, stitre_ta, texte_section )
 
                     self.sections[section][id] = (sposition, snum, stitre_ta, sdebut, sfin, debut_vigueur_texte, fin_vigueur_section, texte_section)
-                    texte = texte + texte_section
 
                     # Si la section a une fin de vigueur, celle-ci devient une borne maximale de fin de vigueur des sections parentes
                     if fin_vigueur_section:

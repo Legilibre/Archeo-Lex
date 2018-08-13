@@ -13,19 +13,6 @@
 
 class Organisations:
 
-    def __init__( self, syntaxe ):
-
-        """
-        Initialisation.
-
-        :param syntaxe:
-            (Syntaxes) Classe implémentant une certaine syntaxe légère de texte brut, comme Markdown.
-        :returns:
-            (None)
-        """
-
-        self.syntaxe = syntaxe
-
     def obtenir_nom_fichier( self, id, parents, num, titre ):
 
         """
@@ -45,7 +32,7 @@ class Organisations:
 
         raise NotImplementedError
 
-    def ecrire_ressource( self, id, parents, titre, texte ):
+    def ecrire_ressource( self, id, parents, num, titre, texte ):
 
         """
         Écrire la ressource en cours.
@@ -61,18 +48,27 @@ class Organisations:
         :param texte:
             (string|None) Texte de la ressource.
         :returns:
-            (string) Texte de la ressource.
+            (list((str|None,str))) Liste de fichiers et texte de la ressource.
         """
 
-        raise NotImplementedError
+        return []
 
-    def ecrire_texte( self ):
+    def ecrire_texte( self, id, titre, texte ):
 
         """
         Écrire le fichier la version du texte.
+
+        :param id:
+            (string) ID de la ressource.
+        :param titre:
+            (string) Titre de la ressource.
+        :param texte:
+            (string|None) Texte de la ressource.
+        :returns:
+            (list((str|None,str))) Liste de fichiers et texte de la ressource.
         """
 
-        pass
+        return []
 
 
 # vim: set ts=4 sw=4 sts=4 et:

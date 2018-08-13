@@ -90,7 +90,8 @@ class Markdown( Syntaxes ):
         Obtenir le titre dans la syntaxe représentée.
 
         :param parents:
-            (liste de strings) Niveaux parents de la ressource.  :param texte:
+            (liste de strings) Niveaux parents de la ressource.
+        :param texte:
             (string) Texte du titre.
         :returns:
             (string|None) Texte du titre dans la syntaxe représentée.

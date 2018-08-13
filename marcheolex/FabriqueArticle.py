@@ -19,19 +19,24 @@ from marcheolex.exports import *
 
 class FabriqueArticle:
 
-    def __init__( self, db, stockage, cache = None ):
+    def __init__( self, db, stockage, syntaxe, cache = None ):
 
         """
         :param db:
             Base de donnée.
+        :param stockage:
+            (Stockage) Classe modélisant le stockage.
+        :param syntaxe:
+            (Syntaxes) Classe modélisant la syntaxe.
         :param cache:
             boolean Utilisation d’un cache mémoire
         """
 
-        FabriqueArticle.db = db
-        FabriqueArticle.stockage = stockage
-
+        self.db = db
+        self.stockage = stockage
+        self.syntaxe = syntaxe
         self.cache = cache
+
         self.articles = {}
         self.erreurs = []
 
@@ -60,13 +65,13 @@ class FabriqueArticle:
 
         if id not in self.articles:
 
-            article = FabriqueArticle.db.one("""
+            article = self.db.one("""
                 SELECT num, date_debut, date_fin, bloc_textuel, cid
                 FROM articles
                 WHERE id = '{0}'
             """.format(id))
             if not article:
-                article = FabriqueArticle.db.one("""
+                article = self.db.one("""
                     SELECT num, debut, fin
                     FROM sommaires
                     WHERE element = '{0}'
@@ -82,7 +87,7 @@ class FabriqueArticle:
             else:
                 num, date_debut, date_fin, bloc_textuel, cid = article
 
-                articles = FabriqueArticle.db.all("""
+                articles = self.db.all("""
                     SELECT id, num, date_debut, date_fin, bloc_textuel
                     FROM articles
                     WHERE cid = '{0}'
@@ -109,9 +114,16 @@ class FabriqueArticle:
         if not self.cache:
             self.effacer_cache()
 
-        # Enregistrement
+        # Assemblage du texte
         niveaux = [ False ] * niveau
-        texte_retourne = FabriqueArticle.stockage.ecrire_ressource( id, niveaux, num.strip() if num else '', '', texte_article.strip() )
+        num = num.strip() if num else ''
+        texte_article = texte_article.strip()
+        titre = 'Article ' + num if num else 'Article (non-numéroté)'
+        titre_formate = self.syntaxe.obtenir_titre( niveaux, titre )
+        texte_retourne = titre_formate + texte_article + '\n\n'
+
+        # Enregistrement
+        self.stockage.ecrire_ressource( id, niveaux, num, '', texte_article )
 
         return (num, texte_retourne, date_debut, date_fin)
 
@@ -139,8 +151,7 @@ class FabriqueArticle:
         date_debut = datetime.date(*(time.strptime(date_debut, '%Y-%m-%d')[0:3])) if date_debut != '2999-01-01' else None
         date_fin = datetime.date(*(time.strptime(date_fin, '%Y-%m-%d')[0:3])) if date_fin != '2999-01-01' else None
 
-        md = FabriqueArticle.stockage.organisation.syntaxe
-        texte_article = md.transformer_depuis_html( bloc_textuel )
+        texte_article = self.syntaxe.transformer_depuis_html( bloc_textuel )
 
         self.articles[id] = (num, texte_article, date_debut, date_fin)
 

@@ -13,11 +13,13 @@
 
 class Stockage:
 
-    def __init__( self, organisation ):
+    def __init__( self, dossier, organisation ):
 
         """
         Initialisation.
 
+        :param dossier:
+            (str) Nom du dossier conteneur.
         :param organisation:
             (Organisations) Classe implémentant une certaine organisation des fichiers, par exemple un fichier unique ou un article par fichier.
         :returns:
@@ -25,6 +27,7 @@ class Stockage:
         """
 
         self.organisation = organisation
+        self.dossier = dossier
 
     def ecrire_ressource( self, id, parents, num, titre, texte ):
 
@@ -42,18 +45,27 @@ class Stockage:
         :param texte:
             (string|None) Texte de la ressource.
         :returns:
-            (string) Texte de la ressource.
+            (None)
         """
 
-        raise NotImplementedError
+        pass
 
-    def ecrire_texte( self ):
+    def ecrire_texte( self, id, titre, texte ):
 
         """
         Écrire le fichier la version du texte.
+
+        :param id:
+            (string) ID de la ressource.
+        :param titre:
+            (string) Titre de la ressource.
+        :param texte:
+            (string|None) Texte de la ressource.
+        :returns:
+            (None)
         """
 
-        raise NotImplementedError
+        pass
 
 
 # vim: set ts=4 sw=4 sts=4 et:

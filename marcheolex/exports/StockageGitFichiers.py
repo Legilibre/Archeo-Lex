@@ -9,6 +9,8 @@
 # the LICENSE file for more details.
 
 # Imports
+import os
+import subprocess
 from . import Stockage
 from . import UnArticleParFichierSansHierarchie
 from . import FichierUnique
@@ -32,33 +34,49 @@ class StockageGitFichiers( Stockage ):
         :param texte:
             (string|None) Texte de la ressource.
         :returns:
-            (string) Texte de la ressource.
+            (None)
         """
 
-        texte_retourne = self.organisation.ecrire_ressource( id, parents, num, titre, texte )
+        fichiers = self.organisation.ecrire_ressource( id, parents, num, titre, texte )
 
-        if isinstance( self.organisation, UnArticleParFichierSansHierarchie ):
-            nom_fichier = self.organisation.obtenir_nom_fichier( id, parents, num, titre )
-            if nom_fichier:
-                f_texte = open( nom_fichier, 'w' )
-                f_texte.write( texte + '\n' )
-                f_texte.close()
+        # Enregistrer les fichiers
+        for fichier in fichiers:
+            with open( os.path.join( self.dossier, fichier[0] ), 'w' ) as f:
+                contenu = fichier[1].strip()
+                if contenu:
+                    f.write( fichier[1].strip() + '\n' )
+                else:
+                    f.write( '' )
 
-        return texte_retourne
 
-
-    def ecrire_texte( self ):
+    def ecrire_texte( self, id, titre, texte ):
 
         """
         Écrire le fichier la version du texte.
+
+        :param id:
+            (string) ID de la ressource.
+        :param titre:
+            (string) Titre de la ressource.
+        :param texte:
+            (string|None) Texte de la ressource.
+        :returns:
+            (None)
         """
 
-        if isinstance( self.organisation, FichierUnique ):
-            nom_fichier = self.organisation.obtenir_nom_fichier( None, None, None, None )
-            texte = self.organisation.texte.strip() + '\n'
-            f_texte = open( nom_fichier, 'w' )
-            f_texte.write( texte )
-            f_texte.close()
+        fichiers = self.organisation.ecrire_texte( id, titre, texte )
+
+        # Enregistrer les fichiers
+        for fichier in fichiers:
+            with open( os.path.join( dossier, fichier[0] ), 'w' ) as f:
+                contenu = fichier[1].strip()
+                if contenu:
+                    f.write( fichier[1].strip() + '\n' )
+                else:
+                    f.write( '' )
+
+        # Ajouter les fichiers dans Git
+        subprocess.call(['git', 'add', '.'], cwd=self.dossier)
 
 
 # vim: set ts=4 sw=4 sts=4 et:

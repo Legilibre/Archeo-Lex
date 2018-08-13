@@ -9,7 +9,6 @@
 # the LICENSE file for more details.
 
 # Imports
-import os
 from . import Organisations
 from . import Syntaxes
 
@@ -20,23 +19,17 @@ class UnArticleParFichierSansHierarchie( Organisations ):
     Les articles sont écrits à raison d’un fichier par article sous le nom 'Article_%numéro%'.
     """
 
-    def __init__( self, syntaxe, dossier, extension ):
+    def __init__( self, extension ):
 
         """
         Initialisation.
 
-        :param syntaxe:
-            (Syntaxes) Classe implémentant une certaine syntaxe légère de texte brut, comme Markdown.
-        :param dossier:
-            (str) Dossier contenant les fichiers du texte de loi.
         :param extension:
             (str) Extension du fichier.
         :returns:
             (None)
         """
 
-        super(UnArticleParFichierSansHierarchie, self).__init__( syntaxe )
-        self.dossier = dossier
         self.extension = '.' + extension if extension else ''
 
     def obtenir_nom_fichier( self, id, parents, num, titre ):
@@ -56,14 +49,11 @@ class UnArticleParFichierSansHierarchie( Organisations ):
             (string|None) Emplacement du fichier ou None pour ne pas écrire la ressource.
         """
 
-        if not self.dossier:
-            raise Exception()
-
         if id[4:8] == 'ARTI':
             if num:
-                return os.path.join( self.dossier, 'Article_' + num + self.extension )
+                return 'Article_' + num + self.extension
             else:
-                return os.path.join( self.dossier, 'Article_' + id + self.extension )
+                return 'Article_' + id + self.extension
 
         return None
 
@@ -81,35 +71,14 @@ class UnArticleParFichierSansHierarchie( Organisations ):
         :param texte:
             (string|None) Texte de la ressource.
         :returns:
-            (string) Texte de la ressource.
+            (list((str|None,str))) Liste de fichiers et texte de la ressource.
         """
 
-        if not self.syntaxe:
-            raise Exception()
+        nom_fichier = self.obtenir_nom_fichier( id, parents, num, titre )
 
-        texte = ''
-        if id[4:8] == 'ARTI':
-            if num:
-                titre = 'Article ' + num
-            else:
-                titre = 'Article (non-numéroté)'
-            titre_formate = self.syntaxe.obtenir_titre( parents, titre )
-            texte = texte + titre_formate + texte + '\n\n'
-        elif id[4:8] == 'SCTA':
-            titre_formate = self.syntaxe.obtenir_titre( parents, titre )
-            texte = texte + titre_formate + '\n\n'
-        else:
-            raise Exception()
-
-        return texte
-
-    def ecrire_texte( self ):
-
-        """
-        Écrire le fichier la version du texte.
-        """
-
-        pass
+        if nom_fichier:
+            return [(nom_fichier, texte)]
+        return []
 
 
 # vim: set ts=4 sw=4 sts=4 et:

@@ -303,28 +303,25 @@ def creer_historique_texte(arg):
     
     versions_texte = sorted(list(set(versions_texte)))
 
-    markdown = Markdown()
+    syntaxe = Markdown()
     if format['organisation'] == 'repertoires-simple':
-        un_article_par_fichier_sans_hierarchie = UnArticleParFichierSansHierarchie(markdown, dossier, 'md')
-        stockage = StockageGitFichiers(un_article_par_fichier_sans_hierarchie)
+        un_article_par_fichier_sans_hierarchie = UnArticleParFichierSansHierarchie('md')
+        stockage = StockageGitFichiers(dossier, un_article_par_fichier_sans_hierarchie)
     else:
-        fichier_unique = FichierUnique(markdown, nom_fichier, 'md')
-        stockage = StockageGitFichiers(fichier_unique)
-    fa = FabriqueArticle( db, stockage, True )
+        fichier_unique = FichierUnique('md')
+        stockage = StockageGitFichiers(dossier, fichier_unique)
+    fa = FabriqueArticle( db, stockage, syntaxe, True )
     fs = FabriqueSection( fa )
 
+    # Conversion en syntaxe des en-têtes et pied-de-texte
     if visas:
-        visas = fs.stockage.organisation.syntaxe.transformer_depuis_html( visas )
-        visas = fs.stockage.ecrire_ressource( None, [0], '', 'Visas', visas )
+        visas = fs.syntaxe.transformer_depuis_html( visas )
     if signataires:
-        signataires = fs.stockage.organisation.syntaxe.transformer_depuis_html( signataires )
-        signataires = fs.stockage.ecrire_ressource( None, [0], '', 'Signataires', signataires )
+        signataires = fs.syntaxe.transformer_depuis_html( signataires )
     if tp:
-        tp = fs.stockage.organisation.syntaxe.transformer_depuis_html( tp )
-        tp = fs.stockage.ecrire_ressource( None, [0], '', 'Travaux préparatoires', tp )
+        tp = fs.syntaxe.transformer_depuis_html( tp )
     if nota:
-        nota = fs.stockage.organisation.syntaxe.transformer_depuis_html( nota )
-        nota = fs.stockage.ecrire_ressource( None, [0], '', 'Nota', nota )
+        nota = fs.syntaxe.transformer_depuis_html( nota )
 
     # Pour chaque version
     # - rechercher les sections et articles associés
@@ -371,19 +368,7 @@ def creer_historique_texte(arg):
         # Créer les sections (donc tout le texte)
         contenu, fin_vigueur = fs.obtenir_texte_section( 0, None, cid, debut, fin )
         
-        # Ajout des en-têtes et pied-de-texte
-        if visas:
-            contenu = visas + contenu
-        if signataires:
-            contenu = contenu + signataires
-        if tp:
-            contenu = contenu + tp
-        if nota:
-            contenu = contenu + nota
-
-        contenu = contenu.strip()
-
-        if not contenu:
+        if not contenu.strip():
             if fin == None or str(fin) == '2999-01-01':
                 logger.info(('Version {:'+wnbver+'} (du {} à  maintenant) non-enregistrée car vide').format(i_version+1, debut))
             else:
@@ -391,14 +376,22 @@ def creer_historique_texte(arg):
             erreur_version = True
             continue
 
-        # Enregistrement du fichier
-        if format['organisation'] == 'fichier-unique':
-            f_texte = open(fichier, 'w')
-            f_texte.write(contenu+'\n')
-            f_texte.close()
-        
-        # Ajouter les fichiers dans Git
-        subprocess.call(['git', 'add', '.'], cwd=dossier)
+        # Ajout des en-têtes et pied-de-texte
+        if visas:
+            contenu = visas + contenu
+            visas = fs.stockage.ecrire_ressource( 'PRE', [False], '', 'Visas', visas )
+        if signataires:
+            contenu += signataires
+            signataires = fs.stockage.ecrire_ressource( 'POST', [False], '', 'Signataires', signataires )
+        if tp:
+            contenu += tp
+            tp = fs.stockage.ecrire_ressource( 'POST', [False], '', 'Travaux préparatoires', tp )
+        if nota:
+            contenu += nota
+            nota = fs.stockage.ecrire_ressource( 'POST', [False], '', 'Nota', nota )
+
+        # Enregistrement du fichier global
+        fs.stockage.ecrire_texte( cid, nom_fichier, contenu )
 
         if not subprocess.check_output(['git', 'status', '--ignored', '-s'], cwd=dossier):
             if fin == None or str(fin) == '2999-01-01':

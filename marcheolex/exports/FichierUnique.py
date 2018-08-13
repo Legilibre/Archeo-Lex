@@ -17,29 +17,20 @@ class FichierUnique( Organisations ):
 
     """
     Tout le texte est écrit dans le même fichier.
-
-    Ce fichier doit être inscrit dans la propriété 'fichier' de la classe.
     """
 
-    def __init__( self, syntaxe, fichier, extension ):
+    def __init__( self, extension ):
 
         """
         Initialisation.
 
-        :param syntaxe:
-            (Syntaxes) Classe implémentant une certaine syntaxe légère de texte brut, comme Markdown.
-        :param fichier:
-            (str) Nom de fichier.
         :param extension:
             (str) Extension du fichier.
         :returns:
             (None)
         """
 
-        super(FichierUnique, self).__init__( syntaxe )
-        self.fichier = fichier
         self.extension = '.' + extension if extension else ''
-        self.texte = ''
 
     def obtenir_nom_fichier( self, id, parents, num, titre ):
 
@@ -58,60 +49,29 @@ class FichierUnique( Organisations ):
             (string|None) Emplacement du fichier ou None pour ne pas écrire la ressource.
         """
 
-        if not self.fichier:
+        if not titre:
             raise Exception()
 
-        return self.fichier + self.extension
+        return titre + self.extension
 
-    def ecrire_ressource( self, id, parents, num, titre, texte ):
+    def ecrire_texte( self, id, titre, texte ):
 
         """
+        Écrire le fichier la version du texte.
+
         :param id:
             (string) ID de la ressource.
-        :param parents:
-            (liste de strings) Niveaux parents de la ressource.
-        :param num:
-            (string) Numéro de la ressource par rapport aux autres de même niveau.
         :param titre:
             (string) Titre de la ressource.
         :param texte:
             (string|None) Texte de la ressource.
         :returns:
-            (string) Texte de la ressource.
+            (list((str|None,str))) Liste de fichiers et texte de la ressource.
         """
 
-        if not self.syntaxe:
-            raise Exception()
+        nom_fichier = self.obtenir_nom_fichier( id, [], 0, titre )
 
-        if id == None:
-            if titre:
-                titre_formate = self.syntaxe.obtenir_titre( parents, titre )
-                texte = titre_formate + texte
-            texte = texte + '\n\n'
-        elif id[4:8] == 'ARTI':
-            if num:
-                titre = 'Article ' + num
-            else:
-                titre = 'Article (non-numéroté)'
-            titre_formate = self.syntaxe.obtenir_titre( parents, titre )
-            texte = titre_formate + texte + '\n\n'
-        elif id[4:8] == 'SCTA':
-            titre_formate = self.syntaxe.obtenir_titre( parents, titre )
-            texte = titre_formate
-        else:
-            raise Exception()
-
-        self.texte += texte
-
-        return texte
-
-    def ecrire_texte( self ):
-
-        """
-        Écrire le fichier la version du texte.
-        """
-
-        pass
+        return [(nom_fichier, texte)]
 
 
 # vim: set ts=4 sw=4 sts=4 et:
