@@ -58,7 +58,7 @@ class FabriqueSection:
         self.syntaxe = fabrique_article.syntaxe
 
         self.sections = {}
-        self.desactiver_cache = isinstance( self.stockage.organisation, UnArticleParFichierSansHierarchie )
+        self.desactiver_cache = isinstance( self.stockage.organisation, UnArticleParFichierSansHierarchie ) or isinstance( self.stockage.organisation, UnArticleParFichierAvecHierarchie )
 
 
     def effacer_cache():
@@ -66,15 +66,15 @@ class FabriqueSection:
         self.sections = {}
 
 
-    def obtenir_texte_section( self, niveau, id, cid, debut_vigueur_texte, fin_vigueur_texte ):
+    def obtenir_texte_section( self, id, hierarchie, cid, debut_vigueur_texte, fin_vigueur_texte ):
 
         """
         Obtenir le texte d’une section donnée par un id.
 
-        :param niveau:
-            int - niveau (profondeur) de la section, commençant à 1 (i.e. l’ensemble du texte).
         :param id:
             string - ID de la section.
+        :param hierarchie:
+            [(str, str)] - Liste de couples (id, titre_ta) donnant le contexte dans la hiérarchie des titres.
         :param cid:
             string - CID du texte.
         :param debut_vigueur_texte:
@@ -143,9 +143,9 @@ class FabriqueSection:
             sections[sposition] = section
 
         # Itérer sur les sections non-expirées dans l’ordre d’affichage
-        for i in sorted( sections.keys() ):
+        position = 0
+        for i, section in sorted( sections.items() ):
 
-            section = sections[i]
             sposition, snum, stitre_ta, sdebut, sfin, cdebut, cfin, ctexte = self.sections[section][id]
 
             # Enregistrer la date de fin de vigueur de la section
@@ -163,29 +163,36 @@ class FabriqueSection:
             if ( sdebut and comp_infini_strict( debut_vigueur_texte, sdebut ) ) or comp_infini_strict( sfin, fin_vigueur_texte ):
                 raise Exception( 'Erreur interne : les intervalles de vigueur du texte sont être minimaux et il ne devrait donc pas exister une section avec une des bornes de vigueur strictement comprise dans l’intervalle courant de vigueur du texte' )
 
+            position += 1
             # L’élément est un titre de sommaire, rechercher son texte et l’ajouter à la liste
             if section[4:8] == 'SCTA':
 
+                chierarchie = hierarchie.copy()
+                chierarchie.append( (position, section, stitre_ta) )
+
                 # Le cache de section est valide et peut être utilisé pour ajouter le texte de la section
                 # L’intervalle de vigueur du cache de sections comprend l’intervalle courant de vigueur du texte (cdebut <= debut_vigueur_texte and fin_vigueur_texte < cfin)
-                # FIXME: pour le format "repertoires-simple", il faut désactiver ce "if" sinon certains fichier manquent, ajouter un paramètre ou autre mécanisme
+                # FIXME: pour les formats "articles" ou "sections", il faut désactiver ce "if" sinon certains fichier manquent, ajouter un paramètre ou autre mécanisme
                 if not self.desactiver_cache and comp_infini_large( cdebut, debut_vigueur_texte ) and comp_infini_large( fin_vigueur_texte, cfin ):
-                    niveaux = [ False ] * (niveau+1)
-                    self.stockage.ecrire_ressource( section, niveaux, snum, stitre_ta, ctexte )
+
                     texte = texte + ctexte
+
+                    self.stockage.ecrire_ressource( section, chierarchie, snum, stitre_ta, ctexte )
 
                     # Si la section a une fin de vigueur, celle-ci devient une borne maximale de fin de vigueur des sections parentes
                     if cfin:
                         fins_vigueur.add( cfin )
 
                 else:
-                    niveaux = [ False ] * (niveau+1)
+
+                    titre_formate = self.syntaxe.obtenir_titre( chierarchie, stitre_ta )
+                    texte_section, fin_vigueur_section = self.obtenir_texte_section( section, chierarchie, cid, debut_vigueur_texte, fin_vigueur_texte )
+
                     snum = snum.strip() if snum else ''
-                    titre_formate = self.syntaxe.obtenir_titre( niveaux, stitre_ta )
-                    texte_section, fin_vigueur_section = self.obtenir_texte_section( niveau+1, section, cid, debut_vigueur_texte, fin_vigueur_texte )
                     texte_section = titre_formate + texte_section
                     texte = texte + texte_section
-                    self.stockage.ecrire_ressource( section, niveaux, snum, stitre_ta, texte_section )
+
+                    self.stockage.ecrire_ressource( section, chierarchie, snum, stitre_ta, texte_section )
 
                     self.sections[section][id] = (sposition, snum, stitre_ta, sdebut, sfin, debut_vigueur_texte, fin_vigueur_section, texte_section)
 
@@ -196,7 +203,10 @@ class FabriqueSection:
             # L’élément est un article, l’ajouter à la liste
             elif section[4:8] == 'ARTI':
 
-                valeur_article = self.fabrique_article.obtenir_texte_article( niveau+1, section, debut_vigueur_texte, fin_vigueur_texte, None )
+                chierarchie = hierarchie.copy()
+                chierarchie.append( (position, section, None) )
+
+                valeur_article = self.fabrique_article.obtenir_texte_article( section, chierarchie, debut_vigueur_texte, fin_vigueur_texte )
 
                 num, texte_article, debut_vigueur_article, fin_vigueur_article = valeur_article
 

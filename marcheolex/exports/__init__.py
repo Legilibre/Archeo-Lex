@@ -22,6 +22,7 @@ from .Markdown import Markdown
 # Organisations
 from .FichierUnique import FichierUnique
 from .UnArticleParFichierSansHierarchie import UnArticleParFichierSansHierarchie
+from .UnArticleParFichierAvecHierarchie import UnArticleParFichierAvecHierarchie
 
 # Stockages
 from .StockageGitFichiers import StockageGitFichiers

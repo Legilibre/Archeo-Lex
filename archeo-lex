@@ -53,12 +53,12 @@ aide = ('''Usage: archeo-lex [--aide] [--debug] [--help] [--version] [--textes=<
                              - "fichiers" : plusieurs fichiers avec les dates [inactif]
    --metadonnees           Afficher les métadonnées dans le texte
    --organisation=<TYPE>   Organisation de l’arborescence des fichiers :
-                             - "fichier-unique" (défaut) : unique fichier
-                             - "repertoires-simple" : un répertoire par article, sans hiérarchie
-                             - "repertoires-hiérarchie" : un répertoire par section ou article [inactif]
+                             - "texte" (défaut) : tout le texte dans un unique fichier
+                             - "sections" : un répertoire par section, chaque article dans un fichier
+                             - "articles" : chaque article dans un fichier
 
 
-   --bddlegi=<fichier>     Nom de la base de données de legi.py, par défaut "legi.sqlite"
+   --bddlegi=<fichier>     Nom de la base de données de legi.py, par défaut "cache/sql/legi.sqlite"
    --dossier=<dossier>     Dossier de sortie, par défaut "textes"
    --production            Production en masse, active les options de performance
 
@@ -114,7 +114,7 @@ def principal(arguments):
     data['format']['dialecte'] = arguments.get('--format') or 'markdown'
     data['format']['historique'] = arguments.get('--historique') or 'git'
     data['format']['metadonnees'] = arguments.get('--metadonnees') or False
-    data['format']['organisation'] = arguments.get('--organisation') or 'fichier-unique'
+    data['format']['organisation'] = arguments.get('--organisation') or 'texte'
     
     # Lecture des autres paramètres
     data['bddlegi'] = (arguments.get('--bddlegi') or '') or 'cache/sql/legi.sqlite'

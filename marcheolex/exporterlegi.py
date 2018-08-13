@@ -53,7 +53,7 @@ def creer_historique_legi(textes, format, dossier, bdd, production):
               ORDER BY cid
         """)
         liste_textes = [ x[0] for x in liste_textes ]
-        print( '\nListe de textes : tous\n' )
+        logger.info( '\nListe de textes : tous\n' )
     elif 'tout-obsolete' in textes:
         last_update = db.one("""
             SELECT value
@@ -102,7 +102,7 @@ def creer_historique_legi(textes, format, dossier, bdd, production):
 
     liste_textes.sort()
     if len( liste_textes ) < 100:
-        print( '\nListe de textes :\n' + '\n'.join( liste_textes ) + '\n' )
+        logger.info( '\nListe de textes :\n' + '\n'.join( liste_textes ) + '\n' )
 
     args = [(texte, format, dossier, bdd) for texte in liste_textes]
     if len(liste_textes) == 1 or os.cpu_count() == 1 or not production:
@@ -214,8 +214,10 @@ def creer_historique_texte(arg):
 
     # Créer le dépôt Git avec comme branche maîtresse 'texte' ou 'articles'
     branche = 'texte'
-    if format['organisation'] == 'repertoires-simple':
+    if format['organisation'] == 'articles':
         branche = 'articles'
+    elif format['organisation'] == 'sections':
+        branche = 'sections'
     if not os.path.exists(os.path.join(dossier, '.git')):
         subprocess.call(['git', 'init'], cwd=dossier)
         subprocess.call(['git', 'symbolic-ref', 'HEAD', 'refs/heads/'+branche], cwd=dossier)
@@ -304,9 +306,12 @@ def creer_historique_texte(arg):
     versions_texte = sorted(list(set(versions_texte)))
 
     syntaxe = Markdown()
-    if format['organisation'] == 'repertoires-simple':
+    if format['organisation'] == 'articles':
         un_article_par_fichier_sans_hierarchie = UnArticleParFichierSansHierarchie('md')
         stockage = StockageGitFichiers(dossier, un_article_par_fichier_sans_hierarchie)
+    elif format['organisation'] == 'sections':
+        un_article_par_fichier_avec_hierarchie = UnArticleParFichierAvecHierarchie('md')
+        stockage = StockageGitFichiers(dossier, un_article_par_fichier_avec_hierarchie)
     else:
         fichier_unique = FichierUnique('md')
         stockage = StockageGitFichiers(dossier, fichier_unique)
@@ -354,19 +359,13 @@ def creer_historique_texte(arg):
         date_fr = '{} {} {}'.format(debut.day, MOIS2[int(debut.month)], debut.year)
         if debut.day == 1:
             date_fr = '1er {} {}'.format(MOIS2[int(debut.month)], debut.year)
-        contenu = nom + '\n'   \
-                  + '\n'   \
-                  + '- Date de consolidation : ' + date_fr + '\n'            \
-                  + '- [Lien permanent Légifrance](https://www.legifrance.gouv.fr/affichCode.do?cidTexte=' + cid + '&dateTexte=' + debut.isoformat().replace('-','') + ')\n' \
-                  + '\n' \
-                  + '\n'
 
         # Retrait des fichiers des anciennes versions
         if format['organisation'] != 'fichier-unique':
-            subprocess.call('rm -f *.md', cwd=dossier, shell=True)
+            subprocess.call('rm -rf *', cwd=dossier, shell=True)
 
         # Créer les sections (donc tout le texte)
-        contenu, fin_vigueur = fs.obtenir_texte_section( 0, None, cid, debut, fin )
+        contenu, fin_vigueur = fs.obtenir_texte_section( None, [], cid, debut, fin )
         
         if not contenu.strip():
             if fin == None or str(fin) == '2999-01-01':

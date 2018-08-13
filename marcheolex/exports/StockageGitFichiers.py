@@ -39,7 +39,9 @@ class StockageGitFichiers( Stockage ):
 
         # Enregistrer les fichiers
         for fichier in fichiers:
-            with open( os.path.join( self.dossier, fichier[0] ), 'w' ) as f:
+            nom_fichier = os.path.join( self.dossier, fichier[0] )
+            os.makedirs( os.path.dirname( nom_fichier ), exist_ok=True )
+            with open( nom_fichier, 'w' ) as f:
                 contenu = fichier[1].strip()
                 if contenu:
                     f.write( fichier[1].strip() + '\n' )

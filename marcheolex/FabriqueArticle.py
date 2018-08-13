@@ -46,19 +46,19 @@ class FabriqueArticle:
         self.articles = {}
 
 
-    def obtenir_texte_article( self, niveau, id, debut_vigueur_texte, fin_vigueur_texte, etat_vigueur_section ):
+    def obtenir_texte_article( self, id, hierarchie, debut_vigueur_texte, fin_vigueur_texte ):
 
         """
         Obtenir le texte d’un article donné par un id.
 
         :param id:
             string - ID de l’article.
+        :param hierarchie:
+            [(str, str)] - Liste de couples (id, titre_ta) donnant le contexte dans la hiérarchie des titres.
         :param debut_vigueur_texte:
             datetime.date - date de début de vigueur demandée.
         :param fin_vigueur_texte:
             datetime.date - date de fin de vigueur autorisée par la requête.
-        :param etat_vigueur_section:
-            string - état de la section
         :returns:
             (string, string, datetime.date, datetime.date) - (num, texte, debut_vigueur, fin_vigueur) Numéro et texte de l’article, dates de début et fin de vigueur.
         """
@@ -115,15 +115,15 @@ class FabriqueArticle:
             self.effacer_cache()
 
         # Assemblage du texte
-        niveaux = [ False ] * niveau
         num = num.strip() if num else ''
         texte_article = texte_article.strip()
         titre = 'Article ' + num if num else 'Article (non-numéroté)'
-        titre_formate = self.syntaxe.obtenir_titre( niveaux, titre )
+        hierarchie[-1] = (hierarchie[-1][0], id, titre)
+        titre_formate = self.syntaxe.obtenir_titre( hierarchie, titre )
         texte_retourne = titre_formate + texte_article + '\n\n'
 
         # Enregistrement
-        self.stockage.ecrire_ressource( id, niveaux, num, '', texte_article )
+        self.stockage.ecrire_ressource( id, hierarchie, num, '', texte_article )
 
         return (num, texte_retourne, date_debut, date_fin)
 
