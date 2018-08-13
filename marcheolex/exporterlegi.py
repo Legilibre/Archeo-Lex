@@ -143,6 +143,9 @@ def creer_historique_texte(arg):
     """)
     last_update_jour = datetime.date(*(time.strptime(last_update, '%Y%m%d-%H%M%S')[0:3]))
     last_update = paris.localize( datetime.datetime(*(time.strptime(last_update, '%Y%m%d-%H%M%S')[0:6])) )
+    date_base_legi_fr = '{} {} {} à '.format(last_update.day, MOIS2[int(last_update.month)], last_update.year) + last_update.strftime('%H:%M:%S (%Z)')
+    if last_update.day == 1:
+        date_base_legi_fr = '1er {} {} à '.format(MOIS2[int(last_update.month)], last_update.year) + last_update.strftime('%H:%M:%S (%Z)')
     logger.info('Dernière mise à jour de la base LEGI : {}'.format(last_update.isoformat()))
 
     os.makedirs(dossier, exist_ok=True)
@@ -320,12 +323,16 @@ def creer_historique_texte(arg):
 
     # Conversion en syntaxe des en-têtes et pied-de-texte
     if visas:
-        visas = fs.syntaxe.transformer_depuis_html( visas )
+        visas_titre = fs.syntaxe.obtenir_titre( [(0, 'VISAS', 'Visas')], 'Visas' )
+        visas = fs.syntaxe.transformer_depuis_html( visas ) + '\n\n'
     if signataires:
+        signataires_titre = fs.syntaxe.obtenir_titre( [(0, 'SIGNATAIRES', 'Signataires')], 'Signataires' )
         signataires = fs.syntaxe.transformer_depuis_html( signataires )
     if tp:
+        tp_titre = fs.syntaxe.obtenir_titre( [(0, 'TP', 'Travaux préparatoires')], 'Travaux préparatoires' )
         tp = fs.syntaxe.transformer_depuis_html( tp )
     if nota:
+        nota_titre = fs.syntaxe.obtenir_titre( [(0, 'NOTA', 'Notas')], 'Notas' )
         nota = fs.syntaxe.transformer_depuis_html( nota )
 
     # Pour chaque version
@@ -355,11 +362,6 @@ def creer_historique_texte(arg):
                 subprocess.call(['git', 'checkout', '-b', 'futur-'+branche], cwd=dossier)
             futur = True
 
-        # Créer l’en-tête
-        date_fr = '{} {} {}'.format(debut.day, MOIS2[int(debut.month)], debut.year)
-        if debut.day == 1:
-            date_fr = '1er {} {}'.format(MOIS2[int(debut.month)], debut.year)
-
         # Retrait des fichiers des anciennes versions
         if format['organisation'] != 'fichier-unique':
             subprocess.call('rm -rf *', cwd=dossier, shell=True)
@@ -376,17 +378,20 @@ def creer_historique_texte(arg):
             continue
 
         # Ajout des en-têtes et pied-de-texte
+        date_debut_fr = '{} {} {}'.format(debut.day, MOIS2[int(debut.month)], debut.year)
+        if debut.day == 1:
+            date_debut_fr = '1er {} {}'.format(MOIS2[int(debut.month)], debut.year)
         if visas:
-            contenu = visas + contenu
+            contenu = visas_titre + visas + contenu
             fs.stockage.ecrire_ressource( 'VISAS', [(0, 'VISAS', 'Visas')], '', 'Visas', visas )
         if signataires:
-            contenu += signataires
+            contenu += signataires_titre + signataires
             fs.stockage.ecrire_ressource( 'SIGNATAIRES', [(0, 'SIGNATAIRES', 'Signataires')], '', 'Signataires', signataires )
         if tp:
-            contenu += tp
+            contenu += tp_titre + tp
             fs.stockage.ecrire_ressource( 'TP', [(0, 'TP', 'Travaux préparatoires')], '', 'Travaux préparatoires', tp )
         if nota:
-            contenu += nota
+            contenu += nota_titre + nota
             fs.stockage.ecrire_ressource( 'NOTA', [(0, 'NOTA', 'Nota')], '', 'Nota', nota )
 
         # Enregistrement du fichier global
@@ -401,8 +406,8 @@ def creer_historique_texte(arg):
             continue
 
         # Enregistrer les fichiers dans Git
-        #subprocess.call(['git', 'commit', '--author="Législateur <>"', '--date="' + str(debut_datetime) + '"', '-m', 'Version consolidée au {}\n\nVersions :\n- base LEGI : {}\n- programme Archéo Lex : {}'.format(date_fr, date_base_legi, version_archeolex), '-q', '--no-status'], cwd=dossier)
-        subprocess.call(['git', 'commit', '--author="Législateur <>"', '--date="' + str(debut_datetime) + '"', '-m', 'Version consolidée au {}'.format(date_fr), '-q', '--no-status'], cwd=dossier, env={ 'GIT_COMMITTER_DATE': last_update.isoformat(), 'GIT_COMMITTER_NAME': 'Législateur', 'GIT_COMMITTER_EMAIL': '' })
+        #subprocess.call(['git', 'commit', '--author="Législateur <>"', '--date="' + str(debut_datetime) + '"', '-m', 'Version consolidée au {}\n\nVersions :\n- base LEGI : {}\n- programme Archéo Lex : {}'.format(date_debut_fr, date_base_legi, version_archeolex), '-q', '--no-status'], cwd=dossier)
+        subprocess.call(['git', 'commit', '--author="Législateur <>"', '--date="' + str(debut_datetime) + '"', '-m', 'Version consolidée au {}'.format(date_debut_fr), '-q', '--no-status'], cwd=dossier, env={ 'GIT_COMMITTER_DATE': last_update.isoformat(), 'GIT_COMMITTER_NAME': 'Législateur', 'GIT_COMMITTER_EMAIL': '' })
         
         if fin == None or str(fin) == '2999-01-01':
             logger.info(('Version {:'+wnbver+'} (du {} à  maintenant) enregistrée').format(i_version+1, debut))
