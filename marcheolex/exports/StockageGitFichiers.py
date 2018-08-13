@@ -68,7 +68,7 @@ class StockageGitFichiers( Stockage ):
 
         # Enregistrer les fichiers
         for fichier in fichiers:
-            with open( os.path.join( dossier, fichier[0] ), 'w' ) as f:
+            with open( os.path.join( self.dossier, fichier[0] ), 'w' ) as f:
                 contenu = fichier[1].strip()
                 if contenu:
                     f.write( fichier[1].strip() + '\n' )
