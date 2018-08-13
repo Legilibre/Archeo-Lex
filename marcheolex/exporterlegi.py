@@ -384,6 +384,15 @@ def creer_historique_texte(arg):
         if visas:
             contenu = visas_titre + visas + contenu
             fs.stockage.ecrire_ressource( 'VISAS', [(0, 'VISAS', 'Visas')], '', 'Visas', visas )
+        if format['metadonnees']:
+            date_fin_fr = 'aucune'
+            if fin != None and str(fin) != '2999-01-01':
+                date_fin_fr = '{} {} {}'.format(fin.day, MOIS2[int(fin.month)], fin.year)
+                if fin.day == 1:
+                    date_fin_fr = '1er {} {}'.format(MOIS2[int(fin.month)], fin.year)
+            metadonnees = '---\ntexte: {}\ndebut-vigueur: {}\nfin-vigueur: {}\nbase-legi: {}\n---\n\n'.format(nom_final.replace('_', ' '), date_debut_fr, date_fin_fr, date_base_legi_fr)
+            contenu = metadonnees + contenu
+            fs.stockage.ecrire_ressource( 'METADONNEES', [(0, 'METADONNEES', 'Metadonnées')], '', 'Métadonnées', metadonnees )
         if signataires:
             contenu += signataires_titre + signataires
             fs.stockage.ecrire_ressource( 'SIGNATAIRES', [(0, 'SIGNATAIRES', 'Signataires')], '', 'Signataires', signataires )
