@@ -53,5 +53,4 @@ class StockageGitFichiers( Stockage ):
             # Ajouter les fichiers dans Git
             subprocess.call(['git', 'add', '.'], cwd=self.dossier)
 
-
 # vim: set ts=4 sw=4 sts=4 et:

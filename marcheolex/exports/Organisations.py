@@ -8,9 +8,6 @@
 # To Public License, Version 2, as published by Sam Hocevar. See
 # the LICENSE file for more details.
 
-# Imports
-
-
 class Organisations:
 
     def obtenir_nom_fichier( self, id, parents, num, titre ):
@@ -55,7 +52,7 @@ class Organisations:
 
         if nom_fichier:
             return [(nom_fichier, texte)]
-        return []
 
+        return []
 
 # vim: set ts=4 sw=4 sts=4 et:

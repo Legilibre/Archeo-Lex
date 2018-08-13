@@ -8,9 +8,6 @@
 # To Public License, Version 2, as published by Sam Hocevar. See
 # the LICENSE file for more details.
 
-# Imports
-
-
 class Stockage:
 
     def __init__( self, dossier, organisation ):
@@ -26,8 +23,8 @@ class Stockage:
             (None)
         """
 
-        self.organisation = organisation
         self.dossier = dossier
+        self.organisation = organisation
 
     def ecrire_ressource( self, id, parents, num, titre, texte ):
 
@@ -49,6 +46,5 @@ class Stockage:
         """
 
         pass
-
 
 # vim: set ts=4 sw=4 sts=4 et:

@@ -8,9 +8,6 @@
 # To Public License, Version 2, as published by Sam Hocevar. See
 # the LICENSE file for more details.
 
-# Imports
-
-
 class Syntaxes:
 
     def transformer_depuis_html( self, html ):
@@ -57,6 +54,5 @@ class Syntaxes:
         """
 
         raise NotImplementedError
-
 
 # vim: set ts=4 sw=4 sts=4 et:

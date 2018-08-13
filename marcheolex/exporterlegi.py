@@ -378,16 +378,16 @@ def creer_historique_texte(arg):
         # Ajout des en-têtes et pied-de-texte
         if visas:
             contenu = visas + contenu
-            visas = fs.stockage.ecrire_ressource( 'PRE', [False], '', 'Visas', visas )
+            fs.stockage.ecrire_ressource( 'VISAS', [(0, 'VISAS', 'Visas')], '', 'Visas', visas )
         if signataires:
             contenu += signataires
-            signataires = fs.stockage.ecrire_ressource( 'POST', [False], '', 'Signataires', signataires )
+            fs.stockage.ecrire_ressource( 'SIGNATAIRES', [(0, 'SIGNATAIRES', 'Signataires')], '', 'Signataires', signataires )
         if tp:
             contenu += tp
-            tp = fs.stockage.ecrire_ressource( 'POST', [False], '', 'Travaux préparatoires', tp )
+            fs.stockage.ecrire_ressource( 'TP', [(0, 'TP', 'Travaux préparatoires')], '', 'Travaux préparatoires', tp )
         if nota:
             contenu += nota
-            nota = fs.stockage.ecrire_ressource( 'POST', [False], '', 'Nota', nota )
+            fs.stockage.ecrire_ressource( 'NOTA', [(0, 'NOTA', 'Nota')], '', 'Nota', nota )
 
         # Enregistrement du fichier global
         fs.stockage.ecrire_ressource( cid, [], '', nom_fichier, contenu )
