@@ -26,19 +26,40 @@ class Markdown( Syntaxes ):
             (string|None) Texte équivalent en Markdown.
         """
 
-        # Transformation des <br/> en <p>
         texte = html
         if texte == None:
-            texte = ''
-        texte = re.sub(r'<br ?\/>', '\n', texte)
-        texte = re.sub(r'<p>(.*?)<\/p>', r'\1\n\n', texte, flags=re.DOTALL)
-        texte = re.sub(r'\n\n+', '\n\n', texte)
+            return ''
 
-        # Retrait des espaces blancs de fin de ligne
-        texte = '\n'.join([l.strip() for l in texte.split('\n')])
-        texte = texte.strip()
+        # Transformation des <br>, <p>, <div>, <span>, <blockquote> en paragraphes Markdown
+        # - Les deux blockquote successifs servent lorsque deux blockquote sont imbriqués (souvent)
+        texte = re.sub(r'<br((?: [^>]*)?)/?>', '\n\n', texte)
+        texte = re.sub(r'<p(?:(?: [^>]*)?)>(.*?)</p>', r'\1\n\n', texte, flags=re.DOTALL)
+        texte = re.sub(r'<div(?:(?: [^>]*)?)>(.*?)</div>', r'\1\n\n', texte, flags=re.DOTALL)
+        texte = re.sub(r'<span(?:(?: [^>]*)?)>(.*?)</span>', r'\1\n\n', texte, flags=re.DOTALL)
+        texte = re.sub(r'<blockquote>(.*?)</blockquote>', r'\n\n\1\n\n', texte, flags=re.DOTALL)
+        texte = re.sub(r'<blockquote>(.*?)</blockquote>', r'\n\n\1\n\n', texte, flags=re.DOTALL)
 
-        # - Markdownisation des listes numérotées
+        # Les balises de tableau vont sur des lignes séparées
+        texte = re.sub(r'\s*<td(?: align="left")?((?: [^>]*)?)>\s*(.*?)\s*</td>\s*', r'\n<td\1>\2</td>\n', texte, flags=re.DOTALL)
+        texte = re.sub(r'\s*<th(?: align="left")?((?: [^>]*)?)>\s*(.*?)\s*</th>\s*', r'\n<th\1>\2</th>\n', texte, flags=re.DOTALL)
+        texte = re.sub(r'\s*<tr(?: align="left")?((?: [^>]*)?)>\s*', r'\n<tr\1>\n', texte, flags=re.DOTALL)
+        texte = re.sub(r'\s*</tr>\s*', '\n</tr>\n', texte, flags=re.DOTALL)
+
+        # Retrait des espaces blancs en début et fin de ligne
+        texte = re.sub(r'[ \t\r\f\v]+\n', '\n', texte)
+        texte = re.sub(r'\n[ \t\r\f\v]+', '\n', texte)
+
+        # Markdownisation des listes non-numérotées
+        # - Les sept tirets sont U+002D, U+2010 et U+2011, U+2012 et U+2013, U+2014 et U+2015
+        texte = re.sub(r'\n+[-‐‑‒–—―] *([^\n]+)', r'\n- \1', texte)
+        texte = re.sub(r'\n([^-][^\n]*)\n-([^\n]+)', r'\n\1\n\n-\2', texte)
+
+        # Markdownisation des listes numérotées
+        # - Certains convertisseurs Markdown → HTML renumérotent à partir de 1 dès que ça ressemble à une
+        #   liste numérotée, ce qui bien sûr fait perdre ladite numérotation ; pour éviter cela, les listes
+        #   numérotées ne sont pas transformées en syntaxe Markdown. Un point également à prendre en compte
+        #   est que le signe par défaut est ° (par ex. 1°), ce qui serait probablement perdu en Markdown,
+        #   faisant s’éloigner du texte original.
         #lignes = texte.split('\n')
         #ligne_liste = [ False ] * len(lignes)
         #for i in range(len(lignes)):
@@ -47,13 +68,19 @@ class Markdown( Syntaxes ):
         #    lignes[i] = re.sub(r'^(\d+)([°\.\)-]) +', r'\1. ', lignes[i])
         #    lignes[i] = re.sub(r'^([\*-]) +', r'- ', lignes[i])
 
-        # - Création d’alinea séparés, sauf pour les listes
-        #texte = lignes[0]
-        #for i in range(1, len(lignes)):
-        #    if ligne_liste[i]:
-        #        texte = texte + '\n' + lignes[i]
-        #    else:
-        #        texte = texte + '\n\n' + lignes[i]
+        # Lorsque trop d’espaces consécutifs sont présents, limiter à un maximum de 1
+        texte = re.sub(r' {2,}', ' ', texte)
+
+        # Ajouter des espaces blancs en début de ligne des tableaux
+        texte = re.sub(r'\n*<td((?: [^>]*)?)>(.*?)</td>', r'\n  <td\1>\2</td>', texte, flags=re.DOTALL)
+        texte = re.sub(r'\n*<th((?: [^>]*)?)>(.*?)</th>', r'\n  <th\1>\2</th>', texte, flags=re.DOTALL)
+        texte = re.sub(r'\n*<tr((?: [^>]*)?)>\n*', r'\n <tr\1>\n', texte, flags=re.DOTALL)
+        texte = re.sub(r'\n*</tr>\n*', '\n </tr>\n', texte, flags=re.DOTALL)
+
+        # Lorsque trop de retours à la ligne consécutifs sont présents, limiter à un maximum de 2
+        texte = re.sub(r'\n{3,}', '\n\n', texte)
+
+        texte = texte.strip()
 
         return texte
 
@@ -97,11 +124,9 @@ class Markdown( Syntaxes ):
             (string|None) Texte du titre dans la syntaxe représentée.
         """
 
-        marque_niveau = ''
-        for i in range( len(parents) ):
-            marque_niveau = marque_niveau + '#'
+        marque_niveau = '#' * len(parents)
 
-        texte = re.sub( r'&#13;\n*', '', texte )
+        texte = re.sub( r'(&#13;)?\n*', '', texte ).strip()
 
         return marque_niveau + ' ' + texte + '\n\n'
 
