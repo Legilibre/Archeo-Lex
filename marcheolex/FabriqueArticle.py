@@ -11,7 +11,6 @@
 # the LICENSE file for more details.
 
 # Imports
-import os
 import datetime
 import time
 from marcheolex.utilitaires import comp_infini_large

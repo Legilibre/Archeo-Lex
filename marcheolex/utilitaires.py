@@ -11,12 +11,8 @@
 # the LICENSE file for more details.
 
 # Imports
-import os
 import re
-import subprocess
 import datetime
-import time
-import shutil
 
 MOIS = {
     'janvier': '01',
@@ -37,24 +33,6 @@ MOIS = {
 MOIS2 = ['', 'janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre']
 
 
-def normalisation_code(code):
-    
-    nom = ''
-    repertoire = ''
-    
-    if code.startswith(('code', 'Code')):
-        code = re.sub('\'', '’', code.lower())
-        nom = re.sub('[-_]', ' ', code)
-        nom = nom[0].upper() + nom[1:]
-        repertoire = re.sub('[ _]', '-', code)
-        nom = re.sub(' ', '_', re.sub('é', 'e', nom))
-    else:
-        nom = code.lower()
-        repertoire = code.lower()
-    
-    return repertoire, nom
-
-
 def normalise_date(texte):
     
     texte = texte.strip()
@@ -64,15 +42,6 @@ def normalise_date(texte):
     if not fm:
         return None
     return datetime.date(int(fm.group(1)), int(fm.group(2)), int(fm.group(3)))
-
-
-def normalise_datetime(texte):
-    
-    texte = texte.strip()
-    fm = re.match('(\d{4})(\d{2})(\d{2})-(\d{2})(\d{2})(\d{2})', texte)
-    if not fm:
-        return None
-    return datetime.datetime(int(fm.group(1)), int(fm.group(2)), int(fm.group(3)), int(fm.group(4)), int(fm.group(5)), int(fm.group(6)))
 
 
 def comp_infini(x, y):
