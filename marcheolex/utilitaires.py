@@ -151,4 +151,27 @@ def min_date_infini( x, y ):
         return x
     return y
 
+def date_en_francais( date ):
+
+    """
+    Retourne la date écrite en français.
+
+    :param date:
+        (datetime.date|datetime.datetime) Objet date.
+    :returns:
+        (str)
+    """
+
+    if isinstance( date, datetime.date ):
+        date_fr = '{} {} {}'.format(date.day, MOIS2[int(date.month)], date.year)
+        if date.day == 1:
+            date_fr = '1er {} {}'.format(MOIS2[int(date.month)], date.year)
+        return date_fr
+
+    elif isinstance( date, datetime.datetime ):
+        date_fr = '{} {} {} à'.format(date.day, MOIS2[int(date.month)], date.year)
+        if date.day == 1:
+            date_fr = '1er {} {} à'.format(MOIS2[int(date.month)], date.year) + date.strftime('%H:%M:%S (%Z)')
+        return date_fr
+
 # vim: set ts=4 sw=4 sts=4 et:

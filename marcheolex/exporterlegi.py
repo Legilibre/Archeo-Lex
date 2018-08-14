@@ -23,8 +23,7 @@ from marcheolex import logger
 from marcheolex import version_archeolex
 from marcheolex import natures
 from marcheolex.utilitaires import MOIS
-from marcheolex.utilitaires import MOIS2
-from marcheolex.utilitaires import comp_infini_strict
+from marcheolex.utilitaires import date_en_francais
 from marcheolex.exports import *
 from marcheolex.FabriqueArticle import FabriqueArticle
 from marcheolex.FabriqueSection import FabriqueSection
@@ -143,9 +142,7 @@ def creer_historique_texte(arg):
     """)
     last_update_jour = datetime.date(*(time.strptime(last_update, '%Y%m%d-%H%M%S')[0:3]))
     last_update = paris.localize( datetime.datetime(*(time.strptime(last_update, '%Y%m%d-%H%M%S')[0:6])) )
-    date_base_legi_fr = '{} {} {} à '.format(last_update.day, MOIS2[int(last_update.month)], last_update.year) + last_update.strftime('%H:%M:%S (%Z)')
-    if last_update.day == 1:
-        date_base_legi_fr = '1er {} {} à '.format(MOIS2[int(last_update.month)], last_update.year) + last_update.strftime('%H:%M:%S (%Z)')
+    date_base_legi_fr = date_en_francais( last_update )
     logger.info('Dernière mise à jour de la base LEGI : {}'.format(last_update.isoformat()))
 
     os.makedirs(dossier, exist_ok=True)
@@ -370,7 +367,7 @@ def creer_historique_texte(arg):
         contenu, fin_vigueur = fs.obtenir_texte_section( None, [], cid, debut, fin )
         
         if not contenu.strip():
-            if fin == None or str(fin) == '2999-01-01':
+            if fin == None:
                 logger.info(('Version {:'+wnbver+'} (du {} à  maintenant) non-enregistrée car vide').format(i_version+1, debut))
             else:
                 logger.info(('Version {:'+wnbver+'} (du {} au {}) non-enregistrée car vide').format(i_version+1, debut, fin))
@@ -378,9 +375,7 @@ def creer_historique_texte(arg):
             continue
 
         # Ajout des en-têtes et pied-de-texte
-        date_debut_fr = '{} {} {}'.format(debut.day, MOIS2[int(debut.month)], debut.year)
-        if debut.day == 1:
-            date_debut_fr = '1er {} {}'.format(MOIS2[int(debut.month)], debut.year)
+        date_debut_fr = date_en_francais( debut )
         if visas:
             contenu = visas_titre + visas + contenu
             fs.stockage.ecrire_ressource( 'VISAS', [(0, 'VISAS', 'Visas')], '', 'Visas', visas )
@@ -398,7 +393,7 @@ def creer_historique_texte(arg):
         fs.stockage.ecrire_ressource( cid, [], '', nom_fichier, contenu )
 
         if not subprocess.check_output(['git', 'status', '--ignored', '-s'], cwd=dossier):
-            if fin == None or str(fin) == '2999-01-01':
+            if fin == None:
                 logger.info(('Version {:'+wnbver+'} (du {} à  maintenant) non-enregistrée car identique à la précédente').format(i_version+1, debut))
             else:
                 logger.info(('Version {:'+wnbver+'} (du {} au {}) non-enregistrée car identique à la précédente').format(i_version+1, debut, fin))
@@ -409,7 +404,7 @@ def creer_historique_texte(arg):
         #subprocess.call(['git', 'commit', '--author="Législateur <>"', '--date="' + str(debut_datetime) + '"', '-m', 'Version consolidée au {}\n\nVersions :\n- base LEGI : {}\n- programme Archéo Lex : {}'.format(date_debut_fr, date_base_legi, version_archeolex), '-q', '--no-status'], cwd=dossier)
         subprocess.call(['git', 'commit', '--author="Législateur <>"', '--date="' + str(debut_datetime) + '"', '-m', 'Version consolidée au {}'.format(date_debut_fr), '-q', '--no-status'], cwd=dossier, env={ 'GIT_COMMITTER_DATE': last_update.isoformat(), 'GIT_COMMITTER_NAME': 'Législateur', 'GIT_COMMITTER_EMAIL': '' })
         
-        if fin == None or str(fin) == '2999-01-01':
+        if fin == None:
             logger.info(('Version {:'+wnbver+'} (du {} à  maintenant) enregistrée').format(i_version+1, debut))
         else:
             logger.info(('Version {:'+wnbver+'} (du {} au {}) enregistrée').format(i_version+1, debut, fin))
