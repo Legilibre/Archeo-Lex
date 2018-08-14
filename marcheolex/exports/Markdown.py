@@ -52,7 +52,10 @@ class Markdown( Syntaxes ):
         texte = re.sub(r'\s*</table>', '</table>\n\n', texte, flags=re.DOTALL)
 
         # Retrait des espaces blancs en début et fin de ligne
-        texte = re.sub(r'(?:[ \t\r\f\v]+|</[a-z]+>)*$', lambda m: m.group(0).replace(' ', ''), texte, flags=re.MULTILINE)
+        # - Les regexes sont forward et ne calculent pas en partant de la fin même lorsque l’expression s’y prête
+        #   La version d’origine peut prendre jusqu’à 2 minutes pour une chaîne comportant 29 espaces consécutifs qui ne sont pas en fin de ligne
+        #texte = re.sub(r'(?:[ \t\r\f\v]+|</[a-z]+>)*$', lambda m: m.group(0).replace(' ', ''), texte, flags=re.MULTILINE)
+        texte = ''.join(reversed(re.sub(r'^(?:[ \t\r\f\v]+|>[a-z]+/<)+', lambda m: m.group(0).replace(' ', ''), ''.join(reversed(texte)), flags=re.MULTILINE)))
         texte = re.sub(r'^((?:<[a-z]+(?: [^>]*)?>)*)[ \t\r\f\v]+', r'\1', texte, flags=re.MULTILINE)
         texte = re.sub(r'^((?:<[a-z]+(?: [^>]*)?>)*)[ \t\r\f\v]+', r'\1', texte, flags=re.MULTILINE)
         texte = re.sub(r'^((?:<[a-z]+(?: [^>]*)?>)*)[ \t\r\f\v]+', r'\1', texte, flags=re.MULTILINE)
