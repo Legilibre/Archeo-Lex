@@ -30,9 +30,13 @@ class Markdown( Syntaxes ):
         if texte == None:
             return ''
 
+        # Syntaxes inutiles
+        texte = re.sub(r'</b><b>', '', texte)
+
         # Transformation des <br>, <p>, <div>, <span>, <blockquote> en paragraphes Markdown
         # - Les deux blockquote successifs servent lorsque deux blockquote sont imbriqués (souvent)
         texte = re.sub(r'<br((?: [^>]*)?)/?>', '\n\n', texte)
+        texte = re.sub(r'<p align="center"(?:(?: [^>]*)?)>(.*?)</p>', r'<center>\1</center>', texte, flags=re.DOTALL)
         texte = re.sub(r'<p(?:(?: [^>]*)?)>(.*?)</p>', r'\1\n\n', texte, flags=re.DOTALL)
         texte = re.sub(r'<div(?:(?: [^>]*)?)>(.*?)</div>', r'\1\n\n', texte, flags=re.DOTALL)
         texte = re.sub(r'<span(?:(?: [^>]*)?)>(.*?)</span>', r'\1\n\n', texte, flags=re.DOTALL)
@@ -40,17 +44,22 @@ class Markdown( Syntaxes ):
         texte = re.sub(r'<blockquote>(.*?)</blockquote>', r'\n\n\1\n\n', texte, flags=re.DOTALL)
 
         # Les balises de tableau vont sur des lignes séparées
-        texte = re.sub(r'\s*<td(?: align="left")?((?: [^>]*)?)>\s*(.*?)\s*</td>\s*', r'\n<td\1>\2</td>\n', texte, flags=re.DOTALL)
-        texte = re.sub(r'\s*<th(?: align="left")?((?: [^>]*)?)>\s*(.*?)\s*</th>\s*', r'\n<th\1>\2</th>\n', texte, flags=re.DOTALL)
-        texte = re.sub(r'\s*<tr(?: align="left")?((?: [^>]*)?)>\s*', r'\n<tr\1>\n', texte, flags=re.DOTALL)
+        texte = re.sub(r'\s*<td(?: align="left"| width="\d+")*((?: [^>]*)?)>\s*(.*?)\s*</td>\s*', r'\n<td\1>\2</td>\n', texte, flags=re.DOTALL)
+        texte = re.sub(r'\s*<th(?: align="left"| width="\d+")*((?: [^>]*)?)>\s*(.*?)\s*</th>\s*', r'\n<th\1>\2</th>\n', texte, flags=re.DOTALL)
+        texte = re.sub(r'\s*<tr(?: align="left"| width="\d+")*((?: [^>]*)?)>\s*', r'\n<tr\1>\n', texte, flags=re.DOTALL)
         texte = re.sub(r'\s*</tr>\s*', '\n</tr>\n', texte, flags=re.DOTALL)
+        texte = re.sub(r'\s*<table((?: [^>]*)?)>', r'\n\n<table\1>', texte, flags=re.DOTALL)
+        texte = re.sub(r'\s*</table>', '</table>\n\n', texte, flags=re.DOTALL)
 
         # Retrait des espaces blancs en début et fin de ligne
-        texte = re.sub(r'[ \t\r\f\v]+\n', '\n', texte)
-        texte = re.sub(r'\n[ \t\r\f\v]+', '\n', texte)
+        texte = re.sub(r'(?:[ \t\r\f\v]+|</[a-z]+>)*$', lambda m: m.group(0).replace(' ', ''), texte, flags=re.MULTILINE)
+        texte = re.sub(r'^((?:<[a-z]+(?: [^>]*)?>)*)[ \t\r\f\v]+', r'\1', texte, flags=re.MULTILINE)
+        texte = re.sub(r'^((?:<[a-z]+(?: [^>]*)?>)*)[ \t\r\f\v]+', r'\1', texte, flags=re.MULTILINE)
+        texte = re.sub(r'^((?:<[a-z]+(?: [^>]*)?>)*)[ \t\r\f\v]+', r'\1', texte, flags=re.MULTILINE)
 
-        # Markdownisation des listes non-numérotées
+        # Markdownisation des listes à puces
         # - Les sept tirets sont U+002D, U+2010 et U+2011, U+2012 et U+2013, U+2014 et U+2015
+        # - La 2e expression sert à ajouter une ligne vide avant une liste à puces
         texte = re.sub(r'\n+[-‐‑‒–—―] *([^\n]+)', r'\n- \1', texte)
         texte = re.sub(r'\n([^-][^\n]*)\n-([^\n]+)', r'\n\1\n\n-\2', texte)
 
