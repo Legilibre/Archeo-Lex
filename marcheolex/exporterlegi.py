@@ -367,7 +367,7 @@ def creer_historique_texte(arg):
         contenu, fin_vigueur = fs.obtenir_texte_section( None, [], cid, debut, fin )
         
         if not contenu.strip():
-            if fin == None:
+            if str(fin) == '2999-01-01':
                 logger.info(('Version {:'+wnbver+'} (du {} à  maintenant) non-enregistrée car vide').format(i_version+1, debut))
             else:
                 logger.info(('Version {:'+wnbver+'} (du {} au {}) non-enregistrée car vide').format(i_version+1, debut, fin))
@@ -393,7 +393,7 @@ def creer_historique_texte(arg):
         fs.stockage.ecrire_ressource( cid, [], '', nom_fichier, contenu )
 
         if not subprocess.check_output(['git', 'status', '--ignored', '-s'], cwd=dossier):
-            if fin == None:
+            if str(fin) == '2999-01-01':
                 logger.info(('Version {:'+wnbver+'} (du {} à  maintenant) non-enregistrée car identique à la précédente').format(i_version+1, debut))
             else:
                 logger.info(('Version {:'+wnbver+'} (du {} au {}) non-enregistrée car identique à la précédente').format(i_version+1, debut, fin))
@@ -403,8 +403,8 @@ def creer_historique_texte(arg):
         # Enregistrer les fichiers dans Git
         #subprocess.call(['git', 'commit', '--author="Législateur <>"', '--date="' + str(debut_datetime) + '"', '-m', 'Version consolidée au {}\n\nVersions :\n- base LEGI : {}\n- programme Archéo Lex : {}'.format(date_debut_fr, date_base_legi, version_archeolex), '-q', '--no-status'], cwd=dossier)
         subprocess.call(['git', 'commit', '--author="Législateur <>"', '--date="' + str(debut_datetime) + '"', '-m', 'Version consolidée au {}'.format(date_debut_fr), '-q', '--no-status'], cwd=dossier, env={ 'GIT_COMMITTER_DATE': last_update.isoformat(), 'GIT_COMMITTER_NAME': 'Législateur', 'GIT_COMMITTER_EMAIL': '' })
-        
-        if fin == None:
+
+        if str(fin) == '2999-01-01':
             logger.info(('Version {:'+wnbver+'} (du {} à  maintenant) enregistrée').format(i_version+1, debut))
         else:
             logger.info(('Version {:'+wnbver+'} (du {} au {}) enregistrée').format(i_version+1, debut, fin))
