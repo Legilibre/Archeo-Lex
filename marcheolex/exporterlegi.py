@@ -121,6 +121,8 @@ def creer_historique_texte(arg):
 
     # Constantes
     paris = timezone( 'Europe/Paris' )
+    annee2100 = paris.localize( datetime.datetime( 2100, 1, 1 ) )
+    annee1970 = paris.localize( datetime.datetime( 1970, 1, 1 ) )
 
     # Connexion à la base de données
     db = legi.utils.connect_db(bdd)
@@ -337,7 +339,11 @@ def creer_historique_texte(arg):
     # - créer le fichier texte au format demandé
     # - commiter le fichier
     wnbver = str(len(str(len(versions_texte))))
-    erreur_version = False
+    erreurs = {
+        'versions_manquantes': False,
+        'date_pre_1970': False,
+        'date_post_2100': False,
+    }
     for (i_version, version_texte) in enumerate(versions_texte):
         
         # Passer les versions 'nulles'
@@ -371,7 +377,7 @@ def creer_historique_texte(arg):
                 logger.info(('Version {:'+wnbver+'} (du {} à  maintenant) non-enregistrée car vide').format(i_version+1, debut))
             else:
                 logger.info(('Version {:'+wnbver+'} (du {} au {}) non-enregistrée car vide').format(i_version+1, debut, fin))
-            erreur_version = True
+            erreurs['versions_manquantes'] = True
             continue
 
         # Ajout des en-têtes et pied-de-texte
@@ -397,17 +403,28 @@ def creer_historique_texte(arg):
                 logger.info(('Version {:'+wnbver+'} (du {} à  maintenant) non-enregistrée car identique à la précédente').format(i_version+1, debut))
             else:
                 logger.info(('Version {:'+wnbver+'} (du {} au {}) non-enregistrée car identique à la précédente').format(i_version+1, debut, fin))
-            erreur_version = True
+            erreurs['versions_manquantes'] = True
             continue
+
+        annee_incompatible = ''
+        git_debut_datetime = debut_datetime
+        if  debut_datetime <= annee1970:
+            annee_incompatible = ' avec une date Git erronée mais compatible'
+            erreurs['date_pre_1970'] = True
+            git_debut_datetime = paris.localize( datetime.datetime( 1970, 1, 1, 12 ) )
+        if debut_datetime >= annee2100:
+            annee_incompatible = ' avec une date Git erronée mais compatible'
+            erreurs['date_post_2100'] = True
+            git_debut_datetime = paris.localize( datetime.datetime( 2099, 1, 1, 12 ) )
 
         # Enregistrer les fichiers dans Git
         #subprocess.call(['git', 'commit', '--author="Législateur <>"', '--date="' + str(debut_datetime) + '"', '-m', 'Version consolidée au {}\n\nVersions :\n- base LEGI : {}\n- programme Archéo Lex : {}'.format(date_debut_fr, date_base_legi, version_archeolex), '-q', '--no-status'], cwd=dossier)
-        subprocess.call(['git', 'commit', '--author="Législateur <>"', '--date="' + str(debut_datetime) + '"', '-m', 'Version consolidée au {}'.format(date_debut_fr), '-q', '--no-status'], cwd=dossier, env={ 'GIT_COMMITTER_DATE': last_update.isoformat(), 'GIT_COMMITTER_NAME': 'Législateur', 'GIT_COMMITTER_EMAIL': '' })
+        subprocess.call(['git', 'commit', '--author="Législateur <>"', '--date="' + str(git_debut_datetime) + '"', '-m', 'Version consolidée au {}'.format(date_debut_fr), '-q', '--no-status'], cwd=dossier, env={ 'GIT_COMMITTER_DATE': last_update.isoformat(), 'GIT_COMMITTER_NAME': 'Législateur', 'GIT_COMMITTER_EMAIL': '' })
 
         if str(fin) == '2999-01-01':
-            logger.info(('Version {:'+wnbver+'} (du {} à  maintenant) enregistrée').format(i_version+1, debut))
+            logger.info(('Version {:'+wnbver+'} (du {} à  maintenant) enregistrée{}').format(i_version+1, debut, annee_incompatible))
         else:
-            logger.info(('Version {:'+wnbver+'} (du {} au {}) enregistrée').format(i_version+1, debut, fin))
+            logger.info(('Version {:'+wnbver+'} (du {} au {}) enregistrée{}').format(i_version+1, debut, fin, annee_incompatible))
     
     if futur and not futur_debut:
         subprocess.call(['git', 'checkout', branche], cwd=dossier)
@@ -420,8 +437,12 @@ def creer_historique_texte(arg):
     # Ajout du tag de date éditoriale
     subprocess.call(['git', 'tag', last_update.strftime('%Y%m%d-%H%M%S')], cwd=dossier)
 
-    if erreur_version:
+    if erreurs['versions_manquantes']:
         logger.info( 'Erreurs détectées avec des versions vides ou identiques aux précédentes : erreurs dans la base LEGI (en général) ou dans Archéo Lex, voir le fichier doc/limitations.md.' )
+    if erreurs['date_post_2100']:
+        logger.info( 'Il est apparu des dates postérieures à 2100 (probablement le 22 février 2222 = date future indéterminée) qui ont été codées en 2099-01-01T12:00:00+0100 pour rester pleinement compatible avec tous les clients Git.' )
+    if erreurs['date_pre_1970']:
+        logger.info( 'Il est apparu des dates antérieures à 1970 qui a été codées en 1970-01-01T12:00:00+0100 pour rester pleinement compatible avec tous les clients Git.' )
 
     if fs.fabrique_article.erreurs:
         logger.info( 'Erreurs - voir le fichier doc/limitations.md :' )
