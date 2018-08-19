@@ -11,7 +11,9 @@ Dates bizarres et spéciales
 
 La date du 22 février 2222 (2222-02-22) est présente dans certaines versions futures de textes. Elle signifie « date d’entrée en vigueur différée à une date non-déterminée » et signifie que l’article ou le texte entrera en vigueur à une date donnée sans que cette date ne soit pour l’instant connue. Cette date spéciale est présente dans la base LEGI et a été conservée dans Archéo Lex.
 
-Pour des raisons informatiques dûes au format Git, les dates antérieures au 1er janvier 1970 sont mal codées dans la « date du commit Git » pouvant apparaître dans certaines interfaces de visualisation. Ce problème est complexe à résoudre, il est discuté sur l’[issue 47](https://github.com/Legilibre/Archeo-Lex/issues/47). Un contournement partiel est de s’appuyer sur la date écrite en français dans le résumé du commit qui est toujours correcte.
+Pour des raisons informatiques dûes au format Git, les dates antérieures au 1er janvier 1970 ou postérieures au 1er janvier 2100 (notamment la date évoquée ci-dessus) peuvent apparaître comme erronées dans la « date du commit Git » dans certaines interfaces de visualisation. Ce problème est complexe à résoudre car il dépend des logiciels ou plate-formes Git qui sont utilisées pour afficher le dépôt, certaines ne gérant pas bien les dates pré-1970 et/ou post-2100. Noter que dans tous les cas, le résumé du commit avec la date écrite en français est toujours correct.
+
+Par défaut, Archéo Lex détecte les dates pré-1970 et post-2100 et les inscrit (de façon erronée mais intentionnelle) comme le 1er janvier 1970 à 12:00 CET et 1er janvier 2099 à 12:00 CET. Deux options permettent de créer des dépôts Git en forçant les dates à prendre leurs vraies valeurs (pré-1970 et/ou post-2100), mais cela peut entraîner des incompatibilités lorsque le dépôt est traité par certains logiciels ou plate-formes Git (par exemple refus d’envoyer un dépôt vers un logiciel ou plate-forme Git, ou erreur fatale lors de l’affichage du dépôt).
 
 
 Mention « (article manquant) » dans le corps de l’article

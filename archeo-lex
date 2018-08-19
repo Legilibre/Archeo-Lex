@@ -21,7 +21,7 @@ from marcheolex.exporterlegi import creer_historique_legi
 from marcheolex.pousserlestextes import pousser_les_textes_sur_gitlab
 
 # Manuel d’aide
-aide = ('''Usage: archeo-lex [--aide] [--debug] [--help] [--version] [--textes=<TEXTES>] [--base=<BASE>] [--livraison=<DATE>] [--exporterlegi] [--mise-a-jour | --nouveau] [--dialecte=<DIALECTE>] [--historique=<HISTORIQUE>] [--metadonnees] [--organisation=<TYPE>] [--bddlegi=<fichier>] [--dossier=<dossier>] [--production] [--gitlab-host=<GITHOST>] [--gitlab-token=<GITTOKEN>] [--gitlab-group=<GITGROUP>] [--git-server=<GITSERVER>] [--git-key=<GITKEY>] [--calcules=<FICHIER>]
+aide = ('''Usage: archeo-lex [--aide] [--debug] [--help] [--version] [--textes=<TEXTES>] [--base=<BASE>] [--livraison=<DATE>] [--exporterlegi] [--mise-a-jour | --nouveau] [--dialecte=<DIALECTE>] [--historique=<HISTORIQUE>] [--metadonnees] [--organisation=<TYPE>] [--dates-git] [--dates-git-pre-1970] [--dates-git-post-2100] [--bddlegi=<fichier>] [--dossier=<dossier>] [--production] [--gitlab-host=<GITHOST>] [--gitlab-token=<GITTOKEN>] [--gitlab-group=<GITGROUP>] [--git-server=<GITSERVER>] [--git-key=<GITKEY>] [--calcules=<FICHIER>]
 
 -t --textes=<TEXTES>       Types de textes à télécharger :
                              - "constitution-de-1958",
@@ -56,6 +56,10 @@ aide = ('''Usage: archeo-lex [--aide] [--debug] [--help] [--version] [--textes=<
                              - "texte" (défaut) : tout le texte dans un unique fichier
                              - "sections" : un répertoire par section, chaque article dans un fichier
                              - "articles" : chaque article dans un fichier
+   --dates-git             Forcer les dates de Git avant 1970 et après 2100, cela peut rendre
+                           le dépôt créé non-compatible avec certaines plateformes
+   --dates-git-pre-1970    Forcer les dates de Git avant 1970, voir avertissement ci-dessus
+   --dates-git-post-2100   Forcer les dates de Git après 2100, voir avertissement ci-dessus
 
 
    --bddlegi=<fichier>     Nom de la base de données de legi.py, par défaut "cache/sql/legi.sqlite"
@@ -115,6 +119,8 @@ def principal(arguments):
     data['format']['historique'] = arguments.get('--historique') or 'git'
     data['format']['metadonnees'] = arguments.get('--metadonnees') or False
     data['format']['organisation'] = arguments.get('--organisation') or 'texte'
+    data['format']['dates-git-pre-1970'] = arguments.get('--dates-git-pre-1970') or arguments.get('--dates-git') or False
+    data['format']['dates-git-post-2100'] = arguments.get('--dates-git-post-2100') or arguments.get('--dates-git') or False
     
     # Lecture des autres paramètres
     data['bddlegi'] = (arguments.get('--bddlegi') or '') or 'cache/sql/legi.sqlite'
