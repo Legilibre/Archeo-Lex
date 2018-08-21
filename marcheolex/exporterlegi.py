@@ -229,8 +229,7 @@ def creer_historique_texte(arg):
     date_reprise_git = None
     reset_hash = ''
     if mise_a_jour:
-        tags = subprocess.check_output(['git', 'tag', '-l'], cwd=dossier)
-        tags = tags.strip().split('\n')
+        tags = str( subprocess.check_output(['git', 'tag', '-l'], cwd=dossier), 'utf-8' ).strip().split('\n')
         date_maj_git = False
         if len(tags) == 0:
             raise Exception('Pas de tag de la dernière mise à jour')
@@ -250,11 +249,11 @@ def creer_historique_texte(arg):
 
         # Lecture des versions en vigueur dans le dépôt Git
         try:
-            if subprocess.check_output(['git', 'rev-parse', '--verify', 'futur-'+branche], cwd=dossier):
+            if subprocess.check_output(['git', 'rev-parse', '--verify', 'futur-'+branche], cwd=dossier, stderr=subprocess.DEVNULL):
                 subprocess.call(['git', 'checkout', 'futur-'+branche], cwd=dossier)
         except subprocess.CalledProcessError:
             pass
-        versions_git = subprocess.check_output(['git', 'log', '--oneline'], cwd=dossier).strip().split('\n')
+        versions_git = str( subprocess.check_output(['git', 'log', '--oneline'], cwd=dossier), 'utf-8' ).strip().split('\n')
         for log_version in versions_git:
             for m, k in MOIS.items():
                 log_version = log_version.replace( m, k )
@@ -271,7 +270,7 @@ def creer_historique_texte(arg):
             if date_reprise_git <= last_update_jour.strftime('%Y-%m-%d'):
                 subprocess.call(['git', 'checkout', branche], cwd=dossier)
                 try:
-                    if subprocess.check_output(['git', 'rev-parse', '--verify', 'futur-'+branche], cwd=dossier):
+                    if subprocess.check_output(['git', 'rev-parse', '--verify', 'futur-'+branche], cwd=dossier, stderr=subprocess.DEVNULL):
                         subprocess.call(['git', 'branch', '-D', 'futur-'+branche], cwd=dossier)
                 except subprocess.CalledProcessError:
                     pass
