@@ -215,25 +215,40 @@ def creer_historique_texte(arg):
     fichier = os.path.join(dossier, nom_fichier + '.md')
 
     # Créer le dépôt Git avec comme branche maîtresse 'texte' ou 'articles'
-    branche = 'texte'
-    if format['organisation'] == 'articles':
-        branche = 'articles'
-    elif format['organisation'] == 'sections':
-        branche = 'sections'
+    branche = None
+    git_ref_base = None
+    git_ref = git_ref_base
+    if format['organisation'] in [ 'texte', 'articles', 'sections' ]:
+        branche = format['organisation']
+        git_ref_base = 'refs/' + format['organisation'] + '/' + format['dialecte'] + '/'
+        git_ref = git_ref_base
     if not os.path.exists(os.path.join(dossier, '.git')):
         subprocess.call(['git', 'init'], cwd=dossier)
         subprocess.call(['git', 'symbolic-ref', 'HEAD', 'refs/heads/'+branche], cwd=dossier)
     else:
         subprocess.call(['git', 'checkout', '--', sousdossier], cwd=dossier)
-    
+
+    # Vérification si la référence nécessaire existe ; dans le cas contraire, ce n’est pas une mise à jour
+    git_refs = ''
+    if mise_a_jour:
+        git_refs = str( subprocess.check_output(['git', 'show-ref'], cwd=dossier), 'utf-8' ).strip()
+        git_refs_base = re.search( '^([0-9a-f]{40}) ' + git_ref_base + '([0-9]{8}-[0-9]{6})/vigueur(?:-future)?$', git_refs, flags=re.MULTILINE )
+        mise_a_jour = ( git_refs_base != None )
+        if not mise_a_jour:
+            subprocess.call(['git', 'checkout', '--orphan', branche], cwd=dossier)
+            subprocess.call(['git', 'rm', '--cached', '-rf', '.'], cwd=dossier, stdout=subprocess.DEVNULL)
+            subprocess.call(['git', 'clean', '-f', '-x', '-d'], cwd=dossier, stdout=subprocess.DEVNULL)
+
     date_reprise_git = None
     reset_hash = ''
     if mise_a_jour:
-        tags = str( subprocess.check_output(['git', 'tag', '-l'], cwd=dossier), 'utf-8' ).strip().split('\n')
         date_maj_git = False
-        if len(tags) == 0:
-            raise Exception('Pas de tag de la dernière mise à jour')
-        date_maj_git = paris.localize( datetime.datetime(*(time.strptime(tags[-1], '%Y%m%d-%H%M%S')[0:6])) )
+        git_refs_base = re.findall( '^([0-9a-f]{40}) ' + git_ref_base + '([0-9]{8}-[0-9]{6})/vigueur(?:-future)?$', git_refs, flags=re.MULTILINE )
+        git_refs_base = sorted( git_refs_base, key = lambda x: x[1] )
+        if git_refs_base:
+            date_maj_git = paris.localize( datetime.datetime(*(time.strptime(git_refs_base[-1][1], '%Y%m%d-%H%M%S')[0:6])) )
+        else:
+            raise Exception('Pas de tag de la dernière mise à jour')        
         logger.info('Dernière mise à jour du dépôt : {}'.format(date_maj_git.isoformat()))
         if int(time.mktime(date_maj_git.timetuple())) >= mtime:
             logger.info( 'Dossier : {0}'.format(dossier) )
@@ -249,8 +264,8 @@ def creer_historique_texte(arg):
 
         # Lecture des versions en vigueur dans le dépôt Git
         try:
-            if subprocess.check_output(['git', 'rev-parse', '--verify', 'futur-'+branche], cwd=dossier, stderr=subprocess.DEVNULL):
-                subprocess.call(['git', 'checkout', 'futur-'+branche], cwd=dossier)
+            if subprocess.check_output(['git', 'rev-parse', '--verify', branche+'-futur'], cwd=dossier, stderr=subprocess.DEVNULL):
+                subprocess.call(['git', 'checkout', branche+'-futur'], cwd=dossier)
         except subprocess.CalledProcessError:
             pass
         versions_git = str( subprocess.check_output(['git', 'log', '--oneline'], cwd=dossier), 'utf-8' ).strip().split('\n')
@@ -270,8 +285,8 @@ def creer_historique_texte(arg):
             if date_reprise_git <= last_update_jour.strftime('%Y-%m-%d'):
                 subprocess.call(['git', 'checkout', branche], cwd=dossier)
                 try:
-                    if subprocess.check_output(['git', 'rev-parse', '--verify', 'futur-'+branche], cwd=dossier, stderr=subprocess.DEVNULL):
-                        subprocess.call(['git', 'branch', '-D', 'futur-'+branche], cwd=dossier)
+                    if subprocess.check_output(['git', 'rev-parse', '--verify', branche+'-futur'], cwd=dossier, stderr=subprocess.DEVNULL):
+                        subprocess.call(['git', 'branch', '-D', branche+'-futur'], cwd=dossier)
                 except subprocess.CalledProcessError:
                     pass
             subprocess.call(['git', 'reset', '--hard', reset_hash], cwd=dossier) 
@@ -358,13 +373,13 @@ def creer_historique_texte(arg):
 
         if not futur and debut > last_update_jour:
             if i_version == 0:
-                subprocess.call(['git', 'symbolic-ref', 'HEAD', 'refs/heads/futur-'+branche], cwd=dossier)
+                subprocess.call(['git', 'symbolic-ref', 'HEAD', 'refs/heads/'+branche+'-futur'], cwd=dossier)
                 if not reset_hash:
                     futur_debut = True
             else:
-                subprocess.call(['git', 'checkout', '-b', 'futur-'+branche], cwd=dossier)
+                subprocess.call(['git', 'checkout', '-b', branche+'-futur'], cwd=dossier)
             futur = True
-            branche_courante = 'futur-' + branche
+            branche_courante = branche + '-futur'
 
         # Retrait des fichiers des anciennes versions
         if format['organisation'] != 'fichier-unique':
@@ -433,17 +448,26 @@ def creer_historique_texte(arg):
             logger.info(('Version {:'+wnbver+'} (du {} à  maintenant) enregistrée{}').format(i_version+1, debut, annee_incompatible))
         else:
             logger.info(('Version {:'+wnbver+'} (du {} au {}) enregistrée{}').format(i_version+1, debut, fin, annee_incompatible))
-    
-    if futur and not futur_debut:
+
+    # Création des références Git
+    if not futur_debut:
+        subprocess.call(['git', 'update-ref', git_ref_base + last_update.strftime('%Y%m%d-%H%M%S') + '/vigueur', 'refs/heads/' + branche], cwd=dossier)
+    if futur:
+        subprocess.call(['git', 'update-ref', git_ref_base + last_update.strftime('%Y%m%d-%H%M%S') + '/vigueur-future', 'refs/heads/'+branche+'-futur'], cwd=dossier)
+
+    # Positionnement des fichiers sur, dans l’ordre selon ce qui est disponible : texte, texte-futur, <organisation>, <organisation>-futur
+    if branche != 'texte' and re.search( '^([0-9a-f]{40}) refs/texte/' + format['dialecte'] + '/([0-9]{8}-[0-9]{6})/vigueur$', git_refs, flags=re.MULTILINE ):
+        subprocess.call(['git', 'checkout', 'texte'], cwd=dossier)
+    elif branche != 'texte' and re.search( '^([0-9a-f]{40}) refs/texte/' + format['dialecte'] + '/([0-9]{8}-[0-9]{6})/vigueur-future$', git_refs, flags=re.MULTILINE ):
+        subprocess.call(['git', 'checkout', 'texte-futur'], cwd=dossier)
+    elif futur and not futur_debut:
         subprocess.call(['git', 'checkout', branche], cwd=dossier)
 
     # Optimisation du dossier git
     subprocess.call(['git', 'gc'], cwd=dossier)
+    subprocess.call(['git', 'prune', '--expire=all'], cwd=dossier)
     subprocess.call('rm -rf .git/hooks .git/refs/heads .git/refs/tags .git/logs .git/COMMIT_EDITMSG .git/branches', cwd=dossier, shell=True)
     subprocess.call('chmod -x .git/config', cwd=dossier, shell=True)
-
-    # Ajout du tag de date éditoriale
-    subprocess.call(['git', 'tag', last_update.strftime('%Y%m%d-%H%M%S')], cwd=dossier)
 
     if erreurs['versions_manquantes']:
         logger.info( 'Erreurs détectées avec des versions vides ou identiques aux précédentes : erreurs dans la base LEGI (en général) ou dans Archéo Lex, voir le fichier doc/limitations.md.' )
