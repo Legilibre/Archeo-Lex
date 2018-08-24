@@ -298,16 +298,18 @@ def creer_historique_texte(arg):
         if reset_hash:
             if date_reprise_git <= last_update_jour.strftime('%Y-%m-%d'):
                 subprocess.call(['git', 'checkout', branche], cwd=dossier)
-                try:
-                    if subprocess.check_output(['git', 'rev-parse', '--verify', branche+'-futur'], cwd=dossier, stderr=subprocess.DEVNULL):
-                        subprocess.call(['git', 'branch', '-D', branche+'-futur'], cwd=dossier)
-                except subprocess.CalledProcessError:
-                    pass
             subprocess.call(['git', 'reset', '--hard', reset_hash], cwd=dossier) 
         else:
-            subprocess.call(['git', 'branch', '-m', 'texte', 'junk'], cwd=dossier)
+            subprocess.call(['git', 'branch', '-m', branche, 'junk'], cwd=dossier)
             subprocess.call(['git', 'checkout', '--orphan', branche], cwd=dossier)
             subprocess.call(['git', 'branch', '-D', 'junk'], cwd=dossier)
+            subprocess.call(['git', 'rm', '--cached', '-rf', '.'], cwd=dossier, stdout=subprocess.DEVNULL)
+            subprocess.call(['git', 'clean', '-f', '-x', '-d'], cwd=dossier, stdout=subprocess.DEVNULL)
+        try:
+            if subprocess.check_output(['git', 'rev-parse', '--verify', branche+'-futur'], cwd=dossier, stderr=subprocess.DEVNULL):
+                subprocess.call(['git', 'branch', '-D', branche+'-futur'], cwd=dossier)
+        except subprocess.CalledProcessError:
+            pass
 
     # Sélection des versions du texte
     versions_texte_db = db.all("""
