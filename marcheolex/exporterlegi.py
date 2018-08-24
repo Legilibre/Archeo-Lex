@@ -448,12 +448,13 @@ def creer_historique_texte(arg):
             git_debut_datetime = paris.localize( datetime.datetime( 2099, 1, 1, 12 ) )
 
         # Enregistrer les fichiers dans Git
-        subprocess.call(['git', 'commit', '--author="Législateur <>"', '--date="' + str(git_debut_datetime) + '"', '-m', 'Version consolidée au {}'.format(date_debut_fr), '-q', '--no-status'], cwd=dossier, env={ 'GIT_COMMITTER_DATE': last_update.isoformat(), 'GIT_COMMITTER_NAME': 'Législateur', 'GIT_COMMITTER_EMAIL': '' })
+        subprocess.call(['git', 'commit', '--author="Législateur <>"', '--date="' + str(git_debut_datetime) + '"', '-m', 'Version consolidée au {}'.format(date_debut_fr), '-q', '--no-status'], cwd=dossier, env={ 'GIT_COMMITTER_DATE': str(git_debut_datetime), 'GIT_COMMITTER_NAME': 'Législateur', 'GIT_COMMITTER_EMAIL': '' })
 
         if ( format['dates-git-pre-1970'] and debut_datetime <= annee1970 ) or ( format['dates-git-post-2100'] and debut_datetime >= annee2100 ):
             annee_incompatible = ''
             commit = str( subprocess.check_output(['git', 'cat-file', '-p', 'HEAD'], cwd=dossier), 'utf-8' )
             commit = re.sub( r'author Législateur <> (-?\d+ [+-]\d{4})', 'author Législateur <> ' + str(int(debut_datetime.timestamp())) + debut_datetime.strftime(' %z'), commit )
+            commit = re.sub( r'committer Législateur <> (-?\d+ [+-]\d{4})', 'committer Législateur <> ' + str(int(debut_datetime.timestamp())) + debut_datetime.strftime(' %z'), commit )
             sha1 = str( subprocess.check_output( ['git', 'hash-object', '-t', 'commit', '-w', '--stdin'], cwd=dossier, input=bytes(commit, 'utf-8') ), 'utf-8' )
             sha1 = re.sub( '[^a-f0-9]', '', sha1 )
             subprocess.call(['git', 'update-ref', 'refs/heads/' + branche_courante, sha1], cwd=dossier)
