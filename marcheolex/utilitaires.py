@@ -13,6 +13,7 @@
 # Imports
 import re
 import datetime
+import os, stat, shutil
 
 MOIS = {
     'janvier': '01',
@@ -142,5 +143,40 @@ def date_en_francais( date ):
         if date.day == 1:
             date_fr = '1er {} {} à'.format(MOIS2[int(date.month)], date.year) + date.strftime('%H:%M:%S (%Z)')
         return date_fr
+
+def rmrf(files, base = ''):
+
+    """
+    Efface une liste de fichiers ou dossiers.
+
+    :param files:
+        ([str]) Liste de fichiers ou dossiers.
+    :param base:
+        (str) Emplacement commun de tous les fichiers ou dossiers.
+    """
+
+    for file in files:
+
+        f = file
+        if base:
+            f = os.path.join(base, f)
+        if not os.path.exists(f):
+            continue
+        s = os.stat(f)
+        if stat.S_ISDIR(s.st_mode):
+            shutil.rmtree(f, ignore_errors=True)
+        else:
+            os.remove(f)
+
+def no_more_executable(file):
+
+    """
+    Retire le caractère exécutable d’un fichier.
+
+    :param file:
+        (str) Fichier.
+    """
+
+    os.chmod(file, os.stat(file).st_mode & ~stat.S_IXUSR & ~stat.S_IXGRP & ~stat.S_IXOTH)
 
 # vim: set ts=4 sw=4 sts=4 et:

@@ -24,6 +24,8 @@ from marcheolex import version_archeolex
 from marcheolex import natures
 from marcheolex.utilitaires import MOIS
 from marcheolex.utilitaires import date_en_francais
+from marcheolex.utilitaires import rmrf
+from marcheolex.utilitaires import no_more_executable
 from marcheolex.exports import *
 from marcheolex.FabriqueArticle import FabriqueArticle
 from marcheolex.FabriqueSection import FabriqueSection
@@ -394,8 +396,8 @@ def creer_historique_texte(arg):
             branche_courante = branche + '-futur'
 
         # Retrait des fichiers des anciennes versions
-        if format['organisation'] != 'fichier-unique':
-            subprocess.call('rm -rf *', cwd=dossier, shell=True)
+        if format['organisation'] != 'texte':
+            rmrf(set(os.listdir(dossier)) - {'.git'}, dossier)
 
         # Créer les sections (donc tout le texte)
         contenu, fin_vigueur = fs.obtenir_texte_section( None, [], cid, debut, fin )
@@ -478,8 +480,8 @@ def creer_historique_texte(arg):
     # Optimisation du dossier git
     subprocess.call(['git', 'gc'], cwd=dossier)
     subprocess.call(['git', 'prune', '--expire=all'], cwd=dossier)
-    subprocess.call('rm -rf .git/hooks .git/refs/heads .git/refs/tags .git/logs .git/COMMIT_EDITMSG .git/branches', cwd=dossier, shell=True)
-    subprocess.call('chmod -x .git/config', cwd=dossier, shell=True)
+    rmrf({'COMMIT_EDITMSG', 'branches', 'logs', 'hooks', os.path.join('refs', 'heads'), os.path.join('refs', 'tags'), os.path.join('refs', 'texte'), os.path.join('refs', 'sections'), os.path.join('refs', 'articles')}, os.path.join(dossier, '.git'))
+    no_more_executable(os.path.join(dossier, '.git', 'config'))
 
     if erreurs['versions_manquantes']:
         logger.info( 'Erreurs détectées avec des versions vides ou identiques aux précédentes : erreurs dans la base LEGI (en général) ou dans Archéo Lex, voir le fichier doc/limitations.md.' )
