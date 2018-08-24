@@ -184,6 +184,9 @@ class FabriqueSection:
 
                 else:
 
+                    if stitre_ta == None:
+                        stitre_ta = '(sans titre)'
+
                     titre_formate = self.syntaxe.obtenir_titre( chierarchie, stitre_ta )
                     texte_section, fin_vigueur_section = self.obtenir_texte_section( section, chierarchie, cid, debut_vigueur_texte, fin_vigueur_texte )
 
