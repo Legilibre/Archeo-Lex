@@ -256,11 +256,23 @@ def creer_historique_texte(arg):
             return
 
         # Obtention de la première date qu’il faudra mettre à jour
-        date_reprise_git = db.one("""
-            SELECT date_debut
-            FROM articles
-            WHERE cid = '{0}' AND mtime > {1}
-        """.format(cid,int(time.mktime(date_maj_git.timetuple()))))
+        date_reprise_git = min(
+            db.one("""
+                SELECT date_debut
+                FROM articles
+                WHERE cid = '{0}' AND mtime > {1}
+                ORDER BY date_debut
+            """.format(cid,int(time.mktime(date_maj_git.timetuple()))))
+        ,
+            db.one("""
+                SELECT sommaires.debut
+                FROM sommaires
+                INNER JOIN sections
+                   ON sommaires.element = sections.id
+                WHERE sommaires.cid = '{0}' AND sections.mtime > {1}
+                ORDER BY sommaires.debut
+            """.format(cid,int(time.mktime(date_maj_git.timetuple()))))
+        )
 
         # Lecture des versions en vigueur dans le dépôt Git
         try:
