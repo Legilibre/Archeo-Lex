@@ -245,16 +245,28 @@ def creer_historique_texte(arg):
     reset_hash = ''
     if mise_a_jour:
         date_maj_git = False
-        git_refs_base = re.findall( '^([0-9a-f]{40}) ' + git_ref_base + '([0-9]{8}-[0-9]{6})/vigueur(?:-future)?$', git_refs, flags=re.MULTILINE )
-        git_refs_base = sorted( git_refs_base, key = lambda x: x[1] )
+        git_refs_base = re.findall( '^([0-9a-f]{40}) ' + git_ref_base + '([0-9]{8}-[0-9]{6})/(vigueur(?:-future)?)$', git_refs, flags=re.MULTILINE )
+        git_refs_base = sorted( git_refs_base, key = lambda x: x[1]+x[2] )
         if git_refs_base:
             date_maj_git = paris.localize( datetime.datetime(*(time.strptime(git_refs_base[-1][1], '%Y%m%d-%H%M%S')[0:6])) )
         else:
             raise Exception('Pas de tag de la dernière mise à jour')        
         logger.info('Dernière mise à jour du dépôt : {}'.format(date_maj_git.isoformat()))
-        if int(time.mktime(date_maj_git.timetuple())) >= mtime:
+        # Noter que le mtime des fichiers retarde de quelques secondes par rapport à la date de référence de la base LEGI
+        if int(time.mktime(date_maj_git.timetuple())) >= mtime - 10:
             logger.info( 'Dossier : {0}'.format(dossier) )
             logger.info('Pas de mise à jour disponible')
+            if git_refs_base[-1][1] == last_update.strftime('%Y%m%d-%H%M%S'):
+                return
+
+            logger.info('Ajout de la référence à la base LEGI du jour')
+            if git_refs_base[-1][2] == 'vigueur':
+                subprocess.call(['git', 'update-ref', git_ref_base + last_update.strftime('%Y%m%d-%H%M%S') + '/vigueur', git_refs_base[-1][0]], cwd=dossier)
+            elif git_refs_base[-1][2] == 'vigueur-future':
+                subprocess.call(['git', 'update-ref', git_ref_base + last_update.strftime('%Y%m%d-%H%M%S') + '/vigueur-future', git_refs_base[-1][0]], cwd=dossier)
+                if len(git_refs_base) > 1 and git_refs_base[-2][1] == git_refs_base[-1][1] and git_refs_base[-2][2] == 'vigueur':
+                    subprocess.call(['git', 'update-ref', git_ref_base + last_update.strftime('%Y%m%d-%H%M%S') + '/vigueur', git_refs_base[-2][0]], cwd=dossier)
+            nettoyer_refs_intermediaires(dossier)
             return
 
         # Obtention de la première date qu’il faudra mettre à jour
@@ -505,5 +517,30 @@ def creer_historique_texte(arg):
             logger.info( '* ' + erreur )
 
     return dossier_final, nom_final, cid
+
+def nettoyer_refs_intermediaires(dossier):
+
+    """
+    Pour chaque commit comportant des références, il est retiré les références avec des dates intermédiaires.
+
+    :param dossier:
+        (str) Dossier contenant le dépôt Git.
+    """
+
+    refs = str( subprocess.check_output(['git', 'show-ref'], cwd=dossier), 'utf-8' ).strip()
+    refs = re.findall( '^([0-9a-f]{40}) (refs/(.+?)/([0-9]{8}-[0-9]{6})/(vigueur(?:-future)?))$', refs, flags=re.MULTILINE )
+    categories = {}
+    for ref in refs:
+        if ref[0] not in categories:
+            categories[ref[0]] = {}
+        if ref[2]+ref[4] not in categories[ref[0]]:
+            categories[ref[0]][ref[2]+ref[4]] = []
+        categories[ref[0]][ref[2]+ref[4]].append(ref[1])
+    for ref in categories:
+        for categorie in categories[ref]:
+            if len(categories[ref][categorie]) > 2:
+                categories[ref][categorie].sort()
+                for r in categories[ref][categorie][1:-1]:
+                    subprocess.check_output(['git', 'update-ref', '-d', r], cwd=dossier)
 
 # vim: set ts=4 sw=4 sts=4 et:
