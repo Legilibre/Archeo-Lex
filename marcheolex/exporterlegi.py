@@ -199,7 +199,7 @@ def creer_historique_texte(arg):
             mise_a_jour = False
         os.makedirs(os.path.join(dossier, sousdossier), exist_ok=True)
     elif nature and (nature in natures.keys()) and entree_texte[2]:
-        identifiant = entree_texte[2][0].lower()+entree_texte[2][1:].replace(' ','_')
+        identifiant = entree_texte[3][0].lower()+entree_texte[3][1:].replace(' ','_')
         nom_fichier = identifiant
         sousdossier = os.path.join(nature_min_pluriel, identifiant)
         if not os.path.exists(os.path.join(dossier, sousdossier)):
