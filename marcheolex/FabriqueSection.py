@@ -105,6 +105,7 @@ class FabriqueSection:
                 LEFT JOIN sections
                        ON sommaires.element = sections.id
                 WHERE sommaires.cid = '{0}'
+                  AND sommaires.debut < sommaires.fin
             """.format( cid ) )
 
             for section in sections:
