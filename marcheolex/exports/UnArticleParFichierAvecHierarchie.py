@@ -52,7 +52,7 @@ class UnArticleParFichierAvecHierarchie( Organisations ):
         if id[4:8] == 'ARTI':
             chemin = os.path.dirname( os.path.join( *[parent[2] for parent in parents] ) )
             if num:
-                return os.path.join( chemin, 'Article_' + num + self.extension )
+                return os.path.join( chemin, 'Article_' + num.replace(' ', '_') + self.extension )
             else:
                 return os.path.join( chemin, 'Article_' + id + self.extension )
 

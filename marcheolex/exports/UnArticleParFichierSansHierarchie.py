@@ -50,7 +50,7 @@ class UnArticleParFichierSansHierarchie( Organisations ):
 
         if id[4:8] == 'ARTI':
             if num:
-                return 'Article_' + num + self.extension
+                return 'Article_' + num.replace(' ', '_') + self.extension
             else:
                 return 'Article_' + id + self.extension
 
