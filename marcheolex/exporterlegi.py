@@ -341,13 +341,13 @@ def creer_historique_texte(arg):
         vt = vers[0]
         if isinstance(vt, str):
             vt = datetime.date(*(time.strptime(vt, '%Y-%m-%d')[0:3]))
-        if date_reprise_git and vt.strftime('%Y-%m-%d') < date_reprise_git:
-            continue
-        dates_texte.append( vt )
+        if not date_reprise_git or vt.strftime('%Y-%m-%d') >= date_reprise_git:
+            dates_texte.append( vt )
         vt = vers[1]
         if isinstance(vt, str):
             vt = datetime.date(*(time.strptime(vt, '%Y-%m-%d')[0:3]))
-        dates_fin_texte.append( vt )
+        if not date_reprise_git or vt.strftime('%Y-%m-%d') >= date_reprise_git:
+            dates_fin_texte.append( vt )
     versions_texte = sorted(set(dates_texte).union(set(dates_fin_texte)))
     
     versions_texte = sorted(list(set(versions_texte)))
