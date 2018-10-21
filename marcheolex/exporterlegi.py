@@ -215,6 +215,7 @@ def creer_historique_texte(arg):
     sousdossier = '.'
     os.makedirs(dossier, exist_ok=True)
     fichier = os.path.join(dossier, nom_fichier + '.md')
+    logger.info('Dossier : {}'.format(dossier))
 
     # Créer le dépôt Git avec comme branche maîtresse 'texte' ou 'articles'
     branche = None
@@ -252,8 +253,29 @@ def creer_historique_texte(arg):
         else:
             raise Exception('Pas de tag de la dernière mise à jour')        
         logger.info('Dernière mise à jour du dépôt : {}'.format(date_maj_git.isoformat()))
+
+        # Obtention de la première date qu’il faudra mettre à jour
+        r1 = db.one("""
+            SELECT date_debut
+            FROM articles
+            WHERE cid = '{0}' AND mtime > {1} + 10
+            ORDER BY date_debut
+        """.format(cid,int(time.mktime(date_maj_git.timetuple()))))
+        r2 = db.one("""
+            SELECT sommaires.debut
+            FROM sommaires
+            INNER JOIN sections
+               ON sommaires.element = sections.id
+            WHERE sommaires.cid = '{0}' AND sections.mtime > {1} + 10
+            ORDER BY sommaires.debut
+        """.format(cid,int(time.mktime(date_maj_git.timetuple()))))
+        if r1:
+            date_reprise_git = r1
+        if r2:
+            date_reprise_git = min(r1, r2) if r1 else r2
+
         # Noter que le mtime des fichiers retarde de quelques secondes par rapport à la date de référence de la base LEGI
-        if int(time.mktime(date_maj_git.timetuple())) >= mtime - 10:
+        if int(time.mktime(date_maj_git.timetuple())) >= mtime - 10 or not date_reprise_git:
             logger.info( 'Dossier : {0}'.format(dossier) )
             logger.info('Pas de mise à jour disponible')
             if git_refs_base[-1][1] == last_update.strftime('%Y%m%d-%H%M%S'):
@@ -268,25 +290,6 @@ def creer_historique_texte(arg):
                     subprocess.call(['git', 'update-ref', git_ref_base + last_update.strftime('%Y%m%d-%H%M%S') + '/vigueur', git_refs_base[-2][0]], cwd=dossier)
             nettoyer_refs_intermediaires(dossier)
             return
-
-        # Obtention de la première date qu’il faudra mettre à jour
-        date_reprise_git = min(
-            db.one("""
-                SELECT date_debut
-                FROM articles
-                WHERE cid = '{0}' AND mtime > {1}
-                ORDER BY date_debut
-            """.format(cid,int(time.mktime(date_maj_git.timetuple()))))
-        ,
-            db.one("""
-                SELECT sommaires.debut
-                FROM sommaires
-                INNER JOIN sections
-                   ON sommaires.element = sections.id
-                WHERE sommaires.cid = '{0}' AND sections.mtime > {1}
-                ORDER BY sommaires.debut
-            """.format(cid,int(time.mktime(date_maj_git.timetuple()))))
-        )
 
         # Lecture des versions en vigueur dans le dépôt Git
         try:
