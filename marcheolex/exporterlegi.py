@@ -488,9 +488,9 @@ def creer_historique_texte(arg):
         subprocess.call(['git', 'update-ref', git_ref_base + last_update.strftime('%Y%m%d-%H%M%S') + '/vigueur-future', 'refs/heads/'+branche+'-futur'], cwd=dossier)
 
     # Positionnement des fichiers sur, dans l’ordre selon ce qui est disponible : texte, texte-futur, <organisation>, <organisation>-futur
-    if branche != 'texte' and re.search( '^([0-9a-f]{40}) refs/texte/' + format['dialecte'] + '/([0-9]{8}-[0-9]{6})/vigueur$', git_refs, flags=re.MULTILINE ):
+    if branche_courante != branche and re.search( '^([0-9a-f]{40}) refs/texte/' + format['dialecte'] + '/([0-9]{8}-[0-9]{6})/vigueur$', git_refs, flags=re.MULTILINE ):
         subprocess.call(['git', 'checkout', 'texte'], cwd=dossier)
-    elif branche != 'texte' and re.search( '^([0-9a-f]{40}) refs/texte/' + format['dialecte'] + '/([0-9]{8}-[0-9]{6})/vigueur-future$', git_refs, flags=re.MULTILINE ):
+    elif branche_courante != branche and re.search( '^([0-9a-f]{40}) refs/texte/' + format['dialecte'] + '/([0-9]{8}-[0-9]{6})/vigueur-future$', git_refs, flags=re.MULTILINE ):
         subprocess.call(['git', 'checkout', 'texte-futur'], cwd=dossier)
     elif futur and not futur_debut:
         subprocess.call(['git', 'checkout', branche], cwd=dossier)
