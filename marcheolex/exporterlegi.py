@@ -151,20 +151,24 @@ def creer_historique_texte(arg):
 
     os.makedirs(dossier, exist_ok=True)
     entree_texte = db.one("""
-        SELECT id, nature, titre, titrefull, etat, date_debut, date_fin, num, visas, signataires, tp, nota, abro, rect, cid, mtime
+        SELECT id, nature, titre, titrefull, etat, date_debut, date_fin, num, visas, signataires, tp, nota, abro, rect, cid, mtime, date_texte
         FROM textes_versions
         WHERE id = '{0}'
     """.format(id))
     if entree_texte == None:
         entree_texte = db.one("""
-            SELECT id, nature, titre, titrefull, etat, date_debut, date_fin, num, visas, signataires, tp, nota, abro, rect, cid, mtime
+            SELECT id, nature, titre, titrefull, etat, date_debut, date_fin, num, visas, signataires, tp, nota, abro, rect, cid, mtime, date_texte
             FROM textes_versions
             WHERE cid = '{0}'
         """.format(id))
     if entree_texte == None:
         raise Exception('Pas de texte avec cet ID ou CID')
 
+    texte_id = entree_texte[0]
     nature = entree_texte[1]
+    etat_texte = entree_texte[4]
+    date_debut_texte = entree_texte[5] if entree_texte[5] and entree_texte[5] != '2999-01-01' else None
+    date_fin_texte = entree_texte[6] if entree_texte[6] and entree_texte[6] != '2999-01-01' else None
     visas = entree_texte[8] or ''
     signataires = entree_texte[9] or ''
     tp = entree_texte[10] or ''
@@ -173,6 +177,7 @@ def creer_historique_texte(arg):
     rect = entree_texte[13] or ''
     cid = entree_texte[14]
     mtime = entree_texte[15]
+    date_promulgation_texte = entree_texte[16] if entree_texte[16] and entree_texte[16] != '2999-01-01' else None
 
     visas = visas.strip()
     signataires = signataires.strip()
@@ -487,6 +492,73 @@ def creer_historique_texte(arg):
     if futur:
         subprocess.call(['git', 'update-ref', git_ref_base + last_update.strftime('%Y%m%d-%H%M%S') + '/vigueur-future', 'refs/heads/'+branche+'-futur'], cwd=dossier)
 
+    # Ajout d’une référence contenant un fichier de métadonnées
+    if re.search( '^([0-9a-f]{40}) refs/meta$', git_refs, flags=re.MULTILINE ):
+        subprocess.call(['git', 'checkout', '-b', 'meta', 'refs/meta'], cwd=dossier)
+    else:
+        subprocess.call(['git', 'checkout', '--orphan', 'meta'], cwd=dossier)
+        subprocess.call(['git', 'rm', '--cached', '-rf', '.'], cwd=dossier, stdout=subprocess.DEVNULL)
+        subprocess.call(['git', 'clean', '-f', '-x', '-d'], cwd=dossier, stdout=subprocess.DEVNULL)
+    branche_courante = 'meta'
+    git_refs = str( subprocess.check_output(['git', 'show-ref'], cwd=dossier), 'utf-8' ).strip()
+    date_vigueur_actuelle = None
+    nb_versions_vigueur_actuelle = 0
+    if re.search( '^([0-9a-f]{40}) refs/heads/' + branche + '$', git_refs, flags=re.MULTILINE ):
+        date_vigueur_actuelle = str( subprocess.check_output(['git', 'show', '-s', '--pretty=format:%s', branche], cwd=dossier), 'utf-8' ).strip()
+        nb_versions_vigueur_actuelle = len(str( subprocess.check_output(['git', 'log', '--oneline', branche], cwd=dossier), 'utf-8' ).strip().splitlines())
+        date_vigueur_actuelle = re.match('^Version consolidée au ([0-9]+)(?:er)? ([a-zéû]+) ([0-9]+)$', date_vigueur_actuelle)
+        if date_vigueur_actuelle:
+            date_vigueur_actuelle = date_vigueur_actuelle.group(3) + '-' + MOIS[date_vigueur_actuelle.group(2)] + '-' + ('0' if len(date_vigueur_actuelle.group(1))==1 else '') + date_vigueur_actuelle.group(1)
+    date_vigueur_future = None
+    nb_versions_vigueur_future = 0
+    if re.search( '^([0-9a-f]{40}) refs/heads/' + branche + '-futur$', git_refs, flags=re.MULTILINE ):
+        date_vigueur_future = str( subprocess.check_output(['git', 'show', '-s', '--pretty=format:%s', branche + '-futur'], cwd=dossier), 'utf-8' ).strip()
+        nb_versions_vigueur_future = len(str( subprocess.check_output(['git', 'log', '--oneline', branche + '-futur'], cwd=dossier), 'utf-8' ).strip().splitlines())
+        date_vigueur_future = re.match('^Version consolidée au ([0-9]+)(?:er)? ([a-zéû]+) ([0-9]+)$', date_vigueur_future)
+        if date_vigueur_future:
+            date_vigueur_future = date_vigueur_future.group(3) + '-' + MOIS[date_vigueur_future.group(2)] + '-' + ('0' if len(date_vigueur_future.group(1))==1 else '') + date_vigueur_future.group(1)
+    meta = {
+        'titre': identifiant.replace('_',' '),
+        'nature': nature_min,
+        'état': 'vigueur' if not date_fin_texte else ( 'abrogé' if etat != 'MODIFIE' else 'modifié' ),
+        'id': texte_id,
+        'cid': cid,
+        'éditorialisation_nb-versions': len(set(re.findall( '^(?:[0-9a-f]{40}) ' + git_ref_base + '([0-9]{8}-[0-9]{6})/vigueur(?:-future)?$', git_refs, flags=re.MULTILINE ))),
+        'éditorialisation_dernière-date': last_update.strftime('%Y-%m-%d'),
+        'vigueur_promulgation': "'" + date_promulgation_texte + "'" if date_promulgation_texte else 'null',
+        'vigueur_début': "'" + date_debut_texte + "'" if date_debut_texte else 'null',
+        'vigueur_fin': "'" + date_fin_texte + "'" if date_fin_texte else 'null',
+        'vigueur_actuelle': "'" + date_vigueur_actuelle + "'" if date_vigueur_actuelle else 'null',
+        'vigueur_future': "'" + date_vigueur_future + "'" if date_vigueur_future else 'null',
+        'statistiques_nb-versions-vigueur-actuelle': nb_versions_vigueur_actuelle,
+        'statistiques_nb-versions-vigueur-future': max( 0, nb_versions_vigueur_future - nb_versions_vigueur_actuelle ),
+    }
+    metatxt = """titre: "%s"
+nature: '%s'
+état: '%s'
+id: '%s'
+cid: '%s'
+éditorialisation:
+  nb-versions: %d
+  dernière-date: '%s'
+vigueur:
+  promulgation: %s
+  début: %s
+  fin: %s
+  actuelle: %s
+  future: %s
+statistiques:
+  nb-versions-vigueur-actuelle: %d
+  nb-versions-vigueur-future: %d
+""" % ( meta['titre'], meta['nature'], meta['état'], meta['id'], meta['cid'], meta['éditorialisation_nb-versions'], meta['éditorialisation_dernière-date'], meta['vigueur_promulgation'], meta['vigueur_début'], meta['vigueur_fin'], meta['vigueur_actuelle'], meta['vigueur_future'], meta['statistiques_nb-versions-vigueur-actuelle'], meta['statistiques_nb-versions-vigueur-future'] )
+    with open( os.path.join(dossier, 'meta.yaml'), 'w' ) as f:
+        f.write(metatxt)
+    with open( os.path.join(dossier, '.git', 'meta.yaml'), 'w' ) as f:
+        f.write(metatxt)
+    subprocess.call(['git', 'add', 'meta.yaml'], cwd=dossier)
+    subprocess.call(['git', 'commit', '--allow-empty-message', '--author="Archéo Lex <>"', '--date="' + last_update.isoformat() + '"', '-m', '', '-q', '--no-status'], cwd=dossier, env={ 'GIT_COMMITTER_DATE': last_update.isoformat(), 'GIT_COMMITTER_NAME': 'Archéo Lex', 'GIT_COMMITTER_EMAIL': '' })
+    subprocess.call(['git', 'update-ref', 'refs/meta', 'refs/heads/meta'], cwd=dossier)
+
     # Positionnement des fichiers sur, dans l’ordre selon ce qui est disponible : texte, texte-futur, <organisation>, <organisation>-futur
     if branche_courante != 'texte' and re.search( '^([0-9a-f]{40}) refs/texte/' + format['dialecte'] + '/([0-9]{8}-[0-9]{6})/vigueur$', git_refs, flags=re.MULTILINE ):
         subprocess.call(['git', 'checkout', 'texte'], cwd=dossier)
@@ -494,6 +566,7 @@ def creer_historique_texte(arg):
         subprocess.call(['git', 'checkout', 'texte-futur'], cwd=dossier)
     elif futur and not futur_debut:
         subprocess.call(['git', 'checkout', branche], cwd=dossier)
+    subprocess.call(['git', 'branch', '-D', 'meta'], cwd=dossier)
 
     # Optimisation du dossier git
     subprocess.call(['git', 'gc'], cwd=dossier)
