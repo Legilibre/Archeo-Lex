@@ -357,6 +357,22 @@ def creer_historique_texte(arg):
     
     versions_texte = sorted(list(set(versions_texte)))
 
+    if not versions_texte:
+        versions_texte_db = db.all("""
+              SELECT DISTINCT debut, fin
+              FROM sommaires
+              WHERE cid = '{0}'
+        """.format(cid))
+        if len(list(versions_texte_db)):
+            if isinstance(date_debut_texte, str):
+                versions_texte.append(datetime.date(*(time.strptime(date_debut_texte, '%Y-%m-%d')[0:3])))
+            if isinstance(date_fin_texte, str):
+                versions_texte.append(datetime.date(*(time.strptime(date_fin_texte, '%Y-%m-%d')[0:3])))
+            else:
+                versions_texte.append(datetime.date(*(time.strptime('2999-01-01', '%Y-%m-%d')[0:3])))
+        else:
+            return
+
     syntaxe = Markdown()
     if format['organisation'] == 'articles':
         un_article_par_fichier_sans_hierarchie = UnArticleParFichierSansHierarchie('md')
@@ -520,7 +536,7 @@ def creer_historique_texte(arg):
     meta = {
         'titre': identifiant.replace('_',' '),
         'nature': nature_min,
-        'état': 'vigueur' if not date_fin_texte else ( 'abrogé' if etat != 'MODIFIE' else 'modifié' ),
+        'état': 'vigueur' if not date_fin_texte else ( 'abrogé' if etat_texte != 'MODIFIE' else 'modifié' ),
         'id': texte_id,
         'cid': cid,
         'éditorialisation_nb-versions': len(set(re.findall( '^(?:[0-9a-f]{40}) ' + git_ref_base + '([0-9]{8}-[0-9]{6})/vigueur(?:-future)?$', git_refs, flags=re.MULTILINE ))),

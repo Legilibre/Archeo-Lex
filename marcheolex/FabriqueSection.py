@@ -105,7 +105,9 @@ class FabriqueSection:
                 LEFT JOIN sections
                        ON sommaires.element = sections.id
                 WHERE sommaires.cid = '{0}'
-                  AND sommaires.debut < sommaires.fin
+                  AND (    sommaires.debut < sommaires.fin
+                        OR sommaires.debut = '2999-01-01'
+                      )
             """.format( cid ) )
 
             for section in sections:
