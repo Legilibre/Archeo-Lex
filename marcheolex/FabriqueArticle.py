@@ -40,7 +40,7 @@ class FabriqueArticle:
         self.erreurs = []
 
 
-    def effacer_cache():
+    def effacer_cache(self):
 
         self.articles = {}
 
