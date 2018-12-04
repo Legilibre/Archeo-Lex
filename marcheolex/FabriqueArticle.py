@@ -103,12 +103,12 @@ class FabriqueArticle:
         # La période de vigueur de cet article est expiré ou expire : ne pas l’ajouter au texte (date_fin <= debut_vigueur_texte)
         # Le cas quasi-erroné où le texte n’a pas de début de vigueur est écarté ici, mais devrait probablement renvoyer une erreur ailleurs
         if debut_vigueur_texte and comp_infini_large( date_fin, debut_vigueur_texte ):
-            return (None, date_debut, date_fin)
+            return (num, None, date_debut, date_fin)
 
         # La période de vigueur de cet article n’est pas encore commencé (fin_vigueur_texte <= date_debut) 
         # Les articles intemporels (= sans date de début de vigueur (et normalement sans date de fin de vigueur)) sont considérés comme toujours en vigueur
         if date_debut and comp_infini_large( fin_vigueur_texte, date_debut ):
-            return (None, date_debut, date_fin)
+            return (num, None, date_debut, date_fin)
 
         if not self.cache:
             self.effacer_cache()
