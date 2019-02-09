@@ -92,6 +92,10 @@ class Markdown( Syntaxes ):
         # Lorsque trop de retours à la ligne consécutifs sont présents, limiter à un maximum de 2
         texte = re.sub(r'\n{3,}', '\n\n', texte)
 
+        # Retrait des indications micro-sémantique/aide à la recherche faites par la DILA, pa exemple [*publicité*]
+        texte = re.sub(r'(?<=[a-záàâäéèêëíìîïóòôöøœúùûüýỳŷÿ0-9]) *\[\*[^*]*.*\*\] *(?=[a-záàâäéèêëíìîïóòôöøœúùûüýỳŷÿ0-9])', ' ', texte, re.I)
+        texte = re.sub(r' *\[\*[^*]*.*\*\] *', '', texte)
+
         texte = texte.strip()
 
         return texte
