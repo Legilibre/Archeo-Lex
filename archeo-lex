@@ -98,15 +98,7 @@ def principal(arguments):
     import os.path
 
     from marcheolex import logging, logger
-    from marcheolex.basededonnees import initialisation_bdd
-    from marcheolex.telecharger import obtenir_identifiants
-    from marcheolex.telecharger import telecharger_fichiers_base
-    from marcheolex.ranger import ranger
-    from marcheolex.exporter import creer_historique
-    from marcheolex.exporter import creer_historique_texte
     from marcheolex.exporterlegi import creer_historique_legi
-    from marcheolex.utilitaires import nop
-    from marcheolex.utilitaires import obtenir_tous_textes
     from marcheolex.pousserlestextes import pousser_les_textes_sur_gitlab
 
     if arguments.get('--debug') or arguments.get('-d'):
