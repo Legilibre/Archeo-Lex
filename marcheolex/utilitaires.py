@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
-# 
+#
 # Archéo Lex – Pure Histoire de la Loi française
 # – crée un dépôt Git des lois françaises écrites en syntaxe Markdown
 # – ce module comprend diverses fonctions utilitaires
-# 
+#
 # This program is free software. It comes without any warranty, to
 # the extent permitted by applicable law. You can redistribute it
 # and/or modify it under the terms of the Do What The Fuck You Want
@@ -13,6 +13,7 @@
 # Imports
 import re
 import datetime
+import time
 import os, stat, shutil
 
 MOIS = {
@@ -35,7 +36,7 @@ MOIS2 = ['', 'janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', '
 
 
 def normalise_date(texte):
-    
+
     texte = texte.strip()
     if texte == '2999-01-01' or not texte:
         return None
@@ -46,7 +47,7 @@ def normalise_date(texte):
 
 
 def comp_infini(x, y):
-    
+
     dateinf = datetime.date(2999, 1, 1)
 
     if isinstance(x, str):
@@ -68,7 +69,7 @@ def comp_infini(x, y):
 
 
 def comp_infini_strict(x, y):
-    
+
     dateinf = datetime.date(2999, 1, 1)
 
     if isinstance(x, str):
@@ -90,7 +91,7 @@ def comp_infini_strict(x, y):
 
 
 def comp_infini_large(x, y):
-    
+
     dateinf = datetime.date(2999, 1, 1)
 
     if isinstance(x, str):
