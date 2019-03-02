@@ -13,8 +13,11 @@ import os
 import subprocess
 from . import Stockage
 
-# @WojtekCh https://stackoverflow.com/a/32812228/174027
-LIMIT_NAME_MAX = subprocess.check_output("getconf NAME_MAX /", shell=True)
+try:
+    # @WojtekCh https://stackoverflow.com/a/32812228/174027
+    LIMIT_NAME_MAX = int(subprocess.check_output("getconf NAME_MAX /", shell=True))
+except:
+    LIMIT_NAME_MAX = 0
 
 class StockageGitFichiers( Stockage ):
 
