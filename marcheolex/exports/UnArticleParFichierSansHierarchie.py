@@ -9,7 +9,14 @@
 # the LICENSE file for more details.
 
 # Imports
+import subprocess
 from . import Organisations
+
+try:
+    # @WojtekCh https://stackoverflow.com/a/32812228/174027
+    LIMIT_NAME_MAX = int(subprocess.check_output("getconf NAME_MAX /", shell=True))
+except:
+    LIMIT_NAME_MAX = 0
 
 
 class UnArticleParFichierSansHierarchie( Organisations ):
@@ -30,6 +37,8 @@ class UnArticleParFichierSansHierarchie( Organisations ):
         """
 
         self.extension = '.' + extension if extension else ''
+        self.limite_nom_article = max(LIMIT_NAME_MAX - len(self.extension) - 8, 0)
+        self.limite_nom_article = None if self.limite_nom_article is 0 else self.limite_nom_article
 
     def obtenir_nom_fichier( self, id, parents, num, titre ):
 
@@ -50,9 +59,9 @@ class UnArticleParFichierSansHierarchie( Organisations ):
 
         if id[4:8] == 'ARTI':
             if num:
-                return 'Article_' + num.replace(' ', '_') + self.extension
+                return 'Article_' + num.replace(' ', '_')[:self.limite_nom_article] + self.extension
             else:
-                return 'Article_' + id + self.extension
+                return 'Article_' + id[:self.limite_nom_article] + self.extension
 
         return None
 

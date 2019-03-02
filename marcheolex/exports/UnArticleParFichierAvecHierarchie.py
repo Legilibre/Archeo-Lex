@@ -12,6 +12,12 @@
 import os
 from . import Organisations
 
+try:
+    # @WojtekCh https://stackoverflow.com/a/32812228/174027
+    LIMIT_NAME_MAX = int(subprocess.check_output("getconf NAME_MAX /", shell=True))
+except:
+    LIMIT_NAME_MAX = 0
+
 
 class UnArticleParFichierAvecHierarchie( Organisations ):
 
@@ -31,6 +37,9 @@ class UnArticleParFichierAvecHierarchie( Organisations ):
         """
 
         self.extension = '.' + extension if extension else ''
+        self.limite_nom_section = None if LIMIT_NAME_MAX is 0 else LIMIT_NAME_MAX
+        self.limite_nom_article = max(LIMIT_NAME_MAX - len(self.extension) - 8, 0)
+        self.limite_nom_article = None if self.limite_nom_article is 0 else self.limite_nom_article
 
     def obtenir_nom_fichier( self, id, parents, num, titre ):
 
@@ -50,11 +59,11 @@ class UnArticleParFichierAvecHierarchie( Organisations ):
         """
 
         if id[4:8] == 'ARTI':
-            chemin = os.path.dirname( os.path.join( *[parent[2] for parent in parents] ) )
+            chemin = os.path.dirname( os.path.join( *[parent[2][:self.limite_nom_section] for parent in parents] ) )
             if num:
-                return os.path.join( chemin, 'Article_' + num.replace(' ', '_') + self.extension )
+                return os.path.join( chemin, 'Article_' + num.replace(' ', '_')[:self.limite_nom_article] + self.extension )
             else:
-                return os.path.join( chemin, 'Article_' + id + self.extension )
+                return os.path.join( chemin, 'Article_' + id[:self.limite_nom_article] + self.extension )
 
         return None
 

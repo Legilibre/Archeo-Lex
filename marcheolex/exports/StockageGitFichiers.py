@@ -13,11 +13,6 @@ import os
 import subprocess
 from . import Stockage
 
-try:
-    # @WojtekCh https://stackoverflow.com/a/32812228/174027
-    LIMIT_NAME_MAX = int(subprocess.check_output("getconf NAME_MAX /", shell=True))
-except:
-    LIMIT_NAME_MAX = 0
 
 class StockageGitFichiers( Stockage ):
 
@@ -44,7 +39,7 @@ class StockageGitFichiers( Stockage ):
 
         # Enregistrer les fichiers
         for fichier in fichiers:
-            nom_fichier = os.path.join( self.dossier, fichier[0] )[-LIMIT_NAME_MAX:]
+            nom_fichier = os.path.join( self.dossier, fichier[0] )
             os.makedirs( os.path.dirname( nom_fichier ), exist_ok=True )
             with open( nom_fichier, 'w' ) as f:
                 contenu = fichier[1].strip()

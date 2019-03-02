@@ -8,6 +8,7 @@
 # To Public License, Version 2, as published by Sam Hocevar. See
 # the LICENSE file for more details.
 
+
 class Organisations:
 
     def obtenir_nom_fichier( self, id, parents, num, titre ):

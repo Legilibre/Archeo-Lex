@@ -11,6 +11,12 @@
 # Imports
 from . import Organisations
 
+try:
+    # @WojtekCh https://stackoverflow.com/a/32812228/174027
+    LIMIT_NAME_MAX = int(subprocess.check_output("getconf NAME_MAX /", shell=True))
+except:
+    LIMIT_NAME_MAX = 0
+
 
 class FichierUnique( Organisations ):
 
@@ -30,6 +36,8 @@ class FichierUnique( Organisations ):
         """
 
         self.extension = '.' + extension if extension else ''
+        self.limite_nom_texte = max(LIMIT_NAME_MAX - len(self.extension), 0) if LIMIT_NAME_MAX is not None else None
+        self.limite_nom_texte = None if self.limite_nom_texte is 0 else self.limite_nom_texte
 
     def obtenir_nom_fichier( self, id, parents, num, titre ):
 
@@ -51,7 +59,7 @@ class FichierUnique( Organisations ):
         if len(parents) == 0:
             if not titre:
                 raise Exception()
-            return titre + self.extension
+            return titre[:self.limite_nom_texte] + self.extension
 
         return None
 
