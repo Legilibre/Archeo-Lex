@@ -166,6 +166,8 @@ def creer_historique_texte(arg):
 
     texte_id = entree_texte[0]
     nature = entree_texte[1]
+    titre = entree_texte[2]
+    titrefull = entree_texte[3]
     etat_texte = entree_texte[4]
     date_debut_texte = entree_texte[5] if entree_texte[5] and entree_texte[5] != '2999-01-01' else None
     date_fin_texte = entree_texte[6] if entree_texte[6] and entree_texte[6] != '2999-01-01' else None
@@ -203,8 +205,8 @@ def creer_historique_texte(arg):
         if not os.path.exists(os.path.join(dossier, sousdossier)):
             mise_a_jour = False
         os.makedirs(os.path.join(dossier, sousdossier), exist_ok=True)
-    elif nature and (nature in natures.keys()) and entree_texte[2]:
-        identifiant = entree_texte[3][0].lower()+entree_texte[3][1:].replace(' ','_')
+    elif nature and (nature in natures.keys()) and titre:
+        identifiant = titrefull[0].lower()+titrefull[1:].replace(' ','_')
         nom_fichier = identifiant
         sousdossier = os.path.join(nature_min_pluriel, identifiant)
         if not os.path.exists(os.path.join(dossier, sousdossier)):
@@ -533,8 +535,11 @@ def creer_historique_texte(arg):
         date_vigueur_future = re.match('^Version consolidée au ([0-9]+)(?:er)? ([a-zéû]+) ([0-9]+)$', date_vigueur_future)
         if date_vigueur_future:
             date_vigueur_future = date_vigueur_future.group(3) + '-' + MOIS[date_vigueur_future.group(2)] + '-' + ('0' if len(date_vigueur_future.group(1))==1 else '') + date_vigueur_future.group(1)
+    titre_long = re.sub(r' *\(\d+\) *$', '', titrefull)
+    titre_long = titre_long[0].lower() + titre_long[1:]
     meta = {
-        'titre': identifiant.replace('_',' '),
+        'titre': identifiant.replace('_',' ').replace('\\', '\\\\').replace('"', '\\"'),
+        'titre_long': titre_long.replace('_',' ').replace('\\', '\\\\').replace('"', '\\"'),
         'nature': nature_min,
         'état': 'vigueur' if not date_fin_texte else ( 'abrogé' if etat_texte != 'MODIFIE' else 'modifié' ),
         'id': texte_id,
@@ -550,6 +555,7 @@ def creer_historique_texte(arg):
         'statistiques_nb-versions-vigueur-future': max( 0, nb_versions_vigueur_future - nb_versions_vigueur_actuelle ),
     }
     metatxt = """titre: "%s"
+titre-long: "%s"
 nature: '%s'
 état: '%s'
 id: '%s'
@@ -566,7 +572,7 @@ vigueur:
 statistiques:
   nb-versions-vigueur-actuelle: %d
   nb-versions-vigueur-future: %d
-""" % ( meta['titre'], meta['nature'], meta['état'], meta['id'], meta['cid'], meta['éditorialisation_nb-versions'], meta['éditorialisation_dernière-date'], meta['vigueur_promulgation'], meta['vigueur_début'], meta['vigueur_fin'], meta['vigueur_actuelle'], meta['vigueur_future'], meta['statistiques_nb-versions-vigueur-actuelle'], meta['statistiques_nb-versions-vigueur-future'] )
+""" % ( meta['titre'], meta['titre_long'], meta['nature'], meta['état'], meta['id'], meta['cid'], meta['éditorialisation_nb-versions'], meta['éditorialisation_dernière-date'], meta['vigueur_promulgation'], meta['vigueur_début'], meta['vigueur_fin'], meta['vigueur_actuelle'], meta['vigueur_future'], meta['statistiques_nb-versions-vigueur-actuelle'], meta['statistiques_nb-versions-vigueur-future'] )
     with open( os.path.join(dossier, 'meta.yaml'), 'w' ) as f:
         f.write(metatxt)
     with open( os.path.join(dossier, '.git', 'meta.yaml'), 'w' ) as f:
