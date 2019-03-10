@@ -504,10 +504,43 @@ def creer_historique_texte(arg):
         else:
             logger.info(('Version {:'+wnbver+'} (du {} au {}) enregistrée{}').format(i_version+1, debut, fin, annee_incompatible))
 
+    # Texte abrogé
+    if date_fin_texte:
+        subprocess.call(['git', 'rm', '*'], cwd=dossier, stdout=subprocess.DEVNULL)
+        annee_incompatible = ''
+        debut = datetime.date(*(time.strptime(date_fin_texte, '%Y-%m-%d')[0:3]))
+        date_debut_fr = date_en_francais( debut )
+        debut_datetime = paris.localize( datetime.datetime( debut.year, debut.month, debut.day ) )
+        git_debut_datetime = debut_datetime
+        if  debut_datetime <= annee1970:
+            annee_incompatible = ' avec une date Git erronée mais compatible'
+            erreurs['date_pre_1970'] = True
+            git_debut_datetime = paris.localize( datetime.datetime( 1970, 1, 1, 12 ) )
+        if debut_datetime >= annee2100:
+            annee_incompatible = ' avec une date Git erronée mais compatible'
+            erreurs['date_post_2100'] = True
+            git_debut_datetime = paris.localize( datetime.datetime( 2099, 1, 1, 12 ) )
+        subprocess.call(['git', 'commit', '--author="Législateur <>"', '--date="' + str(git_debut_datetime) + '"', '-m', 'Texte abrogé au {}'.format(date_debut_fr), '-q', '--no-status'], cwd=dossier, env={ 'GIT_COMMITTER_DATE': str(git_debut_datetime), 'GIT_COMMITTER_NAME': 'Législateur', 'GIT_COMMITTER_EMAIL': '' })
+        if ( format['dates-git-pre-1970'] and debut_datetime <= annee1970 ) or ( format['dates-git-post-2100'] and debut_datetime >= annee2100 ):
+            annee_incompatible = ''
+            commit = str( subprocess.check_output(['git', 'cat-file', '-p', 'HEAD'], cwd=dossier), 'utf-8' )
+            commit = re.sub( r'author Législateur <> (-?\d+ [+-]\d{4})', 'author Législateur <> ' + str(int(debut_datetime.timestamp())) + debut_datetime.strftime(' %z'), commit )
+            commit = re.sub( r'committer Législateur <> (-?\d+ [+-]\d{4})', 'committer Législateur <> ' + str(int(debut_datetime.timestamp())) + debut_datetime.strftime(' %z'), commit )
+            sha1 = str( subprocess.check_output( ['git', 'hash-object', '-t', 'commit', '-w', '--stdin'], cwd=dossier, input=bytes(commit, 'utf-8') ), 'utf-8' )
+            sha1 = re.sub( '[^a-f0-9]', '', sha1 )
+            subprocess.call(['git', 'update-ref', 'refs/heads/' + branche_courante, sha1], cwd=dossier)
+        subprocess.call(['git', 'branch', '-m', branche_courante, branche + '-abrogé'], cwd=dossier)
+        branche_courante = branche + '-abrogé'
+        subprocess.call(['git', 'update-ref', '-d', 'refs/heads/' + branche], cwd=dossier)
+        subprocess.call(['git', 'update-ref', '-d', 'refs/heads/' + branche + '-futur'], cwd=dossier)
+        logger.info(('Version {:'+wnbver+'} (   abrogation au {}) enregistrée{}').format(i_version+1, debut, annee_incompatible))
+
     # Création des références Git
-    if not futur_debut:
+    if date_fin_texte:
+        subprocess.call(['git', 'update-ref', git_ref_base + last_update.strftime('%Y%m%d-%H%M%S') + '/abrogé', 'refs/heads/' + branche + '-abrogé'], cwd=dossier)
+    elif not futur_debut:
         subprocess.call(['git', 'update-ref', git_ref_base + last_update.strftime('%Y%m%d-%H%M%S') + '/vigueur', 'refs/heads/' + branche], cwd=dossier)
-    if futur:
+    if futur and not date_fin_texte:
         subprocess.call(['git', 'update-ref', git_ref_base + last_update.strftime('%Y%m%d-%H%M%S') + '/vigueur-future', 'refs/heads/'+branche+'-futur'], cwd=dossier)
 
     # Ajout d’une référence contenant un fichier de métadonnées
@@ -517,6 +550,7 @@ def creer_historique_texte(arg):
         subprocess.call(['git', 'checkout', '--orphan', 'meta'], cwd=dossier)
         subprocess.call(['git', 'rm', '--cached', '-rf', '.'], cwd=dossier, stdout=subprocess.DEVNULL)
         subprocess.call(['git', 'clean', '-f', '-x', '-d'], cwd=dossier, stdout=subprocess.DEVNULL)
+    branche_prec = branche_courante
     branche_courante = 'meta'
     git_refs = str( subprocess.check_output(['git', 'show-ref'], cwd=dossier), 'utf-8' ).strip()
     date_vigueur_actuelle = None
@@ -588,6 +622,8 @@ statistiques:
         subprocess.call(['git', 'checkout', 'texte-futur'], cwd=dossier)
     elif futur and not futur_debut:
         subprocess.call(['git', 'checkout', branche], cwd=dossier)
+    else:
+        subprocess.call(['git', 'checkout', branche_prec], cwd=dossier)
     subprocess.call(['git', 'branch', '-D', 'meta'], cwd=dossier)
 
     # Optimisation du dossier git
